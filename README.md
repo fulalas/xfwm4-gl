@@ -12,7 +12,7 @@ of the weakest points of `xfwm4`, as seen in the latest
 ## Why this exists
 
 A compositor has to take the picture of every window and put those pictures
-together into the screen you see. `xfwm4` does that with XRender, an old drawing
+together into the screen. `xfwm4` does that with XRender, an old drawing
 interface of the X server, and that choice shapes the code: the screen is built
 in an off-screen image first, and that image is then copied to the screen, so
 every frame is drawn twice. On top of that, the X server is asked what area a
