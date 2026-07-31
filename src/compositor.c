@@ -1333,6 +1333,57 @@ free_glx_data (ScreenInfo *screen_info)
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
+/*
+ * The overlay window is released whenever compositing stops, so the GLX
+ * drawable made on it has to go with it. The context, the shaders and the
+ * textures that live in it can stay, which is what makes suspending and
+ * resuming cheap.
+ */
+static void
+detach_glx_window (ScreenInfo *screen_info)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+
+    g_return_if_fail (screen_info != NULL);
+    TRACE ("entering");
+
+    glXMakeCurrent (dpy, None, NULL);
+    if (screen_info->glx_window != None)
+    {
+        glXDestroyWindow (dpy, screen_info->glx_window);
+        screen_info->glx_window = None;
+    }
+}
+
+static gboolean
+attach_glx_window (ScreenInfo *screen_info)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+    g_return_val_if_fail (screen_info->glx_context != None, FALSE);
+    TRACE ("entering");
+
+    screen_info->glx_window = glXCreateWindow (dpy, screen_info->glx_fbconfig,
+                                               screen_info->output, NULL);
+    if (screen_info->glx_window == None)
+    {
+        g_warning ("Could not create GLX window.");
+        return FALSE;
+    }
+
+    if (!glXMakeCurrent (dpy, screen_info->glx_window, screen_info->glx_context))
+    {
+        g_warning ("Could not make GL context current.");
+        glXDestroyWindow (dpy, screen_info->glx_window);
+        screen_info->glx_window = None;
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static gboolean
 init_glx (ScreenInfo *screen_info)
 {
@@ -4993,6 +5044,29 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->use_glx &= display_info->have_xsync;
 #endif /* HAVE_XSYNC */
 
+    if (screen_info->use_gl_render && screen_info->gl_data != NULL &&
+        screen_info->glx_context != None)
+    {
+        /*
+         * Coming back from a suspend, only the drawable is missing. Nothing
+         * else has to be built again.
+         */
+        screen_info->use_n_buffers = 1;
+        screen_info->use_gl_render = attach_glx_window (screen_info);
+        if (screen_info->use_gl_render)
+        {
+            xfwmGLScreenReattached (screen_info);
+            screen_info->use_glx = FALSE;
+        }
+        else
+        {
+            xfwmGLScreenFinish (screen_info);
+            free_glx_data (screen_info);
+        }
+    }
+
+    if (!screen_info->use_gl_render)
+    {
     screen_info->use_gl_render = FALSE;
     screen_info->gl_data = NULL;
 
@@ -5022,6 +5096,7 @@ compositorManageScreen (ScreenInfo *screen_info)
         {
             screen_info->use_glx = FALSE;
         }
+    }
     }
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
@@ -5115,7 +5190,16 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
     screen_info->cwindows = NULL;
 
 #ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render)
+    if (screen_info->use_gl_render && screen_info->gl_keep_alive)
+    {
+        /*
+         * Only stopping for as long as a fullscreen window has focus, so the
+         * context, the shaders and the shadow profile are kept and just the
+         * drawable is dropped. use_gl_render stays set to say so.
+         */
+        detach_glx_window (screen_info);
+    }
+    else if (screen_info->use_gl_render)
     {
         xfwmGLScreenFinish (screen_info);
         screen_info->use_gl_render = FALSE;
@@ -5329,7 +5413,10 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
                  !(screen->params->suspend_compositing_fullscreen &&
                    (c != NULL) && (c->screen_info == screen) &&
                    FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN));
+
+        screen->gl_keep_alive = TRUE;
         compositorActivateScreen (screen, active);
+        screen->gl_keep_alive = FALSE;
     }
 #endif /* HAVE_COMPOSITOR */
 }

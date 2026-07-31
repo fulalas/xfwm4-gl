@@ -49,6 +49,7 @@ void             xfwmGLScreenFinish             (ScreenInfo *);
 gboolean         xfwmGLPaintAll                 (ScreenInfo *,
                                                  XserverRegion);
 
+void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
 void             xfwmGLFreeWindowShadow         (CWindow *);

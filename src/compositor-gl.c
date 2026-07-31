@@ -521,7 +521,7 @@ xfwmGLInvalidateRootTexture (ScreenInfo *screen_info)
 {
     g_return_if_fail (screen_info != NULL);
 
-    if (screen_info->gl_data != NULL)
+    if (screen_info->gl_data != NULL && glXGetCurrentContext () != NULL)
     {
         free_root_texture (screen_info);
     }
@@ -610,12 +610,40 @@ xfwmGLGetRendererName (ScreenInfo *screen_info)
     return (data != NULL) ? data->renderer : NULL;
 }
 
+/*
+ * Called after the drawable has been made again following a suspend. The back
+ * buffer of a brand new drawable holds nothing, so the next frame is whole.
+ */
+void
+xfwmGLScreenReattached (ScreenInfo *screen_info)
+{
+    XfwmGLData *data;
+
+    g_return_if_fail (screen_info != NULL);
+    TRACE ("entering");
+
+    data = gl_data (screen_info);
+    if (data == NULL)
+    {
+        return;
+    }
+
+    data->full_repaint = TRUE;
+    /*
+     * The screen size or the desktop background may have changed while we were
+     * away, so the background is bound again on the next frame.
+     */
+    free_root_texture (screen_info);
+    set_swap_interval_gl (screen_info);
+}
+
 void
 xfwmGLScreenSizeChanged (ScreenInfo *screen_info)
 {
     g_return_if_fail (screen_info != NULL);
 
-    if (screen_info->gl_data == NULL)
+    /* Nothing to drop while suspended, the drawable is gone anyway */
+    if (screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
     {
         return;
     }
@@ -634,7 +662,7 @@ xfwmGLFreeWindowData (CWindow *cw)
     g_return_if_fail (cw != NULL);
 
     screen_info = cw->screen_info;
-    if (screen_info->gl_data == NULL)
+    if (screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
     {
         return;
     }
@@ -662,7 +690,7 @@ xfwmGLFreeWindowShadow (CWindow *cw)
 {
     g_return_if_fail (cw != NULL);
 
-    if (cw->screen_info->gl_data == NULL)
+    if (cw->screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
     {
         return;
     }
@@ -692,6 +720,10 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     screen_info = cw->screen_info;
     data = gl_data (screen_info);
     g_return_val_if_fail (data != NULL, FALSE);
+    if (glXGetCurrentContext () == NULL)
+    {
+        return FALSE;
+    }
 
     xfwmGLFreeWindowShadow (cw);
 
