@@ -745,6 +745,27 @@ border_size (CWindow *cw)
     return border;
 }
 
+/*
+ * Drop the shadow of a window, whichever renderer built it. The size going
+ * back to zero is what says the window has no shadow any more.
+ */
+static void
+drop_win_shadow (CWindow *cw)
+{
+    g_return_if_fail (cw != NULL);
+
+    if (cw->shadow)
+    {
+        XRenderFreePicture (cw->screen_info->display_info->dpy, cw->shadow);
+        cw->shadow = None;
+    }
+#ifdef HAVE_EPOXY
+    xfwmGLFreeWindowShadow (cw);
+#endif /* HAVE_EPOXY */
+    cw->shadow_width = 0;
+    cw->shadow_height = 0;
+}
+
 static void
 free_win_data (CWindow *cw, gboolean delete)
 {
@@ -768,11 +789,7 @@ free_win_data (CWindow *cw, gboolean delete)
     }
 #endif
 
-    if (cw->shadow)
-    {
-        XRenderFreePicture (display_info->dpy, cw->shadow);
-        cw->shadow = None;
-    }
+    drop_win_shadow (cw);
 
     if (cw->alphaPict)
     {
@@ -797,6 +814,10 @@ free_win_data (CWindow *cw, gboolean delete)
         XFixesDestroyRegion (display_info->dpy, cw->clientSize);
         cw->clientSize = None;
     }
+
+#ifdef HAVE_EPOXY
+    xfwmGLInvalidateWindowRegions (cw);
+#endif /* HAVE_EPOXY */
 
     if (cw->borderClip)
     {
@@ -1986,12 +2007,10 @@ void
 ensure_win_shadow (CWindow *cw)
 {
     ScreenInfo *screen_info;
-    DisplayInfo *display_info;
 
     g_return_if_fail (cw != NULL);
 
     screen_info = cw->screen_info;
-    display_info = screen_info->display_info;
 
     /*
        We apply a shadow to the window if:
@@ -2052,16 +2071,7 @@ ensure_win_shadow (CWindow *cw)
         return;
     }
 
-    if (cw->shadow)
-    {
-        XRenderFreePicture (display_info->dpy, cw->shadow);
-        cw->shadow = None;
-    }
-#ifdef HAVE_EPOXY
-    xfwmGLFreeWindowShadow (cw);
-#endif /* HAVE_EPOXY */
-    cw->shadow_width = 0;
-    cw->shadow_height = 0;
+    drop_win_shadow (cw);
 }
 
 static XserverRegion
@@ -2462,7 +2472,7 @@ get_region_bounds (Display *dpy, XserverRegion region, XRectangle *bounds)
     return nrects;
 }
 
-gboolean
+static gboolean
 is_region_empty (Display *dpy, XserverRegion region)
 {
     XRectangle bounds;
@@ -3211,10 +3221,9 @@ set_win_opacity (CWindow *cw, guint32 opacity)
 
     cw->opacity = opacity;
     determine_mode(cw);
-    if (cw->shadow)
+    if (cw->shadow_width > 0)
     {
-        XRenderFreePicture (display_info->dpy, cw->shadow);
-        cw->shadow = None;
+        drop_win_shadow (cw);
         if (cw->extents)
         {
             XFixesDestroyRegion (display_info->dpy, cw->extents);
@@ -3382,6 +3391,10 @@ update_opaque_region (CWindow *cw, Window id)
     display_info = screen_info->display_info;
 
     old_opaque_region = cw->opaque_region;
+
+#ifdef HAVE_EPOXY
+    xfwmGLInvalidateWindowRegions (cw);
+#endif /* HAVE_EPOXY */
 
     nrects = getOpaqueRegionRects (display_info, id, &rects);
     if (nrects)
@@ -3669,11 +3682,7 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
             cw->saved_picture = None;
         }
 
-        if (cw->shadow)
-        {
-            XRenderFreePicture (display_info->dpy, cw->shadow);
-            cw->shadow = None;
-        }
+        drop_win_shadow (cw);
     }
 
     if ((cw->attr.width != width) || (cw->attr.height != height) ||
@@ -3690,6 +3699,10 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
             XFixesDestroyRegion (display_info->dpy, cw->clientSize);
             cw->clientSize = None;
         }
+
+#ifdef HAVE_EPOXY
+        xfwmGLInvalidateWindowRegions (cw);
+#endif /* HAVE_EPOXY */
     }
 
     cw->attr.x = x;
@@ -3743,11 +3756,7 @@ reshape_win (CWindow *cw)
         cw->extents = None;
     }
 
-    if (cw->shadow)
-    {
-        XRenderFreePicture (display_info->dpy, cw->shadow);
-        cw->shadow = None;
-    }
+    drop_win_shadow (cw);
 
     if (cw->borderSize)
     {
@@ -3760,6 +3769,10 @@ reshape_win (CWindow *cw)
         XFixesDestroyRegion (display_info->dpy, cw->clientSize);
         cw->clientSize = None;
     }
+
+#ifdef HAVE_EPOXY
+    xfwmGLInvalidateWindowRegions (cw);
+#endif /* HAVE_EPOXY */
 
     if (damage)
     {

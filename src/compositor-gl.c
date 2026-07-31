@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <X11/Xlib.h>
+#include <X11/extensions/shape.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/Xrender.h>
@@ -48,6 +49,7 @@
 #include "screen.h"
 #include "client.h"
 #include "frame.h"
+#include "hints.h"
 #include "compositor-priv.h"
 #include "compositor-gl.h"
 
@@ -82,9 +84,10 @@ typedef struct
 
     gboolean has_buffer_age;
 
-    XserverRegion damage_history[GL_DAMAGE_HISTORY];
+    cairo_region_t *damage_history[GL_DAMAGE_HISTORY];
     guint damage_index;
     gboolean full_repaint;
+    guint frame_serial;
 
     GLXPixmap root_glx_pixmap;
     GLuint root_texture;
@@ -153,6 +156,177 @@ static const gchar *fragment_shadow_profile =
     "            * texture2D (prof, vec2 (q.y, 0.5)).a;\n"
     "    gl_FragColor = vec4 (0.0, 0.0, 0.0, a * opacity);\n"
     "}\n";
+
+/*
+ * Everything below works on client side regions. Asking the X server what a
+ * window covers means waiting for a reply, and doing that for every window of
+ * every frame is the most expensive thing a compositor can do. The shape of a
+ * window only changes when the window does, so it is worked out once and kept.
+ */
+static cairo_region_t *
+region_from_rects (XRectangle *rects, gint nrects, gint dx, gint dy)
+{
+    cairo_region_t *region;
+    gint i;
+
+    region = cairo_region_create ();
+    for (i = 0; i < nrects; i++)
+    {
+        cairo_rectangle_int_t r;
+
+        r.x = rects[i].x + dx;
+        r.y = rects[i].y + dy;
+        r.width = rects[i].width;
+        r.height = rects[i].height;
+        cairo_region_union_rectangle (region, &r);
+    }
+
+    return region;
+}
+
+/* The area a window covers on screen, its shape included */
+static cairo_region_t *
+window_shape (CWindow *cw)
+{
+    ScreenInfo *screen_info = cw->screen_info;
+    DisplayInfo *display_info = screen_info->display_info;
+
+    if (cw->gl_shape != NULL)
+    {
+        return cw->gl_shape;
+    }
+
+    if (WIN_IS_SHAPED(cw))
+    {
+        XRectangle *rects;
+        gint nrects = 0, ordering;
+
+        myDisplayErrorTrapPush (display_info);
+        rects = XShapeGetRectangles (myScreenGetXDisplay (screen_info), cw->id,
+                                     ShapeBounding, &nrects, &ordering);
+        myDisplayErrorTrapPopIgnored (display_info);
+
+        if (rects != NULL)
+        {
+            cw->gl_shape = region_from_rects (rects, nrects,
+                                              cw->attr.x + cw->attr.border_width,
+                                              cw->attr.y + cw->attr.border_width);
+            XFree (rects);
+
+            return cw->gl_shape;
+        }
+    }
+
+    {
+        cairo_rectangle_int_t r;
+
+        r.x = cw->attr.x;
+        r.y = cw->attr.y;
+        r.width = cw->attr.width + 2 * cw->attr.border_width;
+        r.height = cw->attr.height + 2 * cw->attr.border_width;
+        cw->gl_shape = cairo_region_create_rectangle (&r);
+    }
+
+    return cw->gl_shape;
+}
+
+/* The client area of a framed window, empty for anything else */
+static void
+window_client_area (CWindow *cw, cairo_rectangle_int_t *r)
+{
+    if (WIN_HAS_FRAME(cw))
+    {
+        Client *c = cw->c;
+
+        r->x = frameX (c) + frameLeft (c);
+        r->y = frameY (c) + frameTop (c);
+        r->width = frameWidth (c) - frameLeft (c) - frameRight (c);
+        r->height = frameHeight (c) - frameTop (c) - frameBottom (c);
+    }
+    else
+    {
+        r->x = cw->attr.x;
+        r->y = cw->attr.y;
+        r->width = cw->attr.width + 2 * cw->attr.border_width;
+        r->height = cw->attr.height + 2 * cw->attr.border_width;
+    }
+}
+
+/*
+ * What the window itself says is opaque, in screen coordinates. Windows with an
+ * alpha channel use this to tell us which part of them still hides what is
+ * below, which is how most toolkit windows with rounded corners behave.
+ */
+static cairo_region_t *
+window_opaque_region (CWindow *cw)
+{
+    ScreenInfo *screen_info = cw->screen_info;
+    DisplayInfo *display_info = screen_info->display_info;
+    XRectangle *rects = NULL;
+    unsigned int nrects;
+    cairo_rectangle_int_t client;
+    gint dx, dy;
+
+    if (cw->gl_opaque != NULL)
+    {
+        return cw->gl_opaque;
+    }
+    if (cw->opaque_region == None)
+    {
+        return NULL;
+    }
+
+    nrects = getOpaqueRegionRects (display_info,
+                                   (cw->c != NULL) ? cw->c->window : cw->id,
+                                   &rects);
+    if (nrects == 0)
+    {
+        return NULL;
+    }
+
+    if (WIN_HAS_FRAME(cw))
+    {
+        dx = frameX (cw->c) + frameLeft (cw->c);
+        dy = frameY (cw->c) + frameTop (cw->c);
+    }
+    else
+    {
+        dx = cw->attr.x + cw->attr.border_width;
+        dy = cw->attr.y + cw->attr.border_width;
+    }
+
+    cw->gl_opaque = region_from_rects (rects, (gint) nrects, dx, dy);
+    g_free (rects);
+
+    /* Never claim more than the window covers */
+    cairo_region_intersect (cw->gl_opaque, window_shape (cw));
+    window_client_area (cw, &client);
+    cairo_region_intersect_rectangle (cw->gl_opaque, &client);
+
+    return cw->gl_opaque;
+}
+
+void
+xfwmGLInvalidateWindowRegions (CWindow *cw)
+{
+    g_return_if_fail (cw != NULL);
+
+    if (cw->gl_shape != NULL)
+    {
+        cairo_region_destroy (cw->gl_shape);
+        cw->gl_shape = NULL;
+    }
+    if (cw->gl_opaque != NULL)
+    {
+        cairo_region_destroy (cw->gl_opaque);
+        cw->gl_opaque = NULL;
+    }
+    if (cw->gl_paint_clip != NULL)
+    {
+        cairo_region_destroy (cw->gl_paint_clip);
+        cw->gl_paint_clip = NULL;
+    }
+}
 
 static void
 set_tex_params (GLenum target, GLint filter)
@@ -621,10 +795,9 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     }
     for (i = 0; i < GL_DAMAGE_HISTORY; i++)
     {
-        if (data->damage_history[i] != None)
+        if (data->damage_history[i] != NULL)
         {
-            XFixesDestroyRegion (myScreenGetXDisplay (screen_info),
-                                 data->damage_history[i]);
+            cairo_region_destroy (data->damage_history[i]);
         }
     }
 
@@ -934,6 +1107,7 @@ bind_window_texture (CWindow *cw)
 
     if (cw->gl_texture == 0)
     {
+        cw->gl_bind_serial = 0;
         glGenTextures (1, &cw->gl_texture);
         glBindTexture (data->tex_type, cw->gl_texture);
         set_tex_params (data->tex_type, GL_NEAREST);
@@ -945,15 +1119,21 @@ bind_window_texture (CWindow *cw)
 
     /*
      * The contents behind the GLX pixmap change as the window draws, the
-     * texture has to be released and bound again to see the new content.
+     * texture has to be released and bound again to see the new content. Once
+     * per frame is enough, an opaque window with a translucent frame is
+     * painted in both passes.
      */
-    if (cw->gl_texture_bound)
+    if (cw->gl_bind_serial != data->frame_serial)
     {
-        glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
-        cw->gl_texture_bound = FALSE;
+        if (cw->gl_texture_bound)
+        {
+            glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
+            cw->gl_texture_bound = FALSE;
+        }
+        glXBindTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT, NULL);
+        cw->gl_texture_bound = TRUE;
+        cw->gl_bind_serial = data->frame_serial;
     }
-    glXBindTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT, NULL);
-    cw->gl_texture_bound = TRUE;
 
     return TRUE;
 }
@@ -974,62 +1154,73 @@ static void
 draw_quad (ScreenInfo *screen_info, GLenum tex_type, gboolean y_inverted,
            gint sx, gint sy, gint tex_width, gint tex_height,
            gint dx, gint dy, gint width, gint height,
-           XRectangle *rects, gint nrects)
+           cairo_region_t *clip)
 {
-    gfloat x1, y1, x2, y2;
-    gfloat u1, v1, u2, v2;
-    gint i;
+    gint nrects, i;
 
     if (width <= 0 || height <= 0 || tex_width <= 0 || tex_height <= 0)
     {
         return;
     }
 
-    x1 = 2.0f * (gfloat) dx / (gfloat) screen_info->width - 1.0f;
-    x2 = 2.0f * (gfloat) (dx + width) / (gfloat) screen_info->width - 1.0f;
-    y1 = 1.0f - 2.0f * (gfloat) dy / (gfloat) screen_info->height;
-    y2 = 1.0f - 2.0f * (gfloat) (dy + height) / (gfloat) screen_info->height;
-
-    if (tex_type == GL_TEXTURE_RECTANGLE_ARB)
-    {
-        u1 = (gfloat) sx;
-        u2 = (gfloat) (sx + width);
-        v1 = (gfloat) sy;
-        v2 = (gfloat) (sy + height);
-    }
-    else
-    {
-        u1 = (gfloat) sx / (gfloat) tex_width;
-        u2 = (gfloat) (sx + width) / (gfloat) tex_width;
-        v1 = (gfloat) sy / (gfloat) tex_height;
-        v2 = (gfloat) (sy + height) / (gfloat) tex_height;
-    }
-
-    if (y_inverted)
-    {
-        gfloat v = v1;
-        v1 = (tex_type == GL_TEXTURE_RECTANGLE_ARB) ? (gfloat) tex_height - v2 : 1.0f - v2;
-        v2 = (tex_type == GL_TEXTURE_RECTANGLE_ARB) ? (gfloat) tex_height - v : 1.0f - v;
-    }
-
+    nrects = cairo_region_num_rectangles (clip);
+    glBegin (GL_QUADS);
     for (i = 0; i < nrects; i++)
     {
-        /* GL scissor counts from the bottom of the screen */
-        glScissor (rects[i].x,
-                   screen_info->height - (rects[i].y + rects[i].height),
-                   rects[i].width, rects[i].height);
+        cairo_rectangle_int_t r;
+        gint x1, y1, x2, y2;
+        gfloat vx1, vy1, vx2, vy2;
+        gfloat u1, v1, u2, v2;
 
-        glBegin (GL_QUADS);
+        cairo_region_get_rectangle (clip, i, &r);
+
+        /* Clip the quad to the rectangle, skip it when nothing is left */
+        x1 = MAX (dx, r.x);
+        y1 = MAX (dy, r.y);
+        x2 = MIN (dx + width, r.x + r.width);
+        y2 = MIN (dy + height, r.y + r.height);
+        if (x1 >= x2 || y1 >= y2)
+        {
+            continue;
+        }
+
+        vx1 = 2.0f * (gfloat) x1 / (gfloat) screen_info->width - 1.0f;
+        vx2 = 2.0f * (gfloat) x2 / (gfloat) screen_info->width - 1.0f;
+        vy1 = 1.0f - 2.0f * (gfloat) y1 / (gfloat) screen_info->height;
+        vy2 = 1.0f - 2.0f * (gfloat) y2 / (gfloat) screen_info->height;
+
+        /* The texture follows the same clipping, in texture coordinates */
+        u1 = (gfloat) (sx + x1 - dx);
+        u2 = (gfloat) (sx + x2 - dx);
+        v1 = (gfloat) (sy + y1 - dy);
+        v2 = (gfloat) (sy + y2 - dy);
+        if (tex_type != GL_TEXTURE_RECTANGLE_ARB)
+        {
+            u1 /= (gfloat) tex_width;
+            u2 /= (gfloat) tex_width;
+            v1 /= (gfloat) tex_height;
+            v2 /= (gfloat) tex_height;
+        }
+        if (y_inverted)
+        {
+            gfloat top = (tex_type == GL_TEXTURE_RECTANGLE_ARB)
+                         ? (gfloat) tex_height : 1.0f;
+            gfloat v = v1;
+
+            v1 = top - v2;
+            v2 = top - v;
+        }
+
         glTexCoord2f (u1, v1);
-        glVertex2f (x1, y1);
+        glVertex2f (vx1, vy1);
         glTexCoord2f (u2, v1);
-        glVertex2f (x2, y1);
+        glVertex2f (vx2, vy1);
         glTexCoord2f (u2, v2);
-        glVertex2f (x2, y2);
+        glVertex2f (vx2, vy2);
         glTexCoord2f (u1, v2);
-        glVertex2f (x1, y2);
-        glEnd ();
+        glVertex2f (vx1, vy2);
     }
+    glEnd ();
 }
 
 static void
@@ -1042,8 +1233,7 @@ set_opacity (ScreenInfo *screen_info, gfloat opacity)
 
 static void
 draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
-                  gint width, gint height,
-                  XRectangle *rects, gint nrects)
+                  gint width, gint height, cairo_region_t *clip)
 {
     ScreenInfo *screen_info = cw->screen_info;
     XfwmGLData *data = gl_data (screen_info);
@@ -1054,7 +1244,7 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
 
     draw_quad (screen_info, data->tex_type, data->y_inverted[slot],
                sx, sy, tex_width, tex_height,
-               dx, dy, width, height, rects, nrects);
+               dx, dy, width, height, clip);
 }
 
 /*
@@ -1063,8 +1253,7 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
  * frame drawn separately when the title bar is translucent.
  */
 static void
-paint_window_gl (CWindow *cw, gboolean solid_part,
-                 XRectangle *rects, gint nrects)
+paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 {
     ScreenInfo *screen_info = cw->screen_info;
     gfloat opacity;
@@ -1096,22 +1285,22 @@ paint_window_gl (CWindow *cw, gboolean solid_part,
 
             /* Top border, the title bar */
             draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y,
-                              frame_width, frame_top, rects, nrects);
+                              frame_width, frame_top, clip);
             /* Bottom border */
             draw_window_part (cw, 0, frame_height - frame_bottom,
                               cw->attr.x, cw->attr.y + frame_height - frame_bottom,
-                              frame_width, frame_bottom, rects, nrects);
+                              frame_width, frame_bottom, clip);
             /* Left border */
             draw_window_part (cw, 0, frame_top,
                               cw->attr.x, cw->attr.y + frame_top,
                               frame_left, frame_height - frame_top - frame_bottom,
-                              rects, nrects);
+                              clip);
             /* Right border */
             draw_window_part (cw, frame_width - frame_right, frame_top,
                               cw->attr.x + frame_width - frame_right,
                               cw->attr.y + frame_top,
                               frame_right, frame_height - frame_top - frame_bottom,
-                              rects, nrects);
+                              clip);
         }
 
         set_opacity (screen_info, opacity);
@@ -1119,7 +1308,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part,
                           cw->attr.x + frame_left, cw->attr.y + frame_top,
                           frame_width - frame_left - frame_right,
                           frame_height - frame_top - frame_bottom,
-                          rects, nrects);
+                          clip);
     }
     else
     {
@@ -1128,17 +1317,17 @@ paint_window_gl (CWindow *cw, gboolean solid_part,
         get_window_pixmap_size (cw, &width, &height);
         set_opacity (screen_info, opacity);
         draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y, width, height,
-                          rects, nrects);
+                          clip);
     }
 }
 
 static void
-paint_shadow_gl (CWindow *cw, XRectangle *rects, gint nrects)
+paint_shadow_gl (CWindow *cw, cairo_region_t *clip)
 {
     ScreenInfo *screen_info = cw->screen_info;
     XfwmGLData *data = gl_data (screen_info);
 
-    if (cw->shadow_width <= 0 || nrects == 0)
+    if (cw->shadow_width <= 0 || cairo_region_is_empty (clip))
     {
         return;
     }
@@ -1164,7 +1353,7 @@ paint_shadow_gl (CWindow *cw, XRectangle *rects, gint nrects)
     draw_quad (screen_info, GL_TEXTURE_2D, FALSE,
                0, 0, cw->shadow_width, cw->shadow_height,
                cw->attr.x + cw->shadow_dx, cw->attr.y + cw->shadow_dy,
-               cw->shadow_width, cw->shadow_height, rects, nrects);
+               cw->shadow_width, cw->shadow_height, clip);
 
     glBindTexture (GL_TEXTURE_2D, 0);
     glUseProgram (data->program_win);
@@ -1252,11 +1441,11 @@ bind_root_texture (ScreenInfo *screen_info)
 }
 
 static void
-paint_root_gl (ScreenInfo *screen_info, XRectangle *rects, gint nrects)
+paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
 {
     XfwmGLData *data = gl_data (screen_info);
 
-    if (nrects == 0)
+    if (cairo_region_is_empty (clip))
     {
         return;
     }
@@ -1271,7 +1460,7 @@ paint_root_gl (ScreenInfo *screen_info, XRectangle *rects, gint nrects)
         glUniform1f (data->u_opacity_win, 1.0f);
         draw_quad (screen_info, data->tex_type, data->y_inverted[GL_DEPTH_RGB],
                    0, 0, tex_width, tex_height,
-                   0, 0, screen_info->width, screen_info->height, rects, nrects);
+                   0, 0, screen_info->width, screen_info->height, clip);
     }
     else
     {
@@ -1280,7 +1469,7 @@ paint_root_gl (ScreenInfo *screen_info, XRectangle *rects, gint nrects)
         glUniform1f (data->u_opacity_2d, 1.0f);
         glBindTexture (GL_TEXTURE_2D, data->black_texture);
         draw_quad (screen_info, GL_TEXTURE_2D, FALSE, 0, 0, 1, 1,
-                   0, 0, screen_info->width, screen_info->height, rects, nrects);
+                   0, 0, screen_info->width, screen_info->height, clip);
         glBindTexture (GL_TEXTURE_2D, 0);
         glUseProgram (data->program_win);
     }
@@ -1290,7 +1479,8 @@ static void
 paint_cursor_gl (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
-    XRectangle rect;
+    cairo_rectangle_int_t rect;
+    cairo_region_t *clip;
 
     if (screen_info->cursorSerial == 0)
     {
@@ -1342,6 +1532,7 @@ paint_cursor_gl (ScreenInfo *screen_info)
     rect.y = 0;
     rect.width = screen_info->width;
     rect.height = screen_info->height;
+    clip = cairo_region_create_rectangle (&rect);
 
     glEnable (GL_BLEND);
     glUseProgram (data->program_2d);
@@ -1350,7 +1541,8 @@ paint_cursor_gl (ScreenInfo *screen_info)
                0, 0, data->cursor_width, data->cursor_height,
                screen_info->cursorLocation.x, screen_info->cursorLocation.y,
                screen_info->cursorLocation.width, screen_info->cursorLocation.height,
-               &rect, 1);
+               clip);
+    cairo_region_destroy (clip);
 }
 
 /*
@@ -1430,7 +1622,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     glUseProgram (data->program_2d);
     glUniform1f (data->u_opacity_2d, 1.0f);
 
-    glScissor (0, 0, screen_info->width, screen_info->height);
 
     {
         /* The scene texture has its origin at the bottom left */
@@ -1452,18 +1643,27 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     }
 }
 
-static gint
-fetch_region_rects (Display *dpy, XserverRegion region, XRectangle **rects)
+/*
+ * Turn the damage the X server gave us into a client side region. This is the
+ * one and only region that has to cross the wire each frame.
+ */
+static cairo_region_t *
+fetch_damage (Display *dpy, XserverRegion damage)
 {
+    cairo_region_t *region;
+    XRectangle *rects;
     gint nrects = 0;
 
-    *rects = XFixesFetchRegion (dpy, region, &nrects);
-    if (*rects == NULL)
+    rects = XFixesFetchRegion (dpy, damage, &nrects);
+    if (rects == NULL)
     {
-        return 0;
+        return cairo_region_create ();
     }
 
-    return nrects;
+    region = region_from_rects (rects, nrects, 0, 0);
+    XFree (rects);
+
+    return region;
 }
 
 /*
@@ -1471,16 +1671,14 @@ fetch_region_rects (Display *dpy, XserverRegion region, XRectangle **rects)
  * damage of the last frames is replayed, otherwise the whole screen is
  * redrawn because the content of the back buffer is undefined after a swap.
  */
-static XserverRegion
-get_paint_region (ScreenInfo *screen_info, XserverRegion damage)
+static cairo_region_t *
+get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
 {
     XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
-    XserverRegion region;
+    cairo_region_t *region;
     guint age = 0;
     guint i;
-
-    region = XFixesCreateRegion (dpy, NULL, 0);
 
     if (data->has_buffer_age && !data->full_repaint)
     {
@@ -1490,36 +1688,36 @@ get_paint_region (ScreenInfo *screen_info, XserverRegion damage)
 
     if (age == 0 || age > GL_DAMAGE_HISTORY || data->full_repaint)
     {
-        XRectangle r;
+        cairo_rectangle_int_t r;
 
         r.x = 0;
         r.y = 0;
         r.width = screen_info->width;
         r.height = screen_info->height;
-        XFixesSetRegion (dpy, region, &r, 1);
+        region = cairo_region_create_rectangle (&r);
         data->full_repaint = FALSE;
     }
     else
     {
-        XFixesCopyRegion (dpy, region, damage);
+        region = cairo_region_copy (damage);
         /* Add back what the older frames in the buffer never saw */
         for (i = 0; i < age - 1; i++)
         {
             guint slot = (data->damage_index + GL_DAMAGE_HISTORY - i - 1) % GL_DAMAGE_HISTORY;
 
-            if (data->damage_history[slot] != None)
+            if (data->damage_history[slot] != NULL)
             {
-                XFixesUnionRegion (dpy, region, region, data->damage_history[slot]);
+                cairo_region_union (region, data->damage_history[slot]);
             }
         }
     }
 
     /* Remember this frame's damage for the next rounds */
-    if (data->damage_history[data->damage_index] == None)
+    if (data->damage_history[data->damage_index] != NULL)
     {
-        data->damage_history[data->damage_index] = XFixesCreateRegion (dpy, NULL, 0);
+        cairo_region_destroy (data->damage_history[data->damage_index]);
     }
-    XFixesCopyRegion (dpy, data->damage_history[data->damage_index], damage);
+    data->damage_history[data->damage_index] = cairo_region_copy (damage);
     data->damage_index = (data->damage_index + 1) % GL_DAMAGE_HISTORY;
 
     return region;
@@ -1531,11 +1729,11 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     XfwmGLData *data;
     DisplayInfo *display_info;
     Display *dpy;
-    XserverRegion paint_region;
-    XRectangle *rects;
+    cairo_region_t *frame_damage;
+    cairo_region_t *paint_region;
+    cairo_region_t *clip;
     GList *list;
     CWindow *cw;
-    gint nrects;
     gboolean zoomed;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
@@ -1558,16 +1756,17 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     myDisplayErrorTrapPush (display_info);
 
-    paint_region = get_paint_region (screen_info, damage);
-    if (is_region_empty (dpy, paint_region))
+    frame_damage = fetch_damage (dpy, damage);
+    paint_region = get_paint_region (screen_info, frame_damage);
+    cairo_region_destroy (frame_damage);
+
+    if (cairo_region_is_empty (paint_region))
     {
-        XFixesDestroyRegion (dpy, paint_region);
+        cairo_region_destroy (paint_region);
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
-    rects = NULL;
-    nrects = 0;
 
     zoomed = screen_info->zoomed;
     if (zoomed && !bind_zoom_fbo (screen_info))
@@ -1575,8 +1774,12 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         zoomed = FALSE;
     }
 
+    data->frame_serial++;
+    if (data->frame_serial == 0)
+    {
+        data->frame_serial = 1;
+    }
     glViewport (0, 0, screen_info->width, screen_info->height);
-    glEnable (GL_SCISSOR_TEST);
     glUseProgram (data->program_win);
     glActiveTexture (GL_TEXTURE0);
 
@@ -1586,9 +1789,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
      */
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
-        XserverRegion visible;
-        XRectangle *win_rects;
-        gint win_nrects;
+        cairo_region_t *shape;
 
         cw = (CWindow *) list->data;
 
@@ -1604,36 +1805,28 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
+        /* Builds the shadow of the window as a side effect */
         ensure_win_shadow (cw);
 
-        if (cw->borderSize == None)
-        {
-            cw->borderSize = border_size (cw);
-        }
-        if (cw->clientSize == None)
-        {
-            cw->clientSize = client_size (cw);
-        }
+        shape = window_shape (cw);
 
-        /* Keep the region still to paint for the pass below */
-        if (cw->borderClip == None)
+        /* What is still unpainted below this window, for the second pass */
+        if (cw->gl_paint_clip != NULL)
         {
-            cw->borderClip = XFixesCreateRegion (dpy, NULL, 0);
-            XFixesCopyRegion (dpy, cw->borderClip, paint_region);
+            cairo_region_destroy (cw->gl_paint_clip);
         }
+        cw->gl_paint_clip = cairo_region_copy (paint_region);
 
         if (WIN_IS_OPAQUE(cw))
         {
-            visible = XFixesCreateRegion (dpy, NULL, 0);
-            XFixesIntersectRegion (dpy, visible, paint_region, cw->borderSize);
-            win_nrects = fetch_region_rects (dpy, visible, &win_rects);
-            if (win_nrects > 0)
+            clip = cairo_region_copy (paint_region);
+            cairo_region_intersect (clip, shape);
+            if (!cairo_region_is_empty (clip))
             {
                 glDisable (GL_BLEND);
-                paint_window_gl (cw, TRUE, win_rects, win_nrects);
-                XFree (win_rects);
+                paint_window_gl (cw, TRUE, clip);
             }
-            XFixesDestroyRegion (dpy, visible);
+            cairo_region_destroy (clip);
 
             /*
              * Nothing below shows through an opaque window. A window with a
@@ -1641,76 +1834,72 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
              */
             if (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100))
             {
-                XFixesSubtractRegion (dpy, paint_region, paint_region, cw->clientSize);
+                cairo_rectangle_int_t client;
+
+                window_client_area (cw, &client);
+                clip = cairo_region_create_rectangle (&client);
+                cairo_region_subtract (paint_region, clip);
+                cairo_region_destroy (clip);
             }
             else
             {
-                XFixesSubtractRegion (dpy, paint_region, paint_region, cw->borderSize);
+                cairo_region_subtract (paint_region, shape);
             }
         }
-        else if ((cw->opacity == NET_WM_OPAQUE) && !WIN_IS_SHADED(cw) &&
-                 (cw->opaque_region != None))
+        else if ((cw->opacity == NET_WM_OPAQUE) && !WIN_IS_SHADED(cw))
         {
-            clip_opaque_region (cw, paint_region);
+            cairo_region_t *opaque = window_opaque_region (cw);
+
+            if (opaque != NULL)
+            {
+                cairo_region_subtract (paint_region, opaque);
+            }
         }
 
         cw->skipped = FALSE;
     }
 
     /* The background shows wherever no opaque window is left */
-    nrects = fetch_region_rects (dpy, paint_region, &rects);
-    if (nrects > 0)
-    {
-        paint_root_gl (screen_info, rects, nrects);
-    }
+    paint_root_gl (screen_info, paint_region);
 
     /*
      * Second pass, bottom to top: shadows and everything that is blended.
      */
     for (list = g_list_last (screen_info->cwindows); list; list = g_list_previous (list))
     {
-        XRectangle *win_rects;
-        gint win_nrects;
+        cairo_region_t *shape;
 
         cw = (CWindow *) list->data;
-        if (cw->skipped)
+        if (cw->skipped || cw->gl_paint_clip == NULL)
         {
             continue;
         }
 
+        shape = window_shape (cw);
+
         if (cw->shadow_width > 0)
         {
-            XserverRegion shadow_clip;
-
-            shadow_clip = XFixesCreateRegion (dpy, NULL, 0);
-            XFixesSubtractRegion (dpy, shadow_clip, cw->borderClip, cw->borderSize);
-            win_nrects = fetch_region_rects (dpy, shadow_clip, &win_rects);
-            if (win_nrects > 0)
-            {
-                paint_shadow_gl (cw, win_rects, win_nrects);
-                XFree (win_rects);
-            }
-            XFixesDestroyRegion (dpy, shadow_clip);
+            clip = cairo_region_copy (cw->gl_paint_clip);
+            cairo_region_subtract (clip, shape);
+            paint_shadow_gl (cw, clip);
+            cairo_region_destroy (clip);
         }
 
         if (!WIN_IS_OPAQUE(cw) ||
             (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100)))
         {
-            XFixesIntersectRegion (dpy, cw->borderClip, cw->borderClip, cw->borderSize);
-            win_nrects = fetch_region_rects (dpy, cw->borderClip, &win_rects);
-            if (win_nrects > 0)
+            clip = cairo_region_copy (cw->gl_paint_clip);
+            cairo_region_intersect (clip, shape);
+            if (!cairo_region_is_empty (clip))
             {
                 glEnable (GL_BLEND);
-                paint_window_gl (cw, FALSE, win_rects, win_nrects);
-                XFree (win_rects);
+                paint_window_gl (cw, FALSE, clip);
             }
+            cairo_region_destroy (clip);
         }
 
-        if (cw->borderClip != None)
-        {
-            XFixesDestroyRegion (dpy, cw->borderClip);
-            cw->borderClip = None;
-        }
+        cairo_region_destroy (cw->gl_paint_clip);
+        cw->gl_paint_clip = NULL;
     }
 
     if (zoomed)
@@ -1722,7 +1911,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         draw_zoomed_scene (screen_info);
     }
 
-    glDisable (GL_SCISSOR_TEST);
     glUseProgram (0);
     glBindTexture (data->tex_type, 0);
 
@@ -1745,11 +1933,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 #endif
     }
 
-    if (rects != NULL)
-    {
-        XFree (rects);
-    }
-    XFixesDestroyRegion (dpy, paint_region);
+    cairo_region_destroy (paint_region);
     myDisplayErrorTrapPopIgnored (display_info);
 
     return TRUE;

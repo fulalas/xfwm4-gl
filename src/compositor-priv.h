@@ -35,6 +35,7 @@
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/Xrender.h>
 #include <glib.h>
+#include <cairo.h>
 
 #include "display.h"
 #include "screen.h"
@@ -146,6 +147,15 @@ struct _CWindow
     GLuint gl_shadow_texture;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
+    guint gl_bind_serial;
+    /*
+     * Client side regions, so the paint loop never has to ask the X server
+     * what a window covers. Cached until the geometry, the shape or the
+     * opaque region changes, see xfwmGLInvalidateWindowRegions().
+     */
+    cairo_region_t *gl_shape;
+    cairo_region_t *gl_opaque;
+    cairo_region_t *gl_paint_clip;
 #endif /* HAVE_EPOXY */
 };
 
@@ -163,8 +173,6 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
 void             ensure_win_shadow              (CWindow *);
-gboolean         is_region_empty                (Display *,
-                                                 XserverRegion);
 XserverRegion    border_size                    (CWindow *);
 XserverRegion    client_size                    (CWindow *);
 void             clip_opaque_region             (CWindow *,

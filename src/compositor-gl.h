@@ -52,6 +52,7 @@ gboolean         xfwmGLPaintAll                 (ScreenInfo *,
 void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
+void             xfwmGLInvalidateWindowRegions   (CWindow *);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);
