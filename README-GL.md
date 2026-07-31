@@ -1,8 +1,7 @@
-xfwm4 with an OpenGL compositor
-===============================
+# xfwm4-gl
 
-This is xfwm4 4.20.0 with a second way to draw the composited screen, using
-OpenGL. The original way, XRender, is still there and still the fallback.
+This is xfwm4 with a second way to draw the composited screen, using
+OpenGL 2.0. The original way, XRender, is still there as a fallback.
 
 Upstream xfwm4 lives at https://gitlab.xfce.org/xfce/xfwm4. Everything here is
 under the same licence, GPL v2 or later. See [README.md](README.md) for the
@@ -12,7 +11,7 @@ normal xfwm4 information.
 visual glitches on the first try, and read the recovery note below before you
 start.**
 
-What it changes
+## Why this exists
 ---------------
 
 Windows are handed to the graphics card as textures and drawn straight to the
@@ -36,9 +35,14 @@ What it does not change: XRender is not slow because it runs on the processor.
 On most systems the X server already draws XRender on the graphics card. The
 gain here is fewer steps, not moving work off the processor.
 
-Requirements
+## Performance
+
+[blah]
+
+## Requirements
 ------------
 
+[if libepoxy is also required in xfwm4, we shouldn't mention; just mention what's new requirement]
 * libepoxy and the usual xfwm4 build dependencies
 * OpenGL 2.0, frame buffer objects, and `GLX_EXT_texture_from_pixmap`
 

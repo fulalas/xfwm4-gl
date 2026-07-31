@@ -5239,10 +5239,6 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_EPOXY */
     }
     XClearArea (display_info->dpy, screen_info->output, 0, 0, 0, 0, TRUE);
-
-    /* Everything the state depends on has been decided by now */
-    set_render_backend_property (screen_info);
-
     TRACE ("manual compositing enabled");
 
 #ifdef HAVE_EPOXY
@@ -5298,6 +5294,9 @@ compositorManageScreen (ScreenInfo *screen_info)
     {
         g_info ("No vsync support in compositor");
     }
+
+    /* The renderer and the presentation are both settled by now */
+    set_render_backend_property (screen_info);
 
     XFixesSelectCursorInput (display_info->dpy,
                              screen_info->xroot,
