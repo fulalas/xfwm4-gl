@@ -1116,6 +1116,55 @@ check_gl_error (void)
     return clean;
 }
 
+/*
+ * Some drivers present the XRender buffer better through XPresent than through
+ * GLX. This says nothing about whether GL itself is usable, so it must not stop
+ * the GL renderer from starting, only pick the other way of presenting.
+ */
+static gboolean
+prefer_xpresent_renderer (ScreenInfo *screen_info)
+{
+#ifdef HAVE_PRESENT_EXTENSION
+    const char *prefer_xpresent[] = {
+        "Intel",
+        /* Cannot add AMD and Radeon until the fix for
+         * https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/10
+         * is included in a release.
+         */
+        /* "AMD", */
+        /* "Radeon", */
+        NULL
+    };
+    const char *glRenderer;
+    int i;
+
+    /* Only worth declining GLX if XPresent is really there to take over */
+    if (!screen_info->display_info->have_present)
+    {
+        return FALSE;
+    }
+
+    glRenderer = (const char *) glGetString (GL_RENDERER);
+    if (glRenderer == NULL)
+    {
+        return FALSE;
+    }
+
+    for (i = 0; prefer_xpresent[i] != NULL; i++)
+    {
+        if (strcasestr (glRenderer, prefer_xpresent[i]))
+        {
+            g_info ("Prefer XPresent with %s", glRenderer);
+
+            return TRUE;
+        }
+    }
+#endif /* HAVE_PRESENT_EXTENSION */
+
+    return FALSE;
+}
+
+/* Whether GL can be used at all on this driver */
 static gboolean
 check_glx_renderer (ScreenInfo *screen_info)
 {
@@ -1129,18 +1178,6 @@ check_glx_renderer (ScreenInfo *screen_info)
         "virgl",
         NULL
     };
-#ifdef HAVE_PRESENT_EXTENSION
-    const char *prefer_xpresent[] = {
-        "Intel",
-        /* Cannot add AMD and Radeon until the fix for
-         * https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/10
-         * is included in a release.
-         */
-        /* "AMD", */
-        /* "Radeon", */
-        NULL
-    };
-#endif /* HAVE_PRESENT_EXTENSION */
     int i;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
@@ -1153,20 +1190,6 @@ check_glx_renderer (ScreenInfo *screen_info)
         return FALSE;
     }
     DBG ("Using GL renderer: %s", glRenderer);
-
-#ifdef HAVE_PRESENT_EXTENSION
-    if (screen_info->vblank_mode == VBLANK_AUTO)
-    {
-        i = 0;
-        while (prefer_xpresent[i] && !strcasestr (glRenderer, prefer_xpresent[i]))
-            i++;
-        if (prefer_xpresent[i])
-        {
-            g_info ("Prefer XPresent with %s", glRenderer);
-            return FALSE;
-        }
-    }
-#endif /* HAVE_PRESENT_EXTENSION */
 
     i = 0;
     while (blacklisted[i] && !strcasestr (glRenderer, blacklisted[i]))
@@ -5108,6 +5131,13 @@ setup_gl (ScreenInfo *screen_info)
      */
     screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
 
+    if (screen_info->use_glx &&
+        screen_info->vblank_mode == VBLANK_AUTO &&
+        prefer_xpresent_renderer (screen_info))
+    {
+        screen_info->use_glx = FALSE;
+    }
+
     if (!screen_info->use_glx && !screen_info->use_gl_render)
     {
         /* Nobody ended up needing the context we just made */
@@ -5282,6 +5312,13 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->use_present = FALSE;
 #endif /* HAVE_PRESENT_EXTENSION */
 
+#ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        /* The GL renderer presents the screen itself, see set_swap_interval_gl() */
+    }
+    else
+#endif /* HAVE_EPOXY */
     if (screen_info->use_present)
     {
         g_info ("Compositor using XPresent for vsync");
