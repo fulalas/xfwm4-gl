@@ -144,10 +144,6 @@ struct _CWindow
     GLXPixmap gl_pixmap;
     GLuint gl_texture;
     GLuint gl_shadow_texture;
-    gint gl_shadow_width;
-    gint gl_shadow_height;
-    gboolean gl_has_shadow;
-    gboolean gl_shadow_profile;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
 #endif /* HAVE_EPOXY */
@@ -156,15 +152,22 @@ struct _CWindow
 /*
  * Helpers of compositor.c shared with the rendering backends.
  */
-XImage          *compositorMakeShadowImage      (ScreenInfo *,
+XImage          *make_shadow                    (ScreenInfo *,
                                                  gdouble,
                                                  gint,
                                                  gint);
-XserverRegion    compositorBorderSize           (CWindow *);
-void             compositorUpdateWinExtents      (CWindow *);
-gint             compositorGetGaussianSize       (ScreenInfo *);
-XserverRegion    compositorClientSize           (CWindow *);
-void             compositorClipOpaqueRegion     (CWindow *,
+void             shadow_size                    (ScreenInfo *,
+                                                 gint,
+                                                 gint,
+                                                 gint *,
+                                                 gint *);
+Pixmap           root_background_pixmap         (ScreenInfo *);
+void             ensure_win_shadow              (CWindow *);
+gboolean         is_region_empty                (Display *,
+                                                 XserverRegion);
+XserverRegion    border_size                    (CWindow *);
+XserverRegion    client_size                    (CWindow *);
+void             clip_opaque_region             (CWindow *,
                                                  XserverRegion);
 
 #endif /* HAVE_COMPOSITOR */

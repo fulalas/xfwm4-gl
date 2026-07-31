@@ -1455,11 +1455,8 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 {
                     screen_info->params->use_gl_compositing = g_value_get_boolean (value);
                     /* The backend is picked when the compositor starts */
-                    if (screen_info->params->use_compositing)
-                    {
-                        compositorActivateScreen (screen_info, FALSE);
-                        compositorActivateScreen (screen_info, TRUE);
-                    }
+                    compositorActivateScreen (screen_info, FALSE);
+                    compositorUpdateFullscreenSuspend (screen_info);
                 }
                 else if (!strcmp (name, "use_compositing"))
                 {

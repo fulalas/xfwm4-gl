@@ -60,12 +60,11 @@
 typedef struct
 {
     GLuint program_win;
-    GLuint program_shadow;
+    GLuint program_2d;
     GLuint program_shadow_profile;
     GLint u_tex_win;
     GLint u_opacity_win;
-    GLint u_tex_shadow;
-    GLint u_opacity_shadow;
+    GLint u_opacity_2d;
     GLint u_prof_tex;
     GLint u_prof_size;
     GLint u_prof_ramp;
@@ -79,7 +78,6 @@ typedef struct
     GLenum tex_target;
 
     GLXFBConfig fbconfig[2];
-    gboolean fbconfig_ok[2];
     gboolean y_inverted[2];
 
     gboolean has_buffer_age;
@@ -90,6 +88,8 @@ typedef struct
 
     GLXPixmap root_glx_pixmap;
     GLuint root_texture;
+    GLuint black_texture;
+    gboolean root_missing;
     gint root_width;
     gint root_height;
 
@@ -154,14 +154,14 @@ static const gchar *fragment_shadow_profile =
     "    gl_FragColor = vec4 (0.0, 0.0, 0.0, a * opacity);\n"
     "}\n";
 
-static const gchar *fragment_shadow_2d =
-    "uniform sampler2D tex;\n"
-    "uniform float opacity;\n"
-    "varying vec2 uv;\n"
-    "void main (void)\n"
-    "{\n"
-    "    gl_FragColor = vec4 (0.0, 0.0, 0.0, texture2D (tex, uv).a * opacity);\n"
-    "}\n";
+static void
+set_tex_params (GLenum target, GLint filter)
+{
+    glTexParameteri (target, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri (target, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
 
 static gboolean build_shadow_profile (ScreenInfo *screen_info);
 
@@ -326,7 +326,6 @@ choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth)
         status = glXGetFBConfigAttrib (dpy, configs[i], GLX_Y_INVERTED_EXT, &value);
         data->y_inverted[slot] = (status == Success && value == True);
         data->fbconfig[slot] = configs[i];
-        data->fbconfig_ok[slot] = TRUE;
         found = TRUE;
         break;
     }
@@ -452,16 +451,32 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     }
     data->u_tex_win = glGetUniformLocation (data->program_win, "tex");
     data->u_opacity_win = glGetUniformLocation (data->program_win, "opacity");
+    glUseProgram (data->program_win);
+    glUniform1i (data->u_tex_win, 0);
 
-    /* Shadows are alpha only textures we upload ourselves, always 2D */
-    data->program_shadow = link_program (fragment_shadow_2d);
-    if (data->program_shadow == 0)
+    /*
+     * Textures we upload ourselves are always plain 2D: the shadows, the
+     * cursor and the scene the magnifier scales back up. A driver that only
+     * offers the rectangle target for window pixmaps still needs a 2D program
+     * for those, so there is always one.
+     */
+    if (data->tex_type == GL_TEXTURE_2D)
     {
-        xfwmGLScreenFinish (screen_info);
-        return FALSE;
+        data->program_2d = data->program_win;
+        data->u_opacity_2d = data->u_opacity_win;
     }
-    data->u_tex_shadow = glGetUniformLocation (data->program_shadow, "tex");
-    data->u_opacity_shadow = glGetUniformLocation (data->program_shadow, "opacity");
+    else
+    {
+        data->program_2d = link_program (fragment_source_2d);
+        if (data->program_2d == 0)
+        {
+            xfwmGLScreenFinish (screen_info);
+            return FALSE;
+        }
+        data->u_opacity_2d = glGetUniformLocation (data->program_2d, "opacity");
+        glUseProgram (data->program_2d);
+        glUniform1i (glGetUniformLocation (data->program_2d, "tex"), 0);
+    }
 
     /* Shadows of windows large enough are drawn straight from a profile */
     data->program_shadow_profile = link_program (fragment_shadow_profile);
@@ -471,9 +486,24 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         data->u_prof_size = glGetUniformLocation (data->program_shadow_profile, "size");
         data->u_prof_ramp = glGetUniformLocation (data->program_shadow_profile, "ramp");
         data->u_prof_opacity = glGetUniformLocation (data->program_shadow_profile, "opacity");
+        glUseProgram (data->program_shadow_profile);
+        glUniform1i (data->u_prof_tex, 0);
     }
 
     data->renderer = g_strdup ((const gchar *) glGetString (GL_RENDERER));
+    /* Used wherever a plain black area has to be filled */
+    {
+        static const guchar black[4] = { 0, 0, 0, 0xff };
+
+        glGenTextures (1, &data->black_texture);
+        glBindTexture (GL_TEXTURE_2D, data->black_texture);
+        set_tex_params (GL_TEXTURE_2D, GL_NEAREST);
+        glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
+                      GL_RGBA, GL_UNSIGNED_BYTE, black);
+        glBindTexture (GL_TEXTURE_2D, 0);
+    }
+
     data->has_buffer_age = epoxy_has_glx_extension (dpy, screen_info->screen,
                                                     "GLX_EXT_buffer_age");
     data->full_repaint = TRUE;
@@ -514,6 +544,7 @@ free_root_texture (ScreenInfo *screen_info)
         glDeleteTextures (1, &data->root_texture);
         data->root_texture = 0;
     }
+    data->root_missing = FALSE;
 }
 
 void
@@ -568,13 +599,17 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     {
         glDeleteTextures (1, &data->cursor_texture);
     }
+    if (data->black_texture != 0)
+    {
+        glDeleteTextures (1, &data->black_texture);
+    }
     if (data->program_win != 0)
     {
         glDeleteProgram (data->program_win);
     }
-    if (data->program_shadow != 0)
+    if (data->program_2d != 0 && data->program_2d != data->program_win)
     {
-        glDeleteProgram (data->program_shadow);
+        glDeleteProgram (data->program_2d);
     }
     if (data->program_shadow_profile != 0)
     {
@@ -700,10 +735,8 @@ xfwmGLFreeWindowShadow (CWindow *cw)
         glDeleteTextures (1, &cw->gl_shadow_texture);
         cw->gl_shadow_texture = 0;
     }
-    cw->gl_shadow_width = 0;
-    cw->gl_shadow_height = 0;
-    cw->gl_has_shadow = FALSE;
-    cw->gl_shadow_profile = FALSE;
+    cw->shadow_width = 0;
+    cw->shadow_height = 0;
     cw->gl_shadow_opacity = 0.0f;
 }
 
@@ -727,13 +760,8 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
 
     xfwmGLFreeWindowShadow (cw);
 
-    gaussian_size = compositorGetGaussianSize (screen_info);
-    shadow_width = width + gaussian_size
-                 - screen_info->params->shadow_delta_width
-                 - screen_info->params->shadow_delta_x;
-    shadow_height = height + gaussian_size
-                  - screen_info->params->shadow_delta_height
-                  - screen_info->params->shadow_delta_y;
+    gaussian_size = screen_info->gaussianSize;
+    shadow_size (screen_info, width, height, &shadow_width, &shadow_height);
 
     /*
      * The profile only holds for windows wider and taller than the blur, the
@@ -745,16 +773,14 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
         (shadow_height >= 2 * gaussian_size) &&
         build_shadow_profile (screen_info))
     {
-        cw->gl_shadow_width = shadow_width;
-        cw->gl_shadow_height = shadow_height;
+        cw->shadow_width = shadow_width;
+        cw->shadow_height = shadow_height;
         cw->gl_shadow_opacity = (gfloat) opacity * data->shadow_profile_peak;
-        cw->gl_shadow_profile = TRUE;
-        cw->gl_has_shadow = TRUE;
 
         return TRUE;
     }
 
-    image = compositorMakeShadowImage (screen_info, opacity, width, height);
+    image = make_shadow (screen_info, opacity, width, height);
     if (image == NULL)
     {
         return FALSE;
@@ -762,10 +788,7 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
 
     glGenTextures (1, &cw->gl_shadow_texture);
     glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     /* One byte per pixel, so the stride in bytes is also the stride in pixels */
     glPixelStorei (GL_UNPACK_ROW_LENGTH, image->bytes_per_line);
@@ -775,9 +798,8 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
     glBindTexture (GL_TEXTURE_2D, 0);
 
-    cw->gl_shadow_width = image->width;
-    cw->gl_shadow_height = image->height;
-    cw->gl_has_shadow = TRUE;
+    cw->shadow_width = image->width;
+    cw->shadow_height = image->height;
     XDestroyImage (image);
 
     return TRUE;
@@ -801,7 +823,7 @@ build_shadow_profile (ScreenInfo *screen_info)
         return TRUE;
     }
 
-    gaussian_size = compositorGetGaussianSize (screen_info);
+    gaussian_size = screen_info->gaussianSize;
     if (gaussian_size < 2)
     {
         return FALSE;
@@ -809,7 +831,7 @@ build_shadow_profile (ScreenInfo *screen_info)
 
     /* A box far wider than the blur, so the middle of the profile saturates */
     box = 4 * gaussian_size;
-    image = compositorMakeShadowImage (screen_info, 1.0, box, box);
+    image = make_shadow (screen_info, 1.0, box, box);
     if (image == NULL)
     {
         return FALSE;
@@ -838,10 +860,7 @@ build_shadow_profile (ScreenInfo *screen_info)
 
     glGenTextures (1, &data->shadow_profile);
     glBindTexture (GL_TEXTURE_2D, data->shadow_profile);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_ALPHA, gaussian_size, 1, 0,
                   GL_ALPHA, GL_UNSIGNED_BYTE, profile);
@@ -849,6 +868,8 @@ build_shadow_profile (ScreenInfo *screen_info)
 
     data->shadow_profile_size = gaussian_size;
     data->shadow_profile_peak = (gfloat) peak / 255.0f;
+    glUseProgram (data->program_shadow_profile);
+    glUniform1f (data->u_prof_ramp, (gfloat) gaussian_size);
 
     g_free (profile);
     XDestroyImage (image);
@@ -883,7 +904,7 @@ bind_window_texture (CWindow *cw)
     }
 
     slot = (cw->attr.depth == 32) ? GL_DEPTH_RGBA : GL_DEPTH_RGB;
-    if (!data->fbconfig_ok[slot])
+    if (data->fbconfig[slot] == NULL)
     {
         return FALSE;
     }
@@ -915,10 +936,7 @@ bind_window_texture (CWindow *cw)
     {
         glGenTextures (1, &cw->gl_texture);
         glBindTexture (data->tex_type, cw->gl_texture);
-        glTexParameteri (data->tex_type, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri (data->tex_type, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        set_tex_params (data->tex_type, GL_NEAREST);
     }
     else
     {
@@ -1015,8 +1033,16 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type, gboolean y_inverted,
 }
 
 static void
+set_opacity (ScreenInfo *screen_info, gfloat opacity)
+{
+    XfwmGLData *data = gl_data (screen_info);
+
+    glUniform1f (data->u_opacity_win, opacity);
+}
+
+static void
 draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
-                  gint width, gint height, gfloat opacity,
+                  gint width, gint height,
                   XRectangle *rects, gint nrects)
 {
     ScreenInfo *screen_info = cw->screen_info;
@@ -1026,7 +1052,6 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
     get_window_pixmap_size (cw, &tex_width, &tex_height);
     slot = (cw->attr.depth == 32) ? GL_DEPTH_RGBA : GL_DEPTH_RGB;
 
-    glUniform1f (data->u_opacity_win, opacity);
     draw_quad (screen_info, data->tex_type, data->y_inverted[slot],
                sx, sy, tex_width, tex_height,
                dx, dy, width, height, rects, nrects);
@@ -1044,23 +1069,17 @@ paint_window_gl (CWindow *cw, gboolean solid_part,
     ScreenInfo *screen_info = cw->screen_info;
     gfloat opacity;
 
-    if (nrects == 0)
-    {
-        return;
-    }
-
     if (!bind_window_texture (cw))
     {
         return;
     }
 
-    opacity = (gfloat) cw->opacity / (gfloat) NET_WM_OPAQUE;
+    opacity = solid_part ? 1.0f : (gfloat) cw->opacity / (gfloat) NET_WM_OPAQUE;
 
     if (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100))
     {
         gint frame_top, frame_bottom, frame_left, frame_right;
         gint frame_width, frame_height;
-        gfloat frame_opacity;
 
         frame_width = cw->attr.width;
         frame_height = cw->attr.height;
@@ -1068,52 +1087,48 @@ paint_window_gl (CWindow *cw, gboolean solid_part,
         frame_bottom = frameBottom (cw->c);
         frame_left = frameLeft (cw->c);
         frame_right = frameRight (cw->c);
-        frame_opacity = opacity * (gfloat) screen_info->params->frame_opacity / 100.0f;
 
+        /* The frame is only painted in the blended pass, never as a solid */
         if (!solid_part)
         {
+            set_opacity (screen_info,
+                         opacity * (gfloat) screen_info->params->frame_opacity / 100.0f);
+
             /* Top border, the title bar */
             draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y,
-                              frame_width, frame_top, frame_opacity, rects, nrects);
+                              frame_width, frame_top, rects, nrects);
             /* Bottom border */
             draw_window_part (cw, 0, frame_height - frame_bottom,
                               cw->attr.x, cw->attr.y + frame_height - frame_bottom,
-                              frame_width, frame_bottom, frame_opacity, rects, nrects);
+                              frame_width, frame_bottom, rects, nrects);
             /* Left border */
             draw_window_part (cw, 0, frame_top,
                               cw->attr.x, cw->attr.y + frame_top,
                               frame_left, frame_height - frame_top - frame_bottom,
-                              frame_opacity, rects, nrects);
+                              rects, nrects);
             /* Right border */
             draw_window_part (cw, frame_width - frame_right, frame_top,
                               cw->attr.x + frame_width - frame_right,
                               cw->attr.y + frame_top,
                               frame_right, frame_height - frame_top - frame_bottom,
-                              frame_opacity, rects, nrects);
-            /* Client area */
-            draw_window_part (cw, frame_left, frame_top,
-                              cw->attr.x + frame_left, cw->attr.y + frame_top,
-                              frame_width - frame_left - frame_right,
-                              frame_height - frame_top - frame_bottom,
-                              opacity, rects, nrects);
+                              rects, nrects);
         }
-        else
-        {
-            /* Only the client area is opaque when the frame is translucent */
-            draw_window_part (cw, frame_left, frame_top,
-                              cw->attr.x + frame_left, cw->attr.y + frame_top,
-                              frame_width - frame_left - frame_right,
-                              frame_height - frame_top - frame_bottom,
-                              1.0f, rects, nrects);
-        }
+
+        set_opacity (screen_info, opacity);
+        draw_window_part (cw, frame_left, frame_top,
+                          cw->attr.x + frame_left, cw->attr.y + frame_top,
+                          frame_width - frame_left - frame_right,
+                          frame_height - frame_top - frame_bottom,
+                          rects, nrects);
     }
     else
     {
         gint width, height;
 
         get_window_pixmap_size (cw, &width, &height);
+        set_opacity (screen_info, opacity);
         draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y, width, height,
-                          solid_part ? 1.0f : opacity, rects, nrects);
+                          rects, nrects);
     }
 }
 
@@ -1123,39 +1138,36 @@ paint_shadow_gl (CWindow *cw, XRectangle *rects, gint nrects)
     ScreenInfo *screen_info = cw->screen_info;
     XfwmGLData *data = gl_data (screen_info);
 
-    if (!cw->gl_has_shadow || nrects == 0)
+    if (cw->shadow_width <= 0 || nrects == 0)
     {
         return;
     }
 
     glEnable (GL_BLEND);
 
-    if (cw->gl_shadow_profile)
+    if (cw->gl_shadow_texture == 0)
     {
         glUseProgram (data->program_shadow_profile);
-        glUniform1i (data->u_prof_tex, 0);
         glUniform2f (data->u_prof_size,
-                     (gfloat) cw->gl_shadow_width, (gfloat) cw->gl_shadow_height);
-        glUniform1f (data->u_prof_ramp, (gfloat) data->shadow_profile_size);
+                     (gfloat) cw->shadow_width, (gfloat) cw->shadow_height);
         glUniform1f (data->u_prof_opacity, cw->gl_shadow_opacity);
         glBindTexture (GL_TEXTURE_2D, data->shadow_profile);
     }
     else
     {
-        glUseProgram (data->program_shadow);
-        glUniform1i (data->u_tex_shadow, 0);
-        glUniform1f (data->u_opacity_shadow, 1.0f);
+        /* The opacity is already baked into the image we uploaded */
+        glUseProgram (data->program_2d);
+        glUniform1f (data->u_opacity_2d, 1.0f);
         glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
     }
 
     draw_quad (screen_info, GL_TEXTURE_2D, FALSE,
-               0, 0, cw->gl_shadow_width, cw->gl_shadow_height,
+               0, 0, cw->shadow_width, cw->shadow_height,
                cw->attr.x + cw->shadow_dx, cw->attr.y + cw->shadow_dy,
-               cw->gl_shadow_width, cw->gl_shadow_height, rects, nrects);
+               cw->shadow_width, cw->shadow_height, rects, nrects);
 
     glBindTexture (GL_TEXTURE_2D, 0);
     glUseProgram (data->program_win);
-    glUniform1i (data->u_tex_win, 0);
 }
 
 /*
@@ -1168,59 +1180,28 @@ bind_root_texture (ScreenInfo *screen_info)
     XfwmGLData *data = gl_data (screen_info);
     DisplayInfo *display_info = screen_info->display_info;
     Display *dpy = myScreenGetXDisplay (screen_info);
-    Atom backgroundProps[2];
-    Pixmap pixmap = None;
-    gint p;
+    Pixmap pixmap;
 
     if (data->root_texture != 0)
     {
+        /* Only rebound when the background changes, see the invalidate hook */
         glBindTexture (data->tex_type, data->root_texture);
-        if (data->root_glx_pixmap != None)
-        {
-            glXReleaseTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT);
-            glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
-        }
+
         return TRUE;
     }
 
-    if (!data->fbconfig_ok[GL_DEPTH_RGB])
+    if (data->root_missing || data->fbconfig[GL_DEPTH_RGB] == NULL)
     {
         return FALSE;
     }
 
-    backgroundProps[0] = display_info->atoms[XROOTPMAP];
-    backgroundProps[1] = display_info->atoms[XSETROOT];
-
-    for (p = 0; p < 2; p++)
-    {
-        Atom actual_type;
-        gint actual_format;
-        unsigned long nitems;
-        unsigned long bytes_after;
-        guchar *prop;
-        gint result;
-
-        result = XGetWindowProperty (dpy, screen_info->xroot, backgroundProps[p],
-                                     0, 4, False, AnyPropertyType,
-                                     &actual_type, &actual_format, &nitems,
-                                     &bytes_after, &prop);
-        if ((result == Success) &&
-            (actual_type == display_info->atoms[PIXMAP]) &&
-            (actual_format == 32) &&
-            (nitems == 1))
-        {
-            memcpy (&pixmap, prop, 4);
-            XFree (prop);
-            break;
-        }
-        if (result == Success && prop != NULL)
-        {
-            XFree (prop);
-        }
-    }
+    pixmap = root_background_pixmap (screen_info);
 
     if (pixmap == None)
     {
+        /* Nothing advertises a background, do not ask again every frame */
+        data->root_missing = TRUE;
+
         return FALSE;
     }
 
@@ -1258,10 +1239,13 @@ bind_root_texture (ScreenInfo *screen_info)
 
     glGenTextures (1, &data->root_texture);
     glBindTexture (data->tex_type, data->root_texture);
-    glTexParameteri (data->tex_type, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (data->tex_type, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    set_tex_params (data->tex_type, GL_NEAREST);
+    /*
+     * The background pixmap can be smaller than the screen, the X server tiles
+     * it, so the texture repeats rather than stretches.
+     */
+    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
 
     return TRUE;
@@ -1285,45 +1269,20 @@ paint_root_gl (ScreenInfo *screen_info, XRectangle *rects, gint nrects)
         gint tex_height = (data->root_height > 0) ? data->root_height : screen_info->height;
 
         glUniform1f (data->u_opacity_win, 1.0f);
-        /*
-         * The background pixmap can be smaller than the screen, it is tiled
-         * by the X server. Drawing it once stretched would be wrong, so it is
-         * repeated instead.
-         */
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
         draw_quad (screen_info, data->tex_type, data->y_inverted[GL_DEPTH_RGB],
                    0, 0, tex_width, tex_height,
                    0, 0, screen_info->width, screen_info->height, rects, nrects);
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
     else
     {
-        gint i;
-
         /* No background pixmap, plain black like the XRender path */
-        glUseProgram (0);
-        glColor4f (0.0f, 0.0f, 0.0f, 1.0f);
-        for (i = 0; i < nrects; i++)
-        {
-            gfloat x1 = 2.0f * (gfloat) rects[i].x / (gfloat) screen_info->width - 1.0f;
-            gfloat x2 = 2.0f * (gfloat) (rects[i].x + rects[i].width) / (gfloat) screen_info->width - 1.0f;
-            gfloat y1 = 1.0f - 2.0f * (gfloat) rects[i].y / (gfloat) screen_info->height;
-            gfloat y2 = 1.0f - 2.0f * (gfloat) (rects[i].y + rects[i].height) / (gfloat) screen_info->height;
-
-            glScissor (rects[i].x,
-                       screen_info->height - (rects[i].y + rects[i].height),
-                       rects[i].width, rects[i].height);
-            glBegin (GL_QUADS);
-            glVertex2f (x1, y1);
-            glVertex2f (x2, y1);
-            glVertex2f (x2, y2);
-            glVertex2f (x1, y2);
-            glEnd ();
-        }
+        glUseProgram (data->program_2d);
+        glUniform1f (data->u_opacity_2d, 1.0f);
+        glBindTexture (GL_TEXTURE_2D, data->black_texture);
+        draw_quad (screen_info, GL_TEXTURE_2D, FALSE, 0, 0, 1, 1,
+                   0, 0, screen_info->width, screen_info->height, rects, nrects);
+        glBindTexture (GL_TEXTURE_2D, 0);
         glUseProgram (data->program_win);
-        glUniform1i (data->u_tex_win, 0);
     }
 }
 
@@ -1363,10 +1322,7 @@ paint_cursor_gl (ScreenInfo *screen_info)
             glGenTextures (1, &data->cursor_texture);
         }
         glBindTexture (GL_TEXTURE_2D, data->cursor_texture);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
         glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, cursor->width, cursor->height,
                       0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
@@ -1388,7 +1344,8 @@ paint_cursor_gl (ScreenInfo *screen_info)
     rect.height = screen_info->height;
 
     glEnable (GL_BLEND);
-    glUniform1f (data->u_opacity_win, 1.0f);
+    glUseProgram (data->program_2d);
+    glUniform1f (data->u_opacity_2d, 1.0f);
     draw_quad (screen_info, GL_TEXTURE_2D, FALSE,
                0, 0, data->cursor_width, data->cursor_height,
                screen_info->cursorLocation.x, screen_info->cursorLocation.y,
@@ -1416,10 +1373,7 @@ bind_zoom_fbo (ScreenInfo *screen_info)
         glGenFramebuffers (1, &data->fbo);
         glGenTextures (1, &data->fbo_texture);
         glBindTexture (GL_TEXTURE_2D, data->fbo_texture);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
                       screen_info->width, screen_info->height, 0,
                       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -1473,7 +1427,8 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     glBindTexture (GL_TEXTURE_2D, data->fbo_texture);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint) filter);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint) filter);
-    glUniform1f (data->u_opacity_win, 1.0f);
+    glUseProgram (data->program_2d);
+    glUniform1f (data->u_opacity_2d, 1.0f);
 
     glScissor (0, 0, screen_info->width, screen_info->height);
 
@@ -1604,14 +1559,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     myDisplayErrorTrapPush (display_info);
 
     paint_region = get_paint_region (screen_info, damage);
-    nrects = fetch_region_rects (dpy, paint_region, &rects);
-    if (nrects == 0)
+    if (is_region_empty (dpy, paint_region))
     {
         XFixesDestroyRegion (dpy, paint_region);
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
+    rects = NULL;
+    nrects = 0;
 
     zoomed = screen_info->zoomed;
     if (zoomed && !bind_zoom_fbo (screen_info))
@@ -1622,9 +1578,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     glViewport (0, 0, screen_info->width, screen_info->height);
     glEnable (GL_SCISSOR_TEST);
     glUseProgram (data->program_win);
-    glUniform1i (data->u_tex_win, 0);
     glActiveTexture (GL_TEXTURE0);
-    glEnable (data->tex_type);
 
     /*
      * First pass, top to bottom: draw the opaque windows and take what they
@@ -1650,16 +1604,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
-        /* Refreshes the shadow of the window as a side effect */
-        compositorUpdateWinExtents (cw);
+        ensure_win_shadow (cw);
 
         if (cw->borderSize == None)
         {
-            cw->borderSize = compositorBorderSize (cw);
+            cw->borderSize = border_size (cw);
         }
         if (cw->clientSize == None)
         {
-            cw->clientSize = compositorClientSize (cw);
+            cw->clientSize = client_size (cw);
         }
 
         /* Keep the region still to paint for the pass below */
@@ -1698,14 +1651,13 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         else if ((cw->opacity == NET_WM_OPAQUE) && !WIN_IS_SHADED(cw) &&
                  (cw->opaque_region != None))
         {
-            compositorClipOpaqueRegion (cw, paint_region);
+            clip_opaque_region (cw, paint_region);
         }
 
         cw->skipped = FALSE;
     }
 
     /* The background shows wherever no opaque window is left */
-    XFree (rects);
     nrects = fetch_region_rects (dpy, paint_region, &rects);
     if (nrects > 0)
     {
@@ -1726,7 +1678,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
-        if (cw->gl_has_shadow)
+        if (cw->shadow_width > 0)
         {
             XserverRegion shadow_clip;
 
@@ -1772,7 +1724,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     glDisable (GL_SCISSOR_TEST);
     glUseProgram (0);
-    glDisable (data->tex_type);
     glBindTexture (data->tex_type, 0);
 
     glXSwapBuffers (dpy, screen_info->glx_window);
@@ -1794,7 +1745,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 #endif
     }
 
-    XFree (rects);
+    if (rects != NULL)
+    {
+        XFree (rects);
+    }
     XFixesDestroyRegion (dpy, paint_region);
     myDisplayErrorTrapPopIgnored (display_info);
 

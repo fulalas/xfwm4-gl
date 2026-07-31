@@ -382,7 +382,29 @@ presum_gaussian (ScreenInfo *screen_info)
     }
 }
 
-static XImage *
+/*
+ * How big the shadow of a window of that size comes out, blur included. The GL
+ * renderer needs the same answer without building the image.
+ */
+void
+shadow_size (ScreenInfo *screen_info, gint width, gint height,
+             gint *shadow_width, gint *shadow_height)
+{
+    gint gaussian_size;
+
+    g_return_if_fail (screen_info != NULL);
+    g_return_if_fail (screen_info->gaussianMap != NULL);
+
+    gaussian_size = screen_info->gaussianMap->size;
+    *shadow_width = width + gaussian_size
+                  - screen_info->params->shadow_delta_width
+                  - screen_info->params->shadow_delta_x;
+    *shadow_height = height + gaussian_size
+                   - screen_info->params->shadow_delta_height
+                   - screen_info->params->shadow_delta_y;
+}
+
+XImage *
 make_shadow (ScreenInfo *screen_info, gdouble opacity, gint width, gint height)
 {
     DisplayInfo *display_info;
@@ -405,8 +427,7 @@ make_shadow (ScreenInfo *screen_info, gdouble opacity, gint width, gint height)
 
     display_info = screen_info->display_info;
     gaussianSize = screen_info->gaussianMap->size;
-    swidth = width + gaussianSize - screen_info->params->shadow_delta_width - screen_info->params->shadow_delta_x;
-    sheight = height + gaussianSize - screen_info->params->shadow_delta_height - screen_info->params->shadow_delta_y;
+    shadow_size (screen_info, width, height, &swidth, &sheight);
     center = gaussianSize / 2;
     opacity_int = (gint) (opacity * 25);
 
@@ -658,7 +679,7 @@ translate_to_client_region (CWindow *cw, XserverRegion region)
     XFixesTranslateRegion (display_info->dpy, region, x, y);
 }
 
-static XserverRegion
+XserverRegion
 client_size (CWindow *cw)
 {
     DisplayInfo *display_info;
@@ -688,7 +709,7 @@ client_size (CWindow *cw)
     return border;
 }
 
-static XserverRegion
+XserverRegion
 border_size (CWindow *cw)
 {
     DisplayInfo *display_info;
@@ -829,6 +850,57 @@ free_win_data (CWindow *cw, gboolean delete)
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
+/*
+ * The pixmap the desktop background lives in, as advertised by whatever drew
+ * it. None when nothing advertises one.
+ */
+Pixmap
+root_background_pixmap (ScreenInfo *screen_info)
+{
+    DisplayInfo *display_info;
+    Atom backgroundProps[2];
+    Pixmap pixmap = None;
+    gint p;
+
+    g_return_val_if_fail (screen_info != NULL, None);
+
+    display_info = screen_info->display_info;
+    backgroundProps[0] = display_info->atoms[XROOTPMAP];
+    backgroundProps[1] = display_info->atoms[XSETROOT];
+
+    for (p = 0; p < 2; p++)
+    {
+        Atom actual_type;
+        gint actual_format;
+        unsigned long nitems;
+        unsigned long bytes_after;
+        guchar *prop = NULL;
+        gint result;
+
+        result = XGetWindowProperty (display_info->dpy, screen_info->xroot,
+                                     backgroundProps[p], 0, 4, False,
+                                     AnyPropertyType, &actual_type,
+                                     &actual_format, &nitems, &bytes_after,
+                                     &prop);
+        if (prop == NULL)
+        {
+            continue;
+        }
+        if ((result == Success) &&
+            (actual_type == display_info->atoms[PIXMAP]) &&
+            (actual_format == 32) &&
+            (nitems == 1))
+        {
+            memcpy (&pixmap, prop, 4);
+            XFree (prop);
+            break;
+        }
+        XFree (prop);
+    }
+
+    return pixmap;
+}
+
 static Picture
 root_tile (ScreenInfo *screen_info)
 {
@@ -839,8 +911,6 @@ root_tile (ScreenInfo *screen_info)
     Pixmap pixmap;
     XRenderPictureAttributes pa;
     XRenderPictFormat *format;
-    gint p;
-    Atom backgroundProps[2];
 #endif
 
     g_return_val_if_fail (screen_info != NULL, None);
@@ -849,35 +919,13 @@ root_tile (ScreenInfo *screen_info)
     display_info = screen_info->display_info;
     dpy = display_info->dpy;
 #if MONITOR_ROOT_PIXMAP
-    backgroundProps[0] = display_info->atoms[XROOTPMAP];
-    backgroundProps[1] = display_info->atoms[XSETROOT];
-
-    for (p = 0; p < 2; p++)
+    pixmap = root_background_pixmap (screen_info);
+    if (pixmap != None)
     {
-        Atom actual_type;
-        gint actual_format;
-        unsigned long nitems;
-        unsigned long bytes_after;
-        guchar *prop;
-        gint result;
-
-        result = XGetWindowProperty (dpy, screen_info->xroot, backgroundProps[p],
-                                0, 4, False, AnyPropertyType,
-                                &actual_type, &actual_format, &nitems, &bytes_after, &prop);
-
-        if ((result == Success) &&
-            (actual_type == display_info->atoms[PIXMAP]) &&
-            (actual_format == 32) &&
-            (nitems == 1))
-        {
-            memcpy (&pixmap, prop, 4);
-            XFree (prop);
-            pa.repeat = TRUE;
-            format = XRenderFindVisualFormat (dpy, screen_info->visual);
-            g_return_val_if_fail (format != NULL, None);
-            picture = XRenderCreatePicture (dpy, pixmap, format, CPRepeat, &pa);
-            break;
-        }
+        pa.repeat = TRUE;
+        format = XRenderFindVisualFormat (dpy, screen_info->visual);
+        g_return_val_if_fail (format != NULL, None);
+        picture = XRenderCreatePicture (dpy, pixmap, format, CPRepeat, &pa);
     }
 #endif
     if (picture == None)
@@ -1929,22 +1977,21 @@ present_flip (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 }
 #endif /* HAVE_PRESENT_EXTENSION */
 
-static XserverRegion
-win_extents (CWindow *cw)
+/*
+ * Make sure the window has the shadow it is supposed to have, and none if it
+ * should not have one. Whichever renderer is active builds it, the size ends
+ * up in shadow_width and shadow_height either way.
+ */
+void
+ensure_win_shadow (CWindow *cw)
 {
-    DisplayInfo *display_info;
     ScreenInfo *screen_info;
-    XRectangle r;
+    DisplayInfo *display_info;
 
-    g_return_val_if_fail (cw != NULL, None);
-    TRACE ("window 0x%lx", cw->id);
+    g_return_if_fail (cw != NULL);
 
     screen_info = cw->screen_info;
     display_info = screen_info->display_info;
-    r.x = cw->attr.x;
-    r.y = cw->attr.y;
-    r.width = cw->attr.width + cw->attr.border_width * 2;
-    r.height = cw->attr.height + cw->attr.border_width * 2;
 
     /*
        We apply a shadow to the window if:
@@ -1970,45 +2017,83 @@ win_extents (CWindow *cw)
               !WIN_IS_OVERRIDE(cw) &&
               (!WIN_IS_SHAPED(cw))))
     {
-        XRectangle sr;
+        gdouble shadow_opacity;
+        gint width, height;
 
-        TRACE ("window 0x%lx has extents", cw->id);
         cw->shadow_dx = SHADOW_OFFSET_X + screen_info->params->shadow_delta_x;
         cw->shadow_dy = SHADOW_OFFSET_Y + screen_info->params->shadow_delta_y;
+
+        if (cw->shadow_width > 0)
+        {
+            /* Already built and still the right one */
+            return;
+        }
+
+        shadow_opacity = (gdouble) screen_info->params->frame_opacity
+                       * (screen_info->params->shadow_opacity / 100.0)
+                       * cw->opacity
+                       / (NET_WM_OPAQUE * 100.0);
+        width = cw->attr.width + 2 * cw->attr.border_width;
+        height = cw->attr.height + 2 * cw->attr.border_width;
 
 #ifdef HAVE_EPOXY
         if (screen_info->use_gl_render)
         {
-            if (!cw->gl_has_shadow)
-            {
-                double shadow_opacity;
-                shadow_opacity = (double) screen_info->params->frame_opacity
-                               * (screen_info->params->shadow_opacity / 100.0)
-                               * cw->opacity
-                               / (NET_WM_OPAQUE * 100.0);
-
-                xfwmGLUpdateWindowShadow (cw, shadow_opacity,
-                                          cw->attr.width + 2 * cw->attr.border_width,
-                                          cw->attr.height + 2 * cw->attr.border_width);
-                cw->shadow_width = cw->gl_shadow_width;
-                cw->shadow_height = cw->gl_shadow_height;
-            }
+            xfwmGLUpdateWindowShadow (cw, shadow_opacity, width, height);
         }
         else
 #endif /* HAVE_EPOXY */
-        if (!(cw->shadow))
         {
-            double shadow_opacity;
-            shadow_opacity = (double) screen_info->params->frame_opacity
-                           * (screen_info->params->shadow_opacity / 100.0)
-                           * cw->opacity
-                           / (NET_WM_OPAQUE * 100.0);
-
             cw->shadow = shadow_picture (screen_info, shadow_opacity,
-                                         cw->attr.width + 2 * cw->attr.border_width,
-                                         cw->attr.height + 2 * cw->attr.border_width,
+                                         width, height,
                                          &cw->shadow_width, &cw->shadow_height);
         }
+
+        return;
+    }
+
+    if (cw->shadow)
+    {
+        XRenderFreePicture (display_info->dpy, cw->shadow);
+        cw->shadow = None;
+    }
+#ifdef HAVE_EPOXY
+    xfwmGLFreeWindowShadow (cw);
+#endif /* HAVE_EPOXY */
+    cw->shadow_width = 0;
+    cw->shadow_height = 0;
+}
+
+static XserverRegion
+win_extents (CWindow *cw)
+{
+    DisplayInfo *display_info;
+    ScreenInfo *screen_info;
+    XRectangle r;
+
+    g_return_val_if_fail (cw != NULL, None);
+    TRACE ("window 0x%lx", cw->id);
+
+    screen_info = cw->screen_info;
+    display_info = screen_info->display_info;
+    r.x = cw->attr.x;
+    r.y = cw->attr.y;
+    r.width = cw->attr.width + cw->attr.border_width * 2;
+    r.height = cw->attr.height + cw->attr.border_width * 2;
+
+    /*
+       We apply a shadow to the window if:
+       - It's a window with a frame and the user asked for shadows under regular
+         windows,
+       - it's an override redirect window that is not shaped, not an argb and
+         the user asked for shadows on so called "popup" windows.
+     */
+
+    ensure_win_shadow (cw);
+
+    if (cw->shadow_width > 0 && cw->shadow_height > 0)
+    {
+        XRectangle sr;
 
         sr.x = cw->attr.x + cw->shadow_dx;
         sr.y = cw->attr.y + cw->shadow_dy;
@@ -2033,17 +2118,6 @@ win_extents (CWindow *cw)
         {
             r.height = sr.y + sr.height - r.y;
         }
-    }
-    else
-    {
-        if (cw->shadow)
-        {
-            XRenderFreePicture (display_info->dpy, cw->shadow);
-            cw->shadow = None;
-        }
-#ifdef HAVE_EPOXY
-        xfwmGLFreeWindowShadow (cw);
-#endif /* HAVE_EPOXY */
     }
     return XFixesCreateRegion (display_info->dpy, &r, 1);
 }
@@ -2344,7 +2418,7 @@ paint_win (CWindow *cw, XserverRegion region, Picture paint_buffer, gboolean sol
     }
 }
 
-static void
+void
 clip_opaque_region (CWindow *cw, XserverRegion region)
 {
     ScreenInfo *screen_info;
@@ -2388,7 +2462,7 @@ get_region_bounds (Display *dpy, XserverRegion region, XRectangle *bounds)
     return nrects;
 }
 
-static gboolean
+gboolean
 is_region_empty (Display *dpy, XserverRegion region)
 {
     XRectangle bounds;
@@ -2423,10 +2497,7 @@ set_render_backend_property (ScreenInfo *screen_info)
     }
 
 #ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render)
-    {
-        renderer = xfwmGLGetRendererName (screen_info);
-    }
+    renderer = xfwmGLGetRendererName (screen_info);
 #endif /* HAVE_EPOXY */
 
     if (renderer != NULL)
@@ -2438,60 +2509,11 @@ set_render_backend_property (ScreenInfo *screen_info)
         value = g_strdup ("xrender");
     }
 
-    XChangeProperty (display_info->dpy, screen_info->xroot,
-                     display_info->atoms[XFWM4_RENDER_BACKEND],
-                     display_info->atoms[UTF8_STRING], 8, PropModeReplace,
-                     (unsigned char *) value, strlen (value));
+    setUTF8StringHint (display_info, screen_info->xroot,
+                       XFWM4_RENDER_BACKEND, value);
     g_free (value);
 }
 
-#ifdef HAVE_EPOXY
-XImage *
-compositorMakeShadowImage (ScreenInfo *screen_info, gdouble opacity,
-                           gint width, gint height)
-{
-    return make_shadow (screen_info, opacity, width, height);
-}
-
-XserverRegion
-compositorBorderSize (CWindow *cw)
-{
-    return border_size (cw);
-}
-
-/*
- * The extents are what creates the shadow of a window, the backends have to
- * refresh them before painting.
- */
-gint
-compositorGetGaussianSize (ScreenInfo *screen_info)
-{
-    g_return_val_if_fail (screen_info != NULL, 0);
-
-    return (screen_info->gaussianMap != NULL) ? screen_info->gaussianMap->size : 0;
-}
-
-void
-compositorUpdateWinExtents (CWindow *cw)
-{
-    if (cw->extents == None)
-    {
-        cw->extents = win_extents (cw);
-    }
-}
-
-XserverRegion
-compositorClientSize (CWindow *cw)
-{
-    return client_size (cw);
-}
-
-void
-compositorClipOpaqueRegion (CWindow *cw, XserverRegion region)
-{
-    clip_opaque_region (cw, region);
-}
-#endif /* HAVE_EPOXY */
 
 static void
 paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
@@ -2825,7 +2847,7 @@ repair_screen (ScreenInfo *screen_info)
      * We do not paint the screen because we are waiting for
      * the GL pipeline to complete, do not cancel the callback yet...
      */
-     if (screen_info->use_glx && screen_info->gl_sync)
+     if ((screen_info->use_glx || screen_info->use_gl_render) && screen_info->gl_sync)
      {
 #if defined (GL_SIGNALED)
          GLint status = GL_SIGNALED;
@@ -4906,6 +4928,76 @@ compositorInitDisplay (DisplayInfo *display_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
+#ifdef HAVE_EPOXY
+/*
+ * Coming back from a suspend only the drawable is missing, the context and
+ * everything built in it are still there. Returns FALSE when there is nothing
+ * to come back to.
+ */
+static gboolean
+resume_gl (ScreenInfo *screen_info)
+{
+    if (!screen_info->use_gl_render || screen_info->gl_data == NULL ||
+        screen_info->glx_context == None)
+    {
+        return FALSE;
+    }
+
+    screen_info->use_n_buffers = 1;
+    if (!attach_glx_window (screen_info))
+    {
+        xfwmGLScreenFinish (screen_info);
+        free_glx_data (screen_info);
+        screen_info->use_gl_render = FALSE;
+
+        return FALSE;
+    }
+
+    xfwmGLScreenReattached (screen_info);
+    /* The GL renderer drives the screen, nothing else presents */
+    screen_info->use_glx = FALSE;
+
+    return TRUE;
+}
+
+/* Build the GL side from nothing, for whichever of the two paths wants it */
+static void
+setup_gl (ScreenInfo *screen_info)
+{
+    screen_info->use_gl_render = FALSE;
+    screen_info->gl_data = NULL;
+
+    if (!screen_info->use_glx && !screen_info->params->use_gl_compositing)
+    {
+        return;
+    }
+
+    screen_info->use_n_buffers = 1;
+    screen_info->glx_context = None;
+    screen_info->glx_window = None;
+    screen_info->rootTexture = None;
+    screen_info->texture_filter = GL_LINEAR;
+    screen_info->gl_sync = 0;
+
+    if (!init_glx (screen_info))
+    {
+        screen_info->use_glx = FALSE;
+
+        return;
+    }
+
+    if (screen_info->params->use_gl_compositing)
+    {
+        screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
+    }
+    /*
+     * Presenting the XRender buffer through GLX is only wanted when the vblank
+     * mode asks for it and the GL renderer is not the one driving the screen.
+     */
+    screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
+}
+#endif /* HAVE_EPOXY */
+
 gboolean
 compositorManageScreen (ScreenInfo *screen_info)
 {
@@ -5044,59 +5136,9 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->use_glx &= display_info->have_xsync;
 #endif /* HAVE_XSYNC */
 
-    if (screen_info->use_gl_render && screen_info->gl_data != NULL &&
-        screen_info->glx_context != None)
+    if (!resume_gl (screen_info))
     {
-        /*
-         * Coming back from a suspend, only the drawable is missing. Nothing
-         * else has to be built again.
-         */
-        screen_info->use_n_buffers = 1;
-        screen_info->use_gl_render = attach_glx_window (screen_info);
-        if (screen_info->use_gl_render)
-        {
-            xfwmGLScreenReattached (screen_info);
-            screen_info->use_glx = FALSE;
-        }
-        else
-        {
-            xfwmGLScreenFinish (screen_info);
-            free_glx_data (screen_info);
-        }
-    }
-
-    if (!screen_info->use_gl_render)
-    {
-    screen_info->use_gl_render = FALSE;
-    screen_info->gl_data = NULL;
-
-    if (screen_info->use_glx || screen_info->params->use_gl_compositing)
-    {
-        screen_info->use_n_buffers = 1;
-        screen_info->glx_context = None;
-        screen_info->glx_window = None;
-        screen_info->rootTexture = None;
-        screen_info->texture_filter = GL_LINEAR;
-        screen_info->gl_sync = 0;
-
-        if (init_glx (screen_info))
-        {
-            if (screen_info->params->use_gl_compositing)
-            {
-                screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
-            }
-            /*
-             * Presenting the XRender buffer through GLX is only wanted when
-             * the vblank mode asks for it and the GL renderer is not the one
-             * driving the screen.
-             */
-            screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
-        }
-        else
-        {
-            screen_info->use_glx = FALSE;
-        }
-    }
+        setup_gl (screen_info);
     }
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
@@ -5149,8 +5191,8 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
-void
-compositorUnmanageScreen (ScreenInfo *screen_info)
+static void
+unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
 {
 #ifdef HAVE_COMPOSITOR
     DisplayInfo *display_info;
@@ -5158,7 +5200,7 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
     gushort buffer;
 
     g_return_if_fail (screen_info != NULL);
-    TRACE ("entering compositorUnmanageScreen");
+    TRACE ("entering");
 
     display_info = screen_info->display_info;
     if (!compositorIsUsable (display_info))
@@ -5190,7 +5232,7 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
     screen_info->cwindows = NULL;
 
 #ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render && screen_info->gl_keep_alive)
+    if (screen_info->use_gl_render && keep_gl)
     {
         /*
          * Only stopping for as long as a fullscreen window has focus, so the
@@ -5355,8 +5397,8 @@ compositorAddAllWindows (ScreenInfo *screen_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
-gboolean
-compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
+static gboolean
+activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
 {
 #ifdef HAVE_COMPOSITOR
     DisplayInfo *display_info;
@@ -5382,13 +5424,19 @@ compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
     }
     else
     {
-        compositorUnmanageScreen (screen_info);
+        unmanage_screen (screen_info, keep_gl);
     }
 
     return TRUE;
 #else /* HAVE_COMPOSITOR */
     return FALSE;
 #endif /* HAVE_COMPOSITOR */
+}
+
+gboolean
+compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
+{
+    return activate_screen (screen_info, active, FALSE);
 }
 
 void
@@ -5414,10 +5462,20 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
                    (c != NULL) && (c->screen_info == screen) &&
                    FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN));
 
-        screen->gl_keep_alive = TRUE;
-        compositorActivateScreen (screen, active);
-        screen->gl_keep_alive = FALSE;
+        /*
+         * Keep the GL context and everything in it, this is a short stop for
+         * as long as a fullscreen window has focus.
+         */
+        activate_screen (screen, active, TRUE);
     }
+#endif /* HAVE_COMPOSITOR */
+}
+
+void
+compositorUnmanageScreen (ScreenInfo *screen_info)
+{
+#ifdef HAVE_COMPOSITOR
+    unmanage_screen (screen_info, FALSE);
 #endif /* HAVE_COMPOSITOR */
 }
 
@@ -5452,10 +5510,7 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
     }
 
 #ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render)
-    {
-        xfwmGLScreenSizeChanged (screen_info);
-    }
+    xfwmGLScreenSizeChanged (screen_info);
 #endif /* HAVE_EPOXY */
 
 #ifdef HAVE_EPOXY

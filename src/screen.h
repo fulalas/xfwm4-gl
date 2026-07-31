@@ -247,7 +247,6 @@ struct _ScreenInfo
 
     /* GL compositing backend, see compositor-gl.c */
     gboolean use_gl_render;
-    gboolean gl_keep_alive;
     gpointer gl_data;
 #ifdef HAVE_XSYNC
     XSyncFence fence[N_BUFFERS];
