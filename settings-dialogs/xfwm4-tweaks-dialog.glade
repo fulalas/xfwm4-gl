@@ -898,7 +898,6 @@ when switching via keyboard shortcuts</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label"></property>
-                        <property name="tooltip_text" translatable="yes">What xfwm4 is using to draw the composited screen</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -941,7 +940,7 @@ when switching via keyboard shortcuts</property>
                                 <child>
                                   <object class="GtkCheckButton" id="use_gl_compositing_check">
                                     <property name="label" translatable="yes">Use _OpenGL for compositing</property>
-                                    <property name="tooltip_text" translatable="yes">Draw with OpenGL instead of XRender. Requires OpenGL 2, otherwise falls back to XRender</property>
+                                    <property name="tooltip_text" translatable="yes">Requires OpenGL 2.0, otherwise falls back to XRender</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -958,7 +957,7 @@ when switching via keyboard shortcuts</property>
                                 <child>
                                   <object class="GtkCheckButton" id="suspend_compositing_fullscreen_check">
                                     <property name="label" translatable="yes">_Suspend compositing for focused fullscreen windows</property>
-                                    <property name="tooltip_text" translatable="yes">Improves performance in fullscreen applications; effects return as soon as the window closes or loses focus</property>
+                                    <property name="tooltip_text" translatable="yes">Improves performance in fullscreen applications; compositing resumes when the window closes or loses focus</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -975,6 +974,7 @@ when switching via keyboard shortcuts</property>
                                 <child>
                                   <object class="GtkCheckButton" id="unredirect_overlays_check">
                                     <property name="label" translatable="yes">Display _fullscreen overlay windows directly</property>
+                                    <property name="tooltip_text" translatable="yes">Bypass compositing if an application asks to draw straight to the screen, usually old games and video players</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
