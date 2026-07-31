@@ -53,6 +53,7 @@ void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
+const gchar     *xfwmGLGetRendererName          (ScreenInfo *);
 gboolean         xfwmGLUpdateWindowShadow       (CWindow *,
                                                  gdouble,
                                                  gint,

@@ -68,6 +68,7 @@ xfwm4_tweaks_settings_SOURCES = \
 	range-debouncer.h
 
 xfwm4_tweaks_settings_CFLAGS = \
+	$(LIBX11_CFLAGS) \
 	$(GTK_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(DBUS_GLIB_CFLAGS) \
@@ -85,7 +86,8 @@ xfwm4_tweaks_settings_LDADD = \
 	$(DBUS_GLIB_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
 	$(LIBXFCE4UTIL_LIBS) \
-	$(LIBXFCONF_LIBS)
+	$(LIBXFCONF_LIBS) \
+	$(LIBX11_LIBS)
 
 AM_CPPFLAGS = \
 	-I${top_srcdir} \

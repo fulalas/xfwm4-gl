@@ -163,6 +163,88 @@ cb_borderless_maximize_button_toggled (GtkToggleButton *toggle, GtkWidget *title
     gtk_widget_set_sensitive (titleless_maximize_check, gtk_toggle_button_get_active (toggle));
 }
 
+#define RENDER_BACKEND_PROP     "_XFWM4_RENDER_BACKEND"
+
+static void
+update_render_backend_label (GtkWidget *label)
+{
+    Display *dpy;
+    Window root;
+    Atom actual_type;
+    gint actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char *prop = NULL;
+    gchar *text = NULL;
+
+    dpy = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
+    root = GDK_WINDOW_XID (gdk_get_default_root_window ());
+
+    if ((XGetWindowProperty (dpy, root, XInternAtom (dpy, RENDER_BACKEND_PROP, False),
+                             0, 256, False, AnyPropertyType, &actual_type,
+                             &actual_format, &nitems, &bytes_after, &prop) == Success)
+        && (prop != NULL) && (nitems > 0))
+    {
+        gchar *value = g_strndup ((const gchar *) prop, nitems);
+
+        if (g_str_has_prefix (value, "opengl"))
+        {
+            gchar *renderer = value + strlen ("opengl");
+            gchar *details;
+
+            while (*renderer == ' ')
+            {
+                renderer++;
+            }
+            /* The driver details in brackets are far too long for a label */
+            details = strstr (renderer, " (");
+            if (details != NULL)
+            {
+                *details = '\0';
+            }
+            if (*renderer != '\0')
+            {
+                text = g_strdup_printf (_("Renderer: OpenGL \xe2\x80\x94 %s"), renderer);
+            }
+            else
+            {
+                text = g_strdup (_("Renderer: OpenGL"));
+            }
+        }
+        else
+        {
+            text = g_strdup (_("Renderer: XRender (drawn by the X server)"));
+        }
+        g_free (value);
+    }
+    else
+    {
+        text = g_strdup (_("Compositing is disabled"));
+    }
+
+    if (prop != NULL)
+    {
+        XFree (prop);
+    }
+
+    gtk_label_set_text (GTK_LABEL (label), text);
+    g_free (text);
+}
+
+static GdkFilterReturn
+render_backend_filter (GdkXEvent *xevent, GdkEvent *event, gpointer data)
+{
+    XEvent *xev = (XEvent *) xevent;
+
+    if (xev->type == PropertyNotify &&
+        xev->xproperty.atom == XInternAtom (xev->xproperty.display,
+                                           RENDER_BACKEND_PROP, False))
+    {
+        update_render_backend_label (GTK_WIDGET (data));
+    }
+
+    return GDK_FILTER_CONTINUE;
+}
+
 static void
 wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
 {
@@ -220,6 +302,8 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     GtkWidget *use_compositing_check = GTK_WIDGET (gtk_builder_get_object (builder, "use_compositing_check"));
     GtkWidget *use_compositing_box = GTK_WIDGET (gtk_builder_get_object (builder, "use_compositing_box"));
 
+    GtkWidget *render_backend_label = GTK_WIDGET (gtk_builder_get_object (builder, "render_backend_label"));
+    GtkWidget *use_gl_compositing_check = GTK_WIDGET (gtk_builder_get_object (builder, "use_gl_compositing_check"));
     GtkWidget *unredirect_overlays_check = GTK_WIDGET (gtk_builder_get_object (builder, "unredirect_overlays_check"));
     GtkWidget *cycle_preview_check = GTK_WIDGET (gtk_builder_get_object (builder, "cycle_preview_check"));
     GtkWidget *show_frame_shadow_check = GTK_WIDGET (gtk_builder_get_object (builder, "show_frame_shadow_check"));
@@ -426,9 +510,22 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                             G_TYPE_BOOLEAN,
                             (GObject *)use_compositing_check, "active");
     xfconf_g_property_bind (xfwm4_channel,
+                            "/general/use_gl_compositing",
+                            G_TYPE_BOOLEAN,
+                            (GObject *)use_gl_compositing_check, "active");
+    xfconf_g_property_bind (xfwm4_channel,
                             "/general/unredirect_overlays",
                             G_TYPE_BOOLEAN,
                             (GObject *)unredirect_overlays_check, "active");
+
+    {
+        GdkWindow *root_window = gdk_get_default_root_window ();
+
+        gdk_window_set_events (root_window,
+                               gdk_window_get_events (root_window) | GDK_PROPERTY_CHANGE_MASK);
+        gdk_window_add_filter (root_window, render_backend_filter, render_backend_label);
+        update_render_backend_label (render_backend_label);
+    }
     xfconf_g_property_bind (xfwm4_channel,
                             "/general/cycle_preview",
                             G_TYPE_BOOLEAN,

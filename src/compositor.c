@@ -1914,7 +1914,7 @@ win_extents (CWindow *cw)
 #ifdef HAVE_EPOXY
         if (screen_info->use_gl_render)
         {
-            if (cw->gl_shadow_texture == 0)
+            if (!cw->gl_has_shadow)
             {
                 double shadow_opacity;
                 shadow_opacity = (double) screen_info->params->frame_opacity
@@ -2334,6 +2334,52 @@ is_region_empty (Display *dpy, XserverRegion region)
     return (nrects == 0 || bounds.width == 0 || bounds.height == 0);
 }
 
+/*
+ * Advertise the renderer on the root window, the settings dialog reads it to
+ * tell the user what is actually in use. Kept out of xfconf on purpose, this
+ * is runtime state and not a preference.
+ */
+static void
+set_render_backend_property (ScreenInfo *screen_info)
+{
+    DisplayInfo *display_info;
+    const gchar *renderer = NULL;
+    gchar *value;
+
+    g_return_if_fail (screen_info != NULL);
+
+    display_info = screen_info->display_info;
+
+    if (!screen_info->compositor_active)
+    {
+        XDeleteProperty (display_info->dpy, screen_info->xroot,
+                         display_info->atoms[XFWM4_RENDER_BACKEND]);
+        return;
+    }
+
+#ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        renderer = xfwmGLGetRendererName (screen_info);
+    }
+#endif /* HAVE_EPOXY */
+
+    if (renderer != NULL)
+    {
+        value = g_strdup_printf ("opengl %s", renderer);
+    }
+    else
+    {
+        value = g_strdup ("xrender");
+    }
+
+    XChangeProperty (display_info->dpy, screen_info->xroot,
+                     display_info->atoms[XFWM4_RENDER_BACKEND],
+                     display_info->atoms[UTF8_STRING], 8, PropModeReplace,
+                     (unsigned char *) value, strlen (value));
+    g_free (value);
+}
+
 #ifdef HAVE_EPOXY
 XImage *
 compositorMakeShadowImage (ScreenInfo *screen_info, gdouble opacity,
@@ -2352,6 +2398,14 @@ compositorBorderSize (CWindow *cw)
  * The extents are what creates the shadow of a window, the backends have to
  * refresh them before painting.
  */
+gint
+compositorGetGaussianSize (ScreenInfo *screen_info)
+{
+    g_return_val_if_fail (screen_info != NULL, 0);
+
+    return (screen_info->gaussianMap != NULL) ? screen_info->gaussianMap->size : 0;
+}
+
 void
 compositorUpdateWinExtents (CWindow *cw)
 {
@@ -2406,6 +2460,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         g_warning ("GL compositing failed, falling back to XRender.");
         screen_info->use_gl_render = FALSE;
         xfwmGLScreenFinish (screen_info);
+        set_render_backend_property (screen_info);
     }
 #endif /* HAVE_EPOXY */
 
@@ -4912,13 +4967,22 @@ compositorManageScreen (ScreenInfo *screen_info)
     TRACE ("manual compositing enabled");
 
 #ifdef HAVE_EPOXY
+    /*
+     * The GL renderer needs a GLX context whatever the vblank mode is, while
+     * the XRender path only uses GLX to present its buffer in sync with the
+     * screen, which relies on XSync fences.
+     */
     screen_info->use_glx = (screen_info->vblank_mode == VBLANK_AUTO ||
-                            screen_info->vblank_mode == VBLANK_GLX);
+                            screen_info->vblank_mode == VBLANK_GLX ||
+                            screen_info->vblank_mode == VBLANK_TEAR);
 #ifdef HAVE_XSYNC
     screen_info->use_glx &= display_info->have_xsync;
 #endif /* HAVE_XSYNC */
 
-    if (screen_info->use_glx)
+    screen_info->use_gl_render = FALSE;
+    screen_info->gl_data = NULL;
+
+    if (screen_info->use_glx || screen_info->params->use_gl_compositing)
     {
         screen_info->use_n_buffers = 1;
         screen_info->glx_context = None;
@@ -4926,23 +4990,36 @@ compositorManageScreen (ScreenInfo *screen_info)
         screen_info->rootTexture = None;
         screen_info->texture_filter = GL_LINEAR;
         screen_info->gl_sync = 0;
-        screen_info->use_glx = init_glx (screen_info);
-    }
 
-    screen_info->use_gl_render = FALSE;
-    screen_info->gl_data = NULL;
-    if (screen_info->use_glx && screen_info->params->use_gl_compositing)
-    {
-        screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
+        if (init_glx (screen_info))
+        {
+            if (screen_info->params->use_gl_compositing)
+            {
+                screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
+            }
+            /*
+             * Presenting the XRender buffer through GLX is only wanted when
+             * the vblank mode asks for it and the GL renderer is not the one
+             * driving the screen.
+             */
+            screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
+        }
+        else
+        {
+            screen_info->use_glx = FALSE;
+        }
     }
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
 #endif /* HAVE_EPOXY */
 
+    set_render_backend_property (screen_info);
+
 #ifdef HAVE_PRESENT_EXTENSION
     screen_info->use_present = display_info->have_present &&
 #ifdef HAVE_EPOXY
                                !screen_info->use_glx &&
+                               !screen_info->use_gl_render &&
 #endif /* HAVE_EPOXY */
                                (screen_info->vblank_mode == VBLANK_AUTO ||
                                 screen_info->vblank_mode == VBLANK_XPRESENT);
@@ -5004,6 +5081,7 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
         return;
     }
     screen_info->compositor_active = FALSE;
+    set_render_backend_property (screen_info);
 
     remove_timeouts (screen_info);
 
@@ -5025,6 +5103,7 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
     {
         xfwmGLScreenFinish (screen_info);
         screen_info->use_gl_render = FALSE;
+        free_glx_data (screen_info);
     }
 
     if (screen_info->use_glx)
@@ -5350,6 +5429,11 @@ compositorParseVblankMode (const gchar *vblank_setting)
     if (g_ascii_strcasecmp (vblank_setting, "glx") == 0)
     {
         return VBLANK_GLX;
+    }
+    else
+    if (g_ascii_strcasecmp (vblank_setting, "tear") == 0)
+    {
+        return VBLANK_TEAR;
     }
     else
 #endif /* HAVE_EPOXY */

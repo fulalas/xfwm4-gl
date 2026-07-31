@@ -146,6 +146,9 @@ struct _CWindow
     GLuint gl_shadow_texture;
     gint gl_shadow_width;
     gint gl_shadow_height;
+    gboolean gl_has_shadow;
+    gboolean gl_shadow_profile;
+    gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
 #endif /* HAVE_EPOXY */
 };
@@ -159,6 +162,7 @@ XImage          *compositorMakeShadowImage      (ScreenInfo *,
                                                  gint);
 XserverRegion    compositorBorderSize           (CWindow *);
 void             compositorUpdateWinExtents      (CWindow *);
+gint             compositorGetGaussianSize       (ScreenInfo *);
 XserverRegion    compositorClientSize           (CWindow *);
 void             compositorClipOpaqueRegion     (CWindow *,
                                                  XserverRegion);

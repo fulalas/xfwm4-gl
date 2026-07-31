@@ -61,10 +61,19 @@ typedef struct
 {
     GLuint program_win;
     GLuint program_shadow;
+    GLuint program_shadow_profile;
     GLint u_tex_win;
     GLint u_opacity_win;
     GLint u_tex_shadow;
     GLint u_opacity_shadow;
+    GLint u_prof_tex;
+    GLint u_prof_size;
+    GLint u_prof_ramp;
+    GLint u_prof_opacity;
+
+    GLuint shadow_profile;
+    gint shadow_profile_size;
+    gfloat shadow_profile_peak;
 
     GLenum tex_type;
     GLenum tex_target;
@@ -93,6 +102,8 @@ typedef struct
     gint cursor_width;
     gint cursor_height;
     unsigned long cursor_serial;
+
+    gchar *renderer;
 } XfwmGLData;
 
 static const gchar *vertex_source =
@@ -122,6 +133,27 @@ static const gchar *fragment_source_rect =
     "    gl_FragColor = texture2DRect (tex, uv) * opacity;\n"
     "}\n";
 
+/*
+ * A box blurred by a gaussian is separable, so the shadow of any window big
+ * enough is the product of one horizontal and one vertical edge profile. That
+ * turns every shadow into a single quad sampling a small profile texture, with
+ * no per window gaussian to compute and no per window texture to keep.
+ */
+static const gchar *fragment_shadow_profile =
+    "uniform sampler2D prof;\n"
+    "uniform vec2 size;\n"
+    "uniform float ramp;\n"
+    "uniform float opacity;\n"
+    "varying vec2 uv;\n"
+    "void main (void)\n"
+    "{\n"
+    "    vec2 p = uv * size;\n"
+    "    vec2 q = clamp (min (p, size - p) / ramp, 0.0, 1.0);\n"
+    "    float a = texture2D (prof, vec2 (q.x, 0.5)).a\n"
+    "            * texture2D (prof, vec2 (q.y, 0.5)).a;\n"
+    "    gl_FragColor = vec4 (0.0, 0.0, 0.0, a * opacity);\n"
+    "}\n";
+
 static const gchar *fragment_shadow_2d =
     "uniform sampler2D tex;\n"
     "uniform float opacity;\n"
@@ -130,6 +162,8 @@ static const gchar *fragment_shadow_2d =
     "{\n"
     "    gl_FragColor = vec4 (0.0, 0.0, 0.0, texture2D (tex, uv).a * opacity);\n"
     "}\n";
+
+static gboolean build_shadow_profile (ScreenInfo *screen_info);
 
 static XfwmGLData *
 gl_data (ScreenInfo *screen_info)
@@ -301,6 +335,62 @@ choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth)
     return found;
 }
 
+/*
+ * Sync the swaps to the screen. The XRender path does this on the pixmap it
+ * presents, here the frames go straight to the overlay window.
+ *
+ *   off   no sync at all, the fastest but it tears
+ *   tear  adaptive, sync unless the frame is already late
+ *   other sync to every vblank
+ */
+static void
+set_swap_interval_gl (ScreenInfo *screen_info)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+    gint interval;
+
+    switch (screen_info->vblank_mode)
+    {
+        case VBLANK_OFF:
+            interval = 0;
+            break;
+        case VBLANK_TEAR:
+            if (screen_info->has_ext_swap_control_tear)
+            {
+                interval = -1;
+                break;
+            }
+            g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
+            interval = 1;
+            break;
+        default:
+            interval = 1;
+            break;
+    }
+
+#if defined (glXSwapIntervalEXT)
+    if (screen_info->has_ext_swap_control)
+    {
+        glXSwapIntervalEXT (dpy, screen_info->glx_window, interval);
+        g_info ("GL swap interval set to %i", interval);
+
+        return;
+    }
+#endif
+#if defined (glXSwapIntervalMESA)
+    if (screen_info->has_mesa_swap_control)
+    {
+        /* MESA_swap_control knows nothing about negative intervals */
+        glXSwapIntervalMESA ((interval < 0) ? 1 : (guint) interval);
+        g_info ("GL swap interval set to %i", (interval < 0) ? 1 : interval);
+
+        return;
+    }
+#endif
+
+    g_info ("No swap control available, frames are not synced to the screen");
+}
+
 gboolean
 xfwmGLScreenInit (ScreenInfo *screen_info)
 {
@@ -373,31 +463,22 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     data->u_tex_shadow = glGetUniformLocation (data->program_shadow, "tex");
     data->u_opacity_shadow = glGetUniformLocation (data->program_shadow, "opacity");
 
+    /* Shadows of windows large enough are drawn straight from a profile */
+    data->program_shadow_profile = link_program (fragment_shadow_profile);
+    if (data->program_shadow_profile != 0)
+    {
+        data->u_prof_tex = glGetUniformLocation (data->program_shadow_profile, "prof");
+        data->u_prof_size = glGetUniformLocation (data->program_shadow_profile, "size");
+        data->u_prof_ramp = glGetUniformLocation (data->program_shadow_profile, "ramp");
+        data->u_prof_opacity = glGetUniformLocation (data->program_shadow_profile, "opacity");
+    }
+
+    data->renderer = g_strdup ((const gchar *) glGetString (GL_RENDERER));
     data->has_buffer_age = epoxy_has_glx_extension (dpy, screen_info->screen,
                                                     "GLX_EXT_buffer_age");
     data->full_repaint = TRUE;
 
-    /*
-     * Sync the swaps to the screen. The XRender path does this on the pixmap
-     * drawable, here the frames go straight to the overlay window.
-     */
-#if defined (glXSwapIntervalEXT)
-    if (screen_info->has_ext_swap_control)
-    {
-        glXSwapIntervalEXT (dpy, screen_info->glx_window, 1);
-    }
-    else
-#endif
-#if defined (glXSwapIntervalMESA)
-    if (screen_info->has_mesa_swap_control)
-    {
-        glXSwapIntervalMESA (1);
-    }
-    else
-#endif
-    {
-        g_info ("No swap control available, frames are not synced to the screen");
-    }
+    set_swap_interval_gl (screen_info);
 
     glDisable (GL_DEPTH_TEST);
     glDepthMask (GL_FALSE);
@@ -495,6 +576,14 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     {
         glDeleteProgram (data->program_shadow);
     }
+    if (data->program_shadow_profile != 0)
+    {
+        glDeleteProgram (data->program_shadow_profile);
+    }
+    if (data->shadow_profile != 0)
+    {
+        glDeleteTextures (1, &data->shadow_profile);
+    }
     for (i = 0; i < GL_DAMAGE_HISTORY; i++)
     {
         if (data->damage_history[i] != None)
@@ -504,8 +593,21 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
         }
     }
 
+    g_free (data->renderer);
     g_free (data);
     screen_info->gl_data = NULL;
+}
+
+const gchar *
+xfwmGLGetRendererName (ScreenInfo *screen_info)
+{
+    XfwmGLData *data;
+
+    g_return_val_if_fail (screen_info != NULL, NULL);
+
+    data = gl_data (screen_info);
+
+    return (data != NULL) ? data->renderer : NULL;
 }
 
 void
@@ -572,18 +674,55 @@ xfwmGLFreeWindowShadow (CWindow *cw)
     }
     cw->gl_shadow_width = 0;
     cw->gl_shadow_height = 0;
+    cw->gl_has_shadow = FALSE;
+    cw->gl_shadow_profile = FALSE;
+    cw->gl_shadow_opacity = 0.0f;
 }
 
 gboolean
 xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
 {
+    ScreenInfo *screen_info;
+    XfwmGLData *data;
     XImage *image;
+    gint gaussian_size, shadow_width, shadow_height;
 
     g_return_val_if_fail (cw != NULL, FALSE);
 
+    screen_info = cw->screen_info;
+    data = gl_data (screen_info);
+    g_return_val_if_fail (data != NULL, FALSE);
+
     xfwmGLFreeWindowShadow (cw);
 
-    image = compositorMakeShadowImage (cw->screen_info, opacity, width, height);
+    gaussian_size = compositorGetGaussianSize (screen_info);
+    shadow_width = width + gaussian_size
+                 - screen_info->params->shadow_delta_width
+                 - screen_info->params->shadow_delta_x;
+    shadow_height = height + gaussian_size
+                  - screen_info->params->shadow_delta_height
+                  - screen_info->params->shadow_delta_y;
+
+    /*
+     * The profile only holds for windows wider and taller than the blur, the
+     * gaussian of a narrow box never saturates. Small windows keep the shadow
+     * the XRender path builds, they are cheap anyway.
+     */
+    if ((data->program_shadow_profile != 0) &&
+        (shadow_width >= 2 * gaussian_size) &&
+        (shadow_height >= 2 * gaussian_size) &&
+        build_shadow_profile (screen_info))
+    {
+        cw->gl_shadow_width = shadow_width;
+        cw->gl_shadow_height = shadow_height;
+        cw->gl_shadow_opacity = (gfloat) opacity * data->shadow_profile_peak;
+        cw->gl_shadow_profile = TRUE;
+        cw->gl_has_shadow = TRUE;
+
+        return TRUE;
+    }
+
+    image = compositorMakeShadowImage (screen_info, opacity, width, height);
     if (image == NULL)
     {
         return FALSE;
@@ -606,7 +745,84 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
 
     cw->gl_shadow_width = image->width;
     cw->gl_shadow_height = image->height;
+    cw->gl_has_shadow = TRUE;
     XDestroyImage (image);
+
+    return TRUE;
+}
+
+/*
+ * Build the edge profile from a reference shadow of a large box, so the shape
+ * comes from the very same gaussian tables the XRender path uses.
+ */
+static gboolean
+build_shadow_profile (ScreenInfo *screen_info)
+{
+    XfwmGLData *data = gl_data (screen_info);
+    XImage *image;
+    guchar *profile;
+    guchar peak;
+    gint gaussian_size, box, row, i;
+
+    if (data->shadow_profile != 0)
+    {
+        return TRUE;
+    }
+
+    gaussian_size = compositorGetGaussianSize (screen_info);
+    if (gaussian_size < 2)
+    {
+        return FALSE;
+    }
+
+    /* A box far wider than the blur, so the middle of the profile saturates */
+    box = 4 * gaussian_size;
+    image = compositorMakeShadowImage (screen_info, 1.0, box, box);
+    if (image == NULL)
+    {
+        return FALSE;
+    }
+    if (image->width < 2 * gaussian_size || image->height < 1)
+    {
+        XDestroyImage (image);
+        return FALSE;
+    }
+
+    row = image->height / 2;
+    peak = (guchar) image->data[row * image->bytes_per_line + image->width / 2];
+    if (peak == 0)
+    {
+        XDestroyImage (image);
+        return FALSE;
+    }
+
+    profile = g_malloc (gaussian_size);
+    for (i = 0; i < gaussian_size; i++)
+    {
+        gint v = (guchar) image->data[row * image->bytes_per_line + i] * 255 / peak;
+
+        profile[i] = (guchar) MIN (v, 255);
+    }
+
+    glGenTextures (1, &data->shadow_profile);
+    glBindTexture (GL_TEXTURE_2D, data->shadow_profile);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_ALPHA, gaussian_size, 1, 0,
+                  GL_ALPHA, GL_UNSIGNED_BYTE, profile);
+    glBindTexture (GL_TEXTURE_2D, 0);
+
+    data->shadow_profile_size = gaussian_size;
+    data->shadow_profile_peak = (gfloat) peak / 255.0f;
+
+    g_free (profile);
+    XDestroyImage (image);
+
+    DBG ("Shadow profile built, %i samples, peak %.3f",
+         gaussian_size, data->shadow_profile_peak);
 
     return TRUE;
 }
@@ -875,16 +1091,30 @@ paint_shadow_gl (CWindow *cw, XRectangle *rects, gint nrects)
     ScreenInfo *screen_info = cw->screen_info;
     XfwmGLData *data = gl_data (screen_info);
 
-    if (cw->gl_shadow_texture == 0 || nrects == 0)
+    if (!cw->gl_has_shadow || nrects == 0)
     {
         return;
     }
 
-    glUseProgram (data->program_shadow);
-    glUniform1i (data->u_tex_shadow, 0);
-    glUniform1f (data->u_opacity_shadow, 1.0f);
-    glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
     glEnable (GL_BLEND);
+
+    if (cw->gl_shadow_profile)
+    {
+        glUseProgram (data->program_shadow_profile);
+        glUniform1i (data->u_prof_tex, 0);
+        glUniform2f (data->u_prof_size,
+                     (gfloat) cw->gl_shadow_width, (gfloat) cw->gl_shadow_height);
+        glUniform1f (data->u_prof_ramp, (gfloat) data->shadow_profile_size);
+        glUniform1f (data->u_prof_opacity, cw->gl_shadow_opacity);
+        glBindTexture (GL_TEXTURE_2D, data->shadow_profile);
+    }
+    else
+    {
+        glUseProgram (data->program_shadow);
+        glUniform1i (data->u_tex_shadow, 0);
+        glUniform1f (data->u_opacity_shadow, 1.0f);
+        glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
+    }
 
     draw_quad (screen_info, GL_TEXTURE_2D, FALSE,
                0, 0, cw->gl_shadow_width, cw->gl_shadow_height,
@@ -1464,7 +1694,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
-        if (cw->gl_shadow_texture != 0)
+        if (cw->gl_has_shadow)
         {
             XserverRegion shadow_clip;
 

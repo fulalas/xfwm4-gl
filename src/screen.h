@@ -84,6 +84,7 @@ typedef enum
     VBLANK_AUTO,
     VBLANK_XPRESENT,
     VBLANK_GLX,
+    VBLANK_TEAR,
     VBLANK_ERROR,
 } vblankMode;
 
