@@ -2484,6 +2484,54 @@ is_region_empty (Display *dpy, XserverRegion region)
 }
 
 /*
+ * Whether frames end up synced to the screen, as it turned out at runtime
+ * rather than as it was asked for: the vblank mode may want something the
+ * driver cannot do.
+ */
+static const gchar *
+vsync_state (ScreenInfo *screen_info)
+{
+#ifdef HAVE_EPOXY
+    gint interval;
+
+    if (screen_info->use_gl_render)
+    {
+        if (!xfwmGLGetSwapInterval (screen_info, &interval))
+        {
+            return "unknown";
+        }
+        if (interval < 0)
+        {
+            return "adaptive";
+        }
+
+        return (interval > 0) ? "on" : "off";
+    }
+
+    if (screen_info->use_glx)
+    {
+        /* The XRender path presents through GLX, see set_swap_interval() */
+        if (screen_info->has_ext_swap_control)
+        {
+            return screen_info->has_ext_swap_control_tear ? "adaptive" : "on";
+        }
+
+        return screen_info->has_mesa_swap_control ? "on" : "unknown";
+    }
+#endif /* HAVE_EPOXY */
+
+#ifdef HAVE_PRESENT_EXTENSION
+    if (screen_info->use_present)
+    {
+        /* XPresent flips on the vblank */
+        return "on";
+    }
+#endif /* HAVE_PRESENT_EXTENSION */
+
+    return "off";
+}
+
+/*
  * Advertise the renderer on the root window, the settings dialog reads it to
  * tell the user what is actually in use. Kept out of xfconf on purpose, this
  * is runtime state and not a preference.
@@ -2503,6 +2551,8 @@ set_render_backend_property (ScreenInfo *screen_info)
     {
         XDeleteProperty (display_info->dpy, screen_info->xroot,
                          display_info->atoms[XFWM4_RENDER_BACKEND]);
+        XDeleteProperty (display_info->dpy, screen_info->xroot,
+                         display_info->atoms[XFWM4_VSYNC]);
         return;
     }
 
@@ -2522,6 +2572,9 @@ set_render_backend_property (ScreenInfo *screen_info)
     setUTF8StringHint (display_info, screen_info->xroot,
                        XFWM4_RENDER_BACKEND, value);
     g_free (value);
+
+    setUTF8StringHint (display_info, screen_info->xroot,
+                       XFWM4_VSYNC, vsync_state (screen_info));
 }
 
 

@@ -164,6 +164,7 @@ myDisplayInitAtoms (DisplayInfo *display_info)
         "WM_WINDOW_ROLE",
         "XFWM4_COMPOSITING_MANAGER",
         "_XFWM4_RENDER_BACKEND",
+        "_XFWM4_VSYNC",
         "XFWM4_TIMESTAMP_PROP",
         "_XROOTPMAP_ID",
         "_XSETROOT_ID",

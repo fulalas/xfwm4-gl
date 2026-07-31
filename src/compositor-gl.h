@@ -56,6 +56,8 @@ void             xfwmGLInvalidateWindowRegions   (CWindow *);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);
+gboolean         xfwmGLGetSwapInterval          (ScreenInfo *,
+                                                 gint *);
 gboolean         xfwmGLUpdateWindowShadow       (CWindow *,
                                                  gdouble,
                                                  gint,

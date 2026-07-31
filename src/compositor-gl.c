@@ -107,6 +107,8 @@ typedef struct
     unsigned long cursor_serial;
 
     gchar *renderer;
+    gint swap_interval;
+    gboolean swap_control;
 } XfwmGLData;
 
 static const gchar *vertex_source =
@@ -526,8 +528,11 @@ choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth, GLenum want_tar
 static void
 set_swap_interval_gl (ScreenInfo *screen_info)
 {
+    XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
     gint interval;
+
+    data->swap_control = FALSE;
 
     switch (screen_info->vblank_mode)
     {
@@ -553,6 +558,8 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     {
         glXSwapIntervalEXT (dpy, screen_info->glx_window, interval);
         g_info ("GL swap interval set to %i", interval);
+        data->swap_interval = interval;
+        data->swap_control = TRUE;
 
         return;
     }
@@ -561,8 +568,11 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     if (screen_info->has_mesa_swap_control)
     {
         /* MESA_swap_control knows nothing about negative intervals */
-        glXSwapIntervalMESA ((interval < 0) ? 1 : (guint) interval);
-        g_info ("GL swap interval set to %i", (interval < 0) ? 1 : interval);
+        interval = (interval < 0) ? 1 : interval;
+        glXSwapIntervalMESA ((guint) interval);
+        g_info ("GL swap interval set to %i", interval);
+        data->swap_interval = interval;
+        data->swap_control = TRUE;
 
         return;
     }
@@ -844,6 +854,23 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     g_free (data->renderer);
     g_free (data);
     screen_info->gl_data = NULL;
+}
+
+gboolean
+xfwmGLGetSwapInterval (ScreenInfo *screen_info, gint *interval)
+{
+    XfwmGLData *data;
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+
+    data = gl_data (screen_info);
+    if (data == NULL || !data->swap_control)
+    {
+        return FALSE;
+    }
+    *interval = data->swap_interval;
+
+    return TRUE;
 }
 
 const gchar *

@@ -164,39 +164,23 @@ cb_borderless_maximize_button_toggled (GtkToggleButton *toggle, GtkWidget *title
 }
 
 #define RENDER_BACKEND_PROP     "_XFWM4_RENDER_BACKEND"
+#define VSYNC_PROP              "_XFWM4_VSYNC"
 
-static void
-update_render_backend_label (GtkWidget *label)
+static gchar *
+read_root_string (Display *dpy, Window root, const gchar *name)
 {
-    Display *dpy;
-    Window root;
     Atom actual_type;
     gint actual_format;
     unsigned long nitems, bytes_after;
     unsigned char *prop = NULL;
-    const gchar *text = "";
+    gchar *value = NULL;
 
-    dpy = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
-    root = GDK_WINDOW_XID (gdk_get_default_root_window ());
-
-    /*
-     * The window manager puts the renderer it settled on on the root window.
-     * Only the renderer is shown, not the card: xfce4-about already reports
-     * the hardware, and it knows how to enumerate it properly.
-     */
-    if ((XGetWindowProperty (dpy, root, XInternAtom (dpy, RENDER_BACKEND_PROP, False),
+    if ((XGetWindowProperty (dpy, root, XInternAtom (dpy, name, False),
                              0, 256, False, AnyPropertyType, &actual_type,
                              &actual_format, &nitems, &bytes_after, &prop) == Success)
         && (prop != NULL) && (nitems > 0))
     {
-        if (g_str_has_prefix ((const gchar *) prop, "opengl"))
-        {
-            text = _("(currently using: OpenGL)");
-        }
-        else
-        {
-            text = _("(currently using: XRender)");
-        }
+        value = g_strndup ((const gchar *) prop, nitems);
     }
 
     if (prop != NULL)
@@ -204,7 +188,66 @@ update_render_backend_label (GtkWidget *label)
         XFree (prop);
     }
 
-    gtk_label_set_text (GTK_LABEL (label), text);
+    return value;
+}
+
+static void
+update_render_backend_label (GtkWidget *label)
+{
+    Display *dpy;
+    Window root;
+    gchar *backend;
+    gchar *vsync;
+    gchar *text = NULL;
+    const gchar *renderer = NULL;
+    const gchar *sync = NULL;
+
+    dpy = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
+    root = GDK_WINDOW_XID (gdk_get_default_root_window ());
+
+    /*
+     * The window manager puts what it settled on on the root window. Only the
+     * renderer is shown, not the card: xfce4-about already reports the
+     * hardware, and it knows how to enumerate it properly.
+     */
+    backend = read_root_string (dpy, root, RENDER_BACKEND_PROP);
+    vsync = read_root_string (dpy, root, VSYNC_PROP);
+
+    if (backend != NULL)
+    {
+        renderer = g_str_has_prefix (backend, "opengl") ? _("OpenGL") : _("XRender");
+    }
+
+    if (vsync != NULL)
+    {
+        if (!strcmp (vsync, "on"))
+        {
+            sync = _("vsync on");
+        }
+        else if (!strcmp (vsync, "off"))
+        {
+            sync = _("vsync off");
+        }
+        else if (!strcmp (vsync, "adaptive"))
+        {
+            sync = _("adaptive vsync");
+        }
+    }
+
+    if (renderer != NULL && sync != NULL)
+    {
+        text = g_strdup_printf (_("(currently using: %s, %s)"), renderer, sync);
+    }
+    else if (renderer != NULL)
+    {
+        text = g_strdup_printf (_("(currently using: %s)"), renderer);
+    }
+
+    g_free (backend);
+    g_free (vsync);
+
+    gtk_label_set_text (GTK_LABEL (label), (text != NULL) ? text : "");
+    g_free (text);
 }
 
 static GdkFilterReturn
@@ -213,8 +256,10 @@ render_backend_filter (GdkXEvent *xevent, GdkEvent *event, gpointer data)
     XEvent *xev = (XEvent *) xevent;
 
     if (xev->type == PropertyNotify &&
-        xev->xproperty.atom == XInternAtom (xev->xproperty.display,
-                                           RENDER_BACKEND_PROP, False))
+        (xev->xproperty.atom == XInternAtom (xev->xproperty.display,
+                                            RENDER_BACKEND_PROP, False) ||
+         xev->xproperty.atom == XInternAtom (xev->xproperty.display,
+                                             VSYNC_PROP, False)))
     {
         update_render_backend_label (GTK_WIDGET (data));
     }
