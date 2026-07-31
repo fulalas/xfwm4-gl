@@ -2498,7 +2498,8 @@ vsync_state (ScreenInfo *screen_info)
     {
         if (!xfwmGLGetSwapInterval (screen_info, &interval))
         {
-            return "unknown";
+            /* No swap control at all, so nothing is holding frames back */
+            return "off";
         }
         if (interval < 0)
         {
@@ -2516,7 +2517,7 @@ vsync_state (ScreenInfo *screen_info)
             return screen_info->has_ext_swap_control_tear ? "adaptive" : "on";
         }
 
-        return screen_info->has_mesa_swap_control ? "on" : "unknown";
+        return screen_info->has_mesa_swap_control ? "on" : "off";
     }
 #endif /* HAVE_EPOXY */
 
