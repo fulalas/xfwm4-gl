@@ -102,14 +102,18 @@ startup only:
 `auto` behaviour, and Window Manager Tweaks says so rather than claim otherwise.
 
 Two more values exist, `glx` and `xpresent`, which force how XRender puts its
-image on the screen. They do nothing while the OpenGL renderer is in use and are
-only of interest when chasing a driver problem.
+image on the screen and are only of interest when chasing a driver problem. The
+OpenGL renderer presents its own frames and never goes through XPresent, so with
+it both values behave exactly like `auto`: every frame waits for the screen.
 
 ## Limitations
 
-* On an unusual screen depth, ten bit colour for instance, a window may not be
-  drawn at all and you will see straight through it. Turning OpenGL compositing
-  off is the way out.
+* A window is drawn only if the driver can hand a pixmap of its colour depth to
+  OpenGL. Depths are looked up as windows appear, and 24 and 32 bit, which is
+  what nearly everything uses, always work. A screen running at 30 bit for wider
+  colour depends on the driver: if it cannot bind that depth, the window is not
+  drawn and you see straight through it, and turning OpenGL compositing off is
+  the way out.
 
 ## License
 

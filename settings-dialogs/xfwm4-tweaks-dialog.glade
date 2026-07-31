@@ -974,7 +974,7 @@ when switching via keyboard shortcuts</property>
                                 <child>
                                   <object class="GtkCheckButton" id="unredirect_overlays_check">
                                     <property name="label" translatable="yes">Display _fullscreen overlay windows directly</property>
-                                    <property name="tooltip_text" translatable="yes">Bypass compositing if an application asks to draw straight to the screen, usually old games and video players</property>
+                                    <property name="tooltip_text" translatable="yes">Let fullscreen windows that bypass the window manager draw straight to the screen, usually old games and video players. Applications that ask for it are let through in any case</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
