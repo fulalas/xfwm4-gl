@@ -42,7 +42,7 @@ used instead.
 To check which renderer is currently in use, open Window Manager Tweaks and
 select the Compositor tab:
 
-[screenshot here -- I'll do it]
+<img src="https://github.com/user-attachments/assets/65d1a24a-5ed6-4682-97f4-a0bc43e528cb" />
 
 * **Use OpenGL for compositing (default on)** — enables the OpenGL renderer;
   XRender is used instead if it cannot start.
