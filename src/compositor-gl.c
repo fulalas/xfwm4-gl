@@ -56,8 +56,21 @@
 #ifdef HAVE_EPOXY
 
 #define GL_DAMAGE_HISTORY       3
-#define GL_DEPTH_RGB            0
-#define GL_DEPTH_RGBA           1
+#define GL_MAX_DEPTHS           8
+
+/*
+ * Binding a pixmap as a texture needs a frame buffer config matching the depth
+ * of that pixmap. Windows are nearly always 24 or 32 bit, but a screen can run
+ * at another depth, ten bit colour for instance, so the configs are looked up
+ * per depth as windows turn up and kept here.
+ */
+typedef struct
+{
+    gint depth;
+    GLXFBConfig fbconfig;
+    gboolean y_inverted;
+    gboolean usable;
+} XfwmGLDepth;
 
 typedef struct
 {
@@ -79,8 +92,8 @@ typedef struct
     GLenum tex_type;
     GLenum tex_target;
 
-    GLXFBConfig fbconfig[2];
-    gboolean y_inverted[2];
+    XfwmGLDepth depths[GL_MAX_DEPTHS];
+    guint n_depths;
 
     gboolean has_buffer_age;
 
@@ -427,9 +440,9 @@ link_program (const gchar *fragment_source)
  * on the given target. See pick_texture_target() for how the target is chosen.
  */
 static gboolean
-choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth, GLenum want_target)
+find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
+               GLXFBConfig *fbconfig, gboolean *y_inverted)
 {
-    XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
     GLint attribs[] = {
         GLX_DRAWABLE_TYPE,   GLX_PIXMAP_BIT,
@@ -484,30 +497,18 @@ choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth, GLenum want_tar
         }
 
         /*
-         * Both depths have to end up on the same target, the pixmaps are all
+         * Every depth has to end up on the same target, the pixmaps are all
          * bound and sampled by the same code.
          */
-        if (want_target == GLX_TEXTURE_2D_EXT)
+        if (!(value & ((want_target == GLX_TEXTURE_2D_EXT)
+                       ? GLX_TEXTURE_2D_BIT_EXT : GLX_TEXTURE_RECTANGLE_BIT_EXT)))
         {
-            if (!(value & GLX_TEXTURE_2D_BIT_EXT))
-            {
-                continue;
-            }
-            data->tex_type = GL_TEXTURE_2D;
+            continue;
         }
-        else
-        {
-            if (!(value & GLX_TEXTURE_RECTANGLE_BIT_EXT))
-            {
-                continue;
-            }
-            data->tex_type = GL_TEXTURE_RECTANGLE_ARB;
-        }
-        data->tex_target = want_target;
 
         status = glXGetFBConfigAttrib (dpy, configs[i], GLX_Y_INVERTED_EXT, &value);
-        data->y_inverted[slot] = (status == Success && value == True);
-        data->fbconfig[slot] = configs[i];
+        *y_inverted = (status == Success && value == True);
+        *fbconfig = configs[i];
         found = TRUE;
         break;
     }
@@ -581,6 +582,42 @@ set_swap_interval_gl (ScreenInfo *screen_info)
 }
 
 /*
+ * The config for a depth, looked up once and remembered, including the answer
+ * that there is none.
+ */
+static XfwmGLDepth *
+depth_config (ScreenInfo *screen_info, gint depth)
+{
+    XfwmGLData *data = gl_data (screen_info);
+    XfwmGLDepth *entry;
+    guint i;
+
+    for (i = 0; i < data->n_depths; i++)
+    {
+        if (data->depths[i].depth == depth)
+        {
+            return &data->depths[i];
+        }
+    }
+
+    if (data->n_depths == GL_MAX_DEPTHS)
+    {
+        return NULL;
+    }
+
+    entry = &data->depths[data->n_depths++];
+    entry->depth = depth;
+    entry->usable = find_fbconfig (screen_info, depth, data->tex_target,
+                                   &entry->fbconfig, &entry->y_inverted);
+    if (!entry->usable)
+    {
+        g_info ("No GLX config to bind a window of depth %i as a texture", depth);
+    }
+
+    return entry;
+}
+
+/*
  * Rectangle textures come first. They are addressed in pixels, so there is no
  * way for the sampling to disagree with the real width of the pixmap, while a
  * normalised GL_TEXTURE_2D relies on the driver mapping 1.0 exactly onto the
@@ -610,10 +647,14 @@ pick_texture_target (ScreenInfo *screen_info)
             continue;
         }
 
-        data->fbconfig[GL_DEPTH_RGB] = NULL;
-        data->fbconfig[GL_DEPTH_RGBA] = NULL;
-        if (!choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, target) ||
-            !choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, target))
+        data->n_depths = 0;
+        data->tex_target = target;
+        data->tex_type = (target == GLX_TEXTURE_2D_EXT) ? GL_TEXTURE_2D
+                                                        : GL_TEXTURE_RECTANGLE_ARB;
+
+        /* Opaque and ARGB windows both have to work, they are always around */
+        if (!depth_config (screen_info, 24)->usable ||
+            !depth_config (screen_info, 32)->usable)
         {
             continue;
         }
@@ -1184,7 +1225,7 @@ bind_window_texture (CWindow *cw)
     XfwmGLData *data = gl_data (screen_info);
     DisplayInfo *display_info = screen_info->display_info;
     Display *dpy = myScreenGetXDisplay (screen_info);
-    gint slot;
+    XfwmGLDepth *dc;
 
     if (cw->name_window_pixmap == None)
     {
@@ -1200,8 +1241,8 @@ bind_window_texture (CWindow *cw)
         }
     }
 
-    slot = (cw->attr.depth == 32) ? GL_DEPTH_RGBA : GL_DEPTH_RGB;
-    if (data->fbconfig[slot] == NULL)
+    dc = depth_config (screen_info, cw->attr.depth);
+    if (dc == NULL || !dc->usable)
     {
         return FALSE;
     }
@@ -1210,14 +1251,14 @@ bind_window_texture (CWindow *cw)
     {
         const gint attribs[] = {
             GLX_TEXTURE_TARGET_EXT, (gint) data->tex_target,
-            GLX_TEXTURE_FORMAT_EXT, (slot == GL_DEPTH_RGBA)
+            GLX_TEXTURE_FORMAT_EXT, (cw->attr.depth == 32)
                                      ? GLX_TEXTURE_FORMAT_RGBA_EXT
                                      : GLX_TEXTURE_FORMAT_RGB_EXT,
             None
         };
 
         myDisplayErrorTrapPush (display_info);
-        cw->gl_pixmap = glXCreatePixmap (dpy, data->fbconfig[slot],
+        cw->gl_pixmap = glXCreatePixmap (dpy, dc->fbconfig,
                                          cw->name_window_pixmap, attribs);
         if (myDisplayErrorTrapPop (display_info) != Success)
         {
@@ -1361,12 +1402,13 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
 {
     ScreenInfo *screen_info = cw->screen_info;
     XfwmGLData *data = gl_data (screen_info);
-    gint tex_width, tex_height, slot;
+    XfwmGLDepth *dc = depth_config (screen_info, cw->attr.depth);
+    gint tex_width, tex_height;
 
     get_window_pixmap_size (cw, &tex_width, &tex_height);
-    slot = (cw->attr.depth == 32) ? GL_DEPTH_RGBA : GL_DEPTH_RGB;
 
-    draw_quad (screen_info, data->tex_type, data->y_inverted[slot],
+    draw_quad (screen_info, data->tex_type,
+               (dc != NULL) ? dc->y_inverted : FALSE,
                sx, sy, tex_width, tex_height,
                dx, dy, width, height, clip);
 }
@@ -1495,6 +1537,7 @@ bind_root_texture (ScreenInfo *screen_info)
     XfwmGLData *data = gl_data (screen_info);
     DisplayInfo *display_info = screen_info->display_info;
     Display *dpy = myScreenGetXDisplay (screen_info);
+    XfwmGLDepth *dc;
     Pixmap pixmap;
 
     if (data->root_texture != 0)
@@ -1505,7 +1548,8 @@ bind_root_texture (ScreenInfo *screen_info)
         return TRUE;
     }
 
-    if (data->root_missing || data->fbconfig[GL_DEPTH_RGB] == NULL)
+    dc = depth_config (screen_info, screen_info->depth);
+    if (data->root_missing || dc == NULL || !dc->usable)
     {
         return FALSE;
     }
@@ -1540,7 +1584,7 @@ bind_root_texture (ScreenInfo *screen_info)
         data->root_width = (gint) width_ret;
         data->root_height = (gint) height_ret;
 
-        data->root_glx_pixmap = glXCreatePixmap (dpy, data->fbconfig[GL_DEPTH_RGB],
+        data->root_glx_pixmap = glXCreatePixmap (dpy, dc->fbconfig,
                                                  pixmap, attribs);
         if (myDisplayErrorTrapPop (display_info) != Success)
         {
@@ -1574,6 +1618,8 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
 
     if (bind_root_texture (screen_info))
     {
+        XfwmGLDepth *dc = depth_config (screen_info, screen_info->depth);
+        gboolean root_inverted = (dc != NULL) ? dc->y_inverted : FALSE;
         gint tex_width = (data->root_width > 0) ? data->root_width : screen_info->width;
         gint tex_height = (data->root_height > 0) ? data->root_height : screen_info->height;
 
@@ -1589,8 +1635,7 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
         {
             for (x = 0; x < screen_info->width; x += tex_width)
             {
-                draw_quad (screen_info, data->tex_type,
-                           data->y_inverted[GL_DEPTH_RGB],
+                draw_quad (screen_info, data->tex_type, root_inverted,
                            0, 0, tex_width, tex_height,
                            x, y, tex_width, tex_height, clip);
             }
