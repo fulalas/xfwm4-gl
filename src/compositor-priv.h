@@ -173,6 +173,7 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
 void             ensure_win_shadow              (CWindow *);
+XserverRegion    win_extents                    (CWindow *);
 XserverRegion    border_size                    (CWindow *);
 XserverRegion    client_size                    (CWindow *);
 void             clip_opaque_region             (CWindow *,

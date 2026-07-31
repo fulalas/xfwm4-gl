@@ -1744,6 +1744,7 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
                           GLX_BACK_BUFFER_AGE_EXT, &age);
     }
 
+
     if (age == 0 || age > GL_DAMAGE_HISTORY || data->full_repaint)
     {
         cairo_rectangle_int_t r;
@@ -1823,6 +1824,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     myDisplayErrorTrapPush (display_info);
 
+    /*
+     * Window contents are drawn by the X server, and we are about to read those
+     * same pixmaps as textures. Without this the GPU can sample a window while
+     * the server is still drawing into it, which shows up as the window content
+     * flickering while it repaints. The XRender path never sees this because all
+     * of its drawing goes through the server in order.
+     */
+    glXWaitX ();
+
     frame_damage = fetch_damage (dpy, damage);
     paint_region = get_paint_region (screen_info, frame_damage);
 
@@ -1877,8 +1887,16 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
-        /* Builds the shadow of the window as a side effect */
-        ensure_win_shadow (cw);
+        /*
+         * Keep the extents up to date. They are what the damage machinery uses
+         * to work out the area a window is leaving behind when it moves or
+         * resizes, so without this the vacated area is never repainted. Builds
+         * the shadow of the window as a side effect.
+         */
+        if (cw->extents == None)
+        {
+            cw->extents = win_extents (cw);
+        }
 
         shape = window_shape (cw);
 

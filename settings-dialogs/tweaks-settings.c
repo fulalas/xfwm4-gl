@@ -174,51 +174,29 @@ update_render_backend_label (GtkWidget *label)
     gint actual_format;
     unsigned long nitems, bytes_after;
     unsigned char *prop = NULL;
-    gchar *text = NULL;
+    const gchar *text = "";
 
     dpy = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
     root = GDK_WINDOW_XID (gdk_get_default_root_window ());
 
+    /*
+     * The window manager puts the renderer it settled on on the root window.
+     * Only the renderer is shown, not the card: xfce4-about already reports
+     * the hardware, and it knows how to enumerate it properly.
+     */
     if ((XGetWindowProperty (dpy, root, XInternAtom (dpy, RENDER_BACKEND_PROP, False),
                              0, 256, False, AnyPropertyType, &actual_type,
                              &actual_format, &nitems, &bytes_after, &prop) == Success)
         && (prop != NULL) && (nitems > 0))
     {
-        gchar *value = g_strndup ((const gchar *) prop, nitems);
-
-        if (g_str_has_prefix (value, "opengl"))
+        if (g_str_has_prefix ((const gchar *) prop, "opengl"))
         {
-            gchar *renderer = value + strlen ("opengl");
-            gchar *details;
-
-            while (*renderer == ' ')
-            {
-                renderer++;
-            }
-            /* The driver details in brackets are far too long for a label */
-            details = strstr (renderer, " (");
-            if (details != NULL)
-            {
-                *details = '\0';
-            }
-            if (*renderer != '\0')
-            {
-                text = g_strdup_printf (_("Renderer: OpenGL \xe2\x80\x94 %s"), renderer);
-            }
-            else
-            {
-                text = g_strdup (_("Renderer: OpenGL"));
-            }
+            text = _("(currently using: OpenGL)");
         }
         else
         {
-            text = g_strdup (_("Renderer: XRender (drawn by the X server)"));
+            text = _("(currently using: XRender)");
         }
-        g_free (value);
-    }
-    else
-    {
-        text = g_strdup (_("Compositing is disabled"));
     }
 
     if (prop != NULL)
@@ -227,7 +205,6 @@ update_render_backend_label (GtkWidget *label)
     }
 
     gtk_label_set_text (GTK_LABEL (label), text);
-    g_free (text);
 }
 
 static GdkFilterReturn

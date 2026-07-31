@@ -2074,7 +2074,7 @@ ensure_win_shadow (CWindow *cw)
     drop_win_shadow (cw);
 }
 
-static XserverRegion
+XserverRegion
 win_extents (CWindow *cw)
 {
     DisplayInfo *display_info;
