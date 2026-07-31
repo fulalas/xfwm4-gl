@@ -41,6 +41,7 @@
 #include "focus.h"
 #include "misc.h"
 #include "client.h"
+#include "compositor.h"
 #include "frame.h"
 #include "stacking.h"
 #include "transients.h"
@@ -539,6 +540,7 @@ clientUpdateFocus (ScreenInfo *screen_info, Client * c, unsigned short flags)
     }
     clientSetNetActiveWindow (screen_info, c, 0);
     pending_focus = NULL;
+    compositorUpdateFullscreenSuspend (screen_info);
 }
 
 void
@@ -627,6 +629,7 @@ clientSetFocus (ScreenInfo *screen_info, Client *c, guint32 timestamp, unsigned 
         client_focus = NULL;
         clientFocusNone (screen_info, c2, timestamp);
         clientClearDelayedFocus ();
+        compositorUpdateFullscreenSuspend (screen_info);
     }
 }
 

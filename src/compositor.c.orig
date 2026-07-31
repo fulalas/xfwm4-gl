@@ -54,7 +54,6 @@
 #include "display.h"
 #include "screen.h"
 #include "client.h"
-#include "focus.h"
 #include "frame.h"
 #include "hints.h"
 #include "compositor.h"
@@ -5304,33 +5303,6 @@ compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
     return TRUE;
 #else /* HAVE_COMPOSITOR */
     return FALSE;
-#endif /* HAVE_COMPOSITOR */
-}
-
-void
-compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
-{
-#ifdef HAVE_COMPOSITOR
-    DisplayInfo *display_info;
-    ScreenInfo *screen;
-    Client *c;
-    GSList *list;
-    gboolean active;
-
-    g_return_if_fail (screen_info != NULL);
-    TRACE ("entering");
-
-    display_info = screen_info->display_info;
-    c = clientGetFocus ();
-    for (list = display_info->screens; list; list = g_slist_next (list))
-    {
-        screen = (ScreenInfo *) list->data;
-        active = screen->params->use_compositing &&
-                 !(screen->params->suspend_compositing_fullscreen &&
-                   (c != NULL) && (c->screen_info == screen) &&
-                   FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN));
-        compositorActivateScreen (screen, active);
-    }
 #endif /* HAVE_COMPOSITOR */
 }
 

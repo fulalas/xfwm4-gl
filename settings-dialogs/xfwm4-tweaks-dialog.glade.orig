@@ -945,23 +945,6 @@ when switching via keyboard shortcuts</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="suspend_compositing_fullscreen_check">
-                                    <property name="label" translatable="yes">_Suspend compositing for focused fullscreen windows</property>
-                                    <property name="tooltip_text" translatable="yes">Improves performance in fullscreen applications; effects return as soon as the window closes or loses focus</property>
-                                    <property name="use_action_appearance">False</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="receives_default">False</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="draw_indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkCheckButton" id="unredirect_overlays_check">
                                     <property name="label" translatable="yes">Display _fullscreen overlay windows directly</property>
                                     <property name="use_action_appearance">False</property>
@@ -974,7 +957,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">3</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -990,7 +973,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">4</property>
+                                    <property name="position">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1006,7 +989,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">5</property>
+                                    <property name="position">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1022,7 +1005,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">6</property>
+                                    <property name="position">5</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1038,7 +1021,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">7</property>
+                                    <property name="position">6</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1054,7 +1037,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">8</property>
+                                    <property name="position">7</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1070,7 +1053,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">9</property>
+                                    <property name="position">8</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1085,7 +1068,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">10</property>
+                                    <property name="position">9</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1146,7 +1129,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">11</property>
+                                    <property name="position">10</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1161,7 +1144,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">12</property>
+                                    <property name="position">11</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1222,7 +1205,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">13</property>
+                                    <property name="position">12</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1237,7 +1220,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">14</property>
+                                    <property name="position">13</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1298,7 +1281,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">15</property>
+                                    <property name="position">14</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1313,7 +1296,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">16</property>
+                                    <property name="position">15</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1374,7 +1357,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">17</property>
+                                    <property name="position">16</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1389,7 +1372,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">18</property>
+                                    <property name="position">17</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -1450,7 +1433,7 @@ when switching via keyboard shortcuts</property>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">False</property>
-                                    <property name="position">19</property>
+                                    <property name="position">18</property>
                                   </packing>
                                 </child>
                               </object>

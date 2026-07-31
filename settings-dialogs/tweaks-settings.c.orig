@@ -303,7 +303,6 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     GtkWidget *use_compositing_box = GTK_WIDGET (gtk_builder_get_object (builder, "use_compositing_box"));
 
     GtkWidget *render_backend_label = GTK_WIDGET (gtk_builder_get_object (builder, "render_backend_label"));
-    GtkWidget *suspend_compositing_fullscreen_check = GTK_WIDGET (gtk_builder_get_object (builder, "suspend_compositing_fullscreen_check"));
     GtkWidget *use_gl_compositing_check = GTK_WIDGET (gtk_builder_get_object (builder, "use_gl_compositing_check"));
     GtkWidget *unredirect_overlays_check = GTK_WIDGET (gtk_builder_get_object (builder, "unredirect_overlays_check"));
     GtkWidget *cycle_preview_check = GTK_WIDGET (gtk_builder_get_object (builder, "cycle_preview_check"));
@@ -510,10 +509,6 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                             "/general/use_compositing",
                             G_TYPE_BOOLEAN,
                             (GObject *)use_compositing_check, "active");
-    xfconf_g_property_bind (xfwm4_channel,
-                            "/general/suspend_compositing_fullscreen",
-                            G_TYPE_BOOLEAN,
-                            (GObject *)suspend_compositing_fullscreen_check, "active");
     xfconf_g_property_bind (xfwm4_channel,
                             "/general/use_gl_compositing",
                             G_TYPE_BOOLEAN,

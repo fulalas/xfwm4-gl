@@ -742,7 +742,6 @@ loadSettings (ScreenInfo *screen_info)
         {"snap_to_border", NULL, G_TYPE_BOOLEAN, TRUE},
         {"snap_to_windows", NULL, G_TYPE_BOOLEAN, TRUE},
         {"snap_width", NULL, G_TYPE_INT, TRUE},
-        {"suspend_compositing_fullscreen", NULL, G_TYPE_BOOLEAN, TRUE},
         {"vblank_mode", NULL, G_TYPE_STRING, FALSE},
         {"theme", NULL, G_TYPE_STRING, TRUE},
         {"tile_on_move", NULL, G_TYPE_BOOLEAN, TRUE},
@@ -861,8 +860,6 @@ loadSettings (ScreenInfo *screen_info)
         getBoolValue ("snap_resist", rc);
     screen_info->params->snap_width =
         getIntValue ("snap_width", rc);
-    screen_info->params->suspend_compositing_fullscreen =
-        getBoolValue ("suspend_compositing_fullscreen", rc);
     screen_info->params->tile_on_move =
         getBoolValue ("tile_on_move", rc);
     screen_info->params->toggle_workspaces =
@@ -1434,11 +1431,6 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 {
                     screen_info->params->snap_resist = g_value_get_boolean (value);
                 }
-                else if (!strcmp (name, "suspend_compositing_fullscreen"))
-                {
-                    screen_info->params->suspend_compositing_fullscreen = g_value_get_boolean (value);
-                    compositorUpdateFullscreenSuspend (screen_info);
-                }
                 else if (!strcmp (name, "tile_on_move"))
                 {
                     screen_info->params->tile_on_move = g_value_get_boolean (value);
@@ -1464,7 +1456,8 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 else if (!strcmp (name, "use_compositing"))
                 {
                     screen_info->params->use_compositing = g_value_get_boolean (value);
-                    compositorUpdateFullscreenSuspend (screen_info);
+                    compositorActivateScreen (screen_info,
+                                              screen_info->params->use_compositing);
                 }
                 else if (!strcmp (name, "wrap_layout"))
                 {
