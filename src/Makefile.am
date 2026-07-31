@@ -5,6 +5,9 @@ xfwm4_SOURCES =								\
 	client.h							\
 	compositor.c							\
 	compositor.h							\
+	compositor-gl.c							\
+	compositor-gl.h							\
+	compositor-priv.h						\
 	cycle.c								\
 	cycle.h								\
 	device.c							\

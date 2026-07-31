@@ -65,105 +65,8 @@
 #include <X11/extensions/Xdamage.h>
 #include <X11/extensions/Xrender.h>
 
-#ifndef SHADOW_RADIUS
-#define SHADOW_RADIUS   12
-#endif /* SHADOW_RADIUS */
-
-#ifndef SHADOW_OFFSET_X
-#define SHADOW_OFFSET_X (-3 * SHADOW_RADIUS / 2)
-#endif /* SHADOW_OFFSET_X */
-
-#ifndef SHADOW_OFFSET_Y
-#define SHADOW_OFFSET_Y (-3 * SHADOW_RADIUS / 2)
-#endif /* SHADOW_OFFSET_Y */
-
-/* Some convenient macros */
-#define WIN_HAS_CLIENT(cw)              (cw->c)
-#define WIN_HAS_FRAME(cw)               (WIN_HAS_CLIENT(cw) && CLIENT_HAS_FRAME(cw->c))
-#define WIN_NO_SHADOW(cw)               ((cw->c) && \
-                                           (FLAG_TEST (cw->c->flags, CLIENT_FLAG_FULLSCREEN | CLIENT_FLAG_BELOW) || \
-                                            (cw->c->type & WINDOW_DESKTOP)))
-#define WIN_IS_DOCK(cw)                 (WIN_HAS_CLIENT(cw) && (cw->c->type & WINDOW_DOCK))
-#define WIN_IS_OVERRIDE(cw)             (cw->attr.override_redirect)
-#define WIN_IS_ARGB(cw)                 (cw->argb)
-#define WIN_IS_OPAQUE(cw)               ((cw->opacity == NET_WM_OPAQUE) && !WIN_IS_ARGB(cw))
-#define WIN_IS_NATIVE_OPAQUE(cw)        ((cw->native_opacity) && !WIN_IS_ARGB(cw))
-#define WIN_IS_FULLSCREEN(cw)           ((cw->attr.x <= 0) && \
-                                           (cw->attr.y <= 0) && \
-                                           (cw->attr.width + 2 * cw->attr.border_width >= cw->screen_info->width) && \
-                                           (cw->attr.height + 2 * cw->attr.border_width >= cw->screen_info->height))
-#define WIN_IS_SHAPED(cw)               ((WIN_HAS_CLIENT(cw) && FLAG_TEST (cw->c->flags, CLIENT_FLAG_HAS_SHAPE)) || \
-                                           (WIN_IS_OVERRIDE(cw) && (cw->shaped)))
-#define WIN_IS_MAXIMIZED(cw)            (WIN_HAS_CLIENT(cw) && FLAG_TEST_ALL (cw->c->flags, CLIENT_FLAG_MAXIMIZED))
-#define WIN_IS_VIEWABLE(cw)             (cw->viewable)
-#define WIN_HAS_DAMAGE(cw)              (cw->damage)
-#define WIN_IS_VISIBLE(cw)              (WIN_IS_VIEWABLE(cw) && WIN_HAS_DAMAGE(cw))
-#define WIN_IS_DAMAGED(cw)              (cw->damaged)
-#define WIN_IS_REDIRECTED(cw)           (cw->redirected)
-#define WIN_IS_SHADED(cw)               (WIN_HAS_CLIENT(cw) && FLAG_TEST (cw->c->flags, CLIENT_FLAG_SHADED))
-
-#ifndef TIMEOUT_REPAINT_PRIORITY
-#define TIMEOUT_REPAINT_PRIORITY   G_PRIORITY_DEFAULT
-#endif /* TIMEOUT_REPAINT_PRIORITY */
-
-#ifndef TIMEOUT_THROTTLED_REPAINT_PRIORITY
-#define TIMEOUT_THROTTLED_REPAINT_PRIORITY   G_PRIORITY_LOW
-#endif /* TIMEOUT_THROTTLED_REPAINT_PRIORITY */
-
-#ifndef TIMEOUT_REPAINT_MS
-#define TIMEOUT_REPAINT_MS   1
-#endif /* TIMEOUT_REPAINT_MS */
-
-#ifndef TIMEOUT_THROTTLED_REPAINT_MS
-#define TIMEOUT_THROTTLED_REPAINT_MS   500
-#endif /* TIMEOUT_THROTTLED_REPAINT_MS */
-
-#ifndef MONITOR_ROOT_PIXMAP
-#define MONITOR_ROOT_PIXMAP   1
-#endif /* MONITOR_ROOT_PIXMAP */
-
-typedef struct _CWindow CWindow;
-struct _CWindow
-{
-    ScreenInfo *screen_info;
-    Client *c;
-    Window id;
-    XWindowAttributes attr;
-
-    gboolean damaged;
-    gboolean viewable;
-    gboolean shaped;
-    gboolean redirected;
-    gboolean fulloverlay;
-    gboolean argb;
-    gboolean skipped;
-    gboolean native_opacity;
-    gboolean opacity_locked;
-
-    Damage damage;
-#if HAVE_NAME_WINDOW_PIXMAP
-    Pixmap name_window_pixmap;
-#endif /* HAVE_NAME_WINDOW_PIXMAP */
-    Picture picture;
-    Picture saved_picture;
-    Picture shadow;
-    Picture alphaPict;
-    Picture alphaBorderPict;
-
-    XserverRegion borderSize;
-    XserverRegion clientSize;
-    XserverRegion borderClip;
-    XserverRegion extents;
-    XserverRegion opaque_region;
-
-    gint shadow_dx;
-    gint shadow_dy;
-    gint shadow_width;
-    gint shadow_height;
-
-    guint32 opacity;
-    guint32 bypass_compositor;
-};
+#include "compositor-priv.h"
+#include "compositor-gl.h"
 
 static CWindow*
 find_cwindow_in_screen (ScreenInfo *screen_info, Window id)
@@ -817,6 +720,11 @@ free_win_data (CWindow *cw, gboolean delete)
     display_info = screen_info->display_info;
 
     myDisplayErrorTrapPush (display_info);
+#ifdef HAVE_EPOXY
+    /* The GLX pixmap has to go before the pixmap it is bound to */
+    xfwmGLFreeWindowData (cw);
+    xfwmGLFreeWindowShadow (cw);
+#endif /* HAVE_EPOXY */
 #if HAVE_NAME_WINDOW_PIXMAP
     if (cw->name_window_pixmap)
     {
@@ -2003,6 +1911,26 @@ win_extents (CWindow *cw)
         cw->shadow_dx = SHADOW_OFFSET_X + screen_info->params->shadow_delta_x;
         cw->shadow_dy = SHADOW_OFFSET_Y + screen_info->params->shadow_delta_y;
 
+#ifdef HAVE_EPOXY
+        if (screen_info->use_gl_render)
+        {
+            if (cw->gl_shadow_texture == 0)
+            {
+                double shadow_opacity;
+                shadow_opacity = (double) screen_info->params->frame_opacity
+                               * (screen_info->params->shadow_opacity / 100.0)
+                               * cw->opacity
+                               / (NET_WM_OPAQUE * 100.0);
+
+                xfwmGLUpdateWindowShadow (cw, shadow_opacity,
+                                          cw->attr.width + 2 * cw->attr.border_width,
+                                          cw->attr.height + 2 * cw->attr.border_width);
+                cw->shadow_width = cw->gl_shadow_width;
+                cw->shadow_height = cw->gl_shadow_height;
+            }
+        }
+        else
+#endif /* HAVE_EPOXY */
         if (!(cw->shadow))
         {
             double shadow_opacity;
@@ -2041,10 +1969,16 @@ win_extents (CWindow *cw)
             r.height = sr.y + sr.height - r.y;
         }
     }
-    else if (cw->shadow)
+    else
     {
-        XRenderFreePicture (display_info->dpy, cw->shadow);
-        cw->shadow = None;
+        if (cw->shadow)
+        {
+            XRenderFreePicture (display_info->dpy, cw->shadow);
+            cw->shadow = None;
+        }
+#ifdef HAVE_EPOXY
+        xfwmGLFreeWindowShadow (cw);
+#endif /* HAVE_EPOXY */
     }
     return XFixesCreateRegion (display_info->dpy, &r, 1);
 }
@@ -2400,6 +2334,46 @@ is_region_empty (Display *dpy, XserverRegion region)
     return (nrects == 0 || bounds.width == 0 || bounds.height == 0);
 }
 
+#ifdef HAVE_EPOXY
+XImage *
+compositorMakeShadowImage (ScreenInfo *screen_info, gdouble opacity,
+                           gint width, gint height)
+{
+    return make_shadow (screen_info, opacity, width, height);
+}
+
+XserverRegion
+compositorBorderSize (CWindow *cw)
+{
+    return border_size (cw);
+}
+
+/*
+ * The extents are what creates the shadow of a window, the backends have to
+ * refresh them before painting.
+ */
+void
+compositorUpdateWinExtents (CWindow *cw)
+{
+    if (cw->extents == None)
+    {
+        cw->extents = win_extents (cw);
+    }
+}
+
+XserverRegion
+compositorClientSize (CWindow *cw)
+{
+    return client_size (cw);
+}
+
+void
+compositorClipOpaqueRegion (CWindow *cw, XserverRegion region)
+{
+    clip_opaque_region (cw, region);
+}
+#endif /* HAVE_EPOXY */
+
 static void
 paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 {
@@ -2420,6 +2394,20 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     dpy = display_info->dpy;
     screen_width = screen_info->width;
     screen_height = screen_info->height;
+
+#ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        if (xfwmGLPaintAll (screen_info, region))
+        {
+            return;
+        }
+        /* The GL backend gave up, fall back to XRender for good */
+        g_warning ("GL compositing failed, falling back to XRender.");
+        screen_info->use_gl_render = FALSE;
+        xfwmGLScreenFinish (screen_info);
+    }
+#endif /* HAVE_EPOXY */
 
     myDisplayErrorTrapPush (display_info);
 
@@ -3860,6 +3848,9 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
             {
                 myDisplayErrorTrapPush (display_info);
                 XClearArea (display_info->dpy, screen_info->output, 0, 0, 0, 0, TRUE);
+#ifdef HAVE_EPOXY
+                xfwmGLInvalidateRootTexture (screen_info);
+#endif /* HAVE_EPOXY */
                 XRenderFreePicture (display_info->dpy, screen_info->rootTile);
                 myDisplayErrorTrapPopIgnored (display_info);
 
@@ -4937,6 +4928,13 @@ compositorManageScreen (ScreenInfo *screen_info)
         screen_info->gl_sync = 0;
         screen_info->use_glx = init_glx (screen_info);
     }
+
+    screen_info->use_gl_render = FALSE;
+    screen_info->gl_data = NULL;
+    if (screen_info->use_glx && screen_info->params->use_gl_compositing)
+    {
+        screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
+    }
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
 #endif /* HAVE_EPOXY */
@@ -5023,6 +5021,12 @@ compositorUnmanageScreen (ScreenInfo *screen_info)
     screen_info->cwindows = NULL;
 
 #ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        xfwmGLScreenFinish (screen_info);
+        screen_info->use_gl_render = FALSE;
+    }
+
     if (screen_info->use_glx)
     {
         free_glx_data (screen_info);
@@ -5237,6 +5241,13 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
         XRenderFreePicture (display_info->dpy, screen_info->zoomBuffer);
         screen_info->zoomBuffer = None;
     }
+
+#ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        xfwmGLScreenSizeChanged (screen_info);
+    }
+#endif /* HAVE_EPOXY */
 
 #ifdef HAVE_EPOXY
     if (screen_info->use_glx)

@@ -244,6 +244,7 @@ struct _XfwmParams
     gboolean title_vertical_offset_inactive;
     gboolean toggle_workspaces;
     gboolean unredirect_overlays;
+    gboolean use_gl_compositing;
     gboolean urgent_blink;
     gboolean use_compositing;
     gboolean wrap_cycle;

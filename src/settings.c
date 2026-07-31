@@ -755,6 +755,7 @@ loadSettings (ScreenInfo *screen_info)
         {"unredirect_overlays", NULL, G_TYPE_BOOLEAN, TRUE},
         {"urgent_blink", NULL, G_TYPE_BOOLEAN, TRUE},
         {"use_compositing", NULL, G_TYPE_BOOLEAN, TRUE},
+        {"use_gl_compositing", NULL, G_TYPE_BOOLEAN, TRUE},
         {"workspace_count", NULL, G_TYPE_INT, TRUE},
         {"wrap_cycle", NULL, G_TYPE_BOOLEAN, TRUE},
         {"wrap_layout", NULL, G_TYPE_BOOLEAN, TRUE},
@@ -865,6 +866,8 @@ loadSettings (ScreenInfo *screen_info)
         getBoolValue ("unredirect_overlays", rc);
     screen_info->params->use_compositing =
         getBoolValue ("use_compositing", rc);
+    screen_info->params->use_gl_compositing =
+        getBoolValue ("use_gl_compositing", rc);
     screen_info->params->wrap_workspaces =
         getBoolValue ("wrap_workspaces", rc);
     screen_info->params->zoom_desktop =
@@ -1437,6 +1440,16 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 else if (!strcmp (name, "unredirect_overlays"))
                 {
                     screen_info->params->unredirect_overlays = g_value_get_boolean (value);
+                }
+                else if (!strcmp (name, "use_gl_compositing"))
+                {
+                    screen_info->params->use_gl_compositing = g_value_get_boolean (value);
+                    /* The backend is picked when the compositor starts */
+                    if (screen_info->params->use_compositing)
+                    {
+                        compositorActivateScreen (screen_info, FALSE);
+                        compositorActivateScreen (screen_info, TRUE);
+                    }
                 }
                 else if (!strcmp (name, "use_compositing"))
                 {

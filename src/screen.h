@@ -243,6 +243,10 @@ struct _ScreenInfo
     GLXContext glx_context;
     GLXWindow glx_window;
     GLsync gl_sync;
+
+    /* GL compositing backend, see compositor-gl.c */
+    gboolean use_gl_render;
+    gpointer gl_data;
 #ifdef HAVE_XSYNC
     XSyncFence fence[N_BUFFERS];
 #endif /* HAVE_XSYNC */
