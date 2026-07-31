@@ -50,7 +50,11 @@ select the Compositor tab:
   falls back to XRender.
 * **Suspend compositing for focused fullscreen windows (default on)** —
   temporarily disables compositing while a fullscreen application has focus.
-  This is especially useful for heavy applications such as games.
+  This is especially useful for heavy applications such as games. While
+  compositing is off, avoiding tearing is up to the application: players using
+  OpenGL or Vulkan take care of it themselves, older ones drawing through X11
+  may tear. An application can also ask to never be bypassed, and then
+  compositing is left running for it.
 * **Display fullscreen overlay windows directly (default on)** — this one is
   also present in the original `xfwm4` and here only gained a tooltip, to
   explain that it usually applies to quite old applications.

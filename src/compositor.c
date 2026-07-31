@@ -3658,7 +3658,9 @@ add_win (DisplayInfo *display_info, Window id, Client *c)
     {
         update_opaque_region (new, id);
     }
-    getBypassCompositor (display_info, id, &new->bypass_compositor);
+    /* The application sets this on its own window, not on the frame */
+    getBypassCompositor (display_info, (c != NULL) ? c->window : id,
+                         &new->bypass_compositor);
     init_opacity (new);
     determine_mode (new);
 
@@ -4185,12 +4187,22 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
     }
     else if (ev->atom == display_info->atoms[NET_WM_BYPASS_COMPOSITOR])
     {
-        CWindow *cw = find_cwindow_in_display (display_info, ev->window);
+        Client *c;
+        CWindow *cw;
+
         TRACE ("NET_WM_BYPASS_COMPOSITOR changed for id 0x%lx", ev->window);
+
+        /*
+         * The property sits on the client window while the compositor tracks
+         * the frame, so the client has to be resolved first.
+         */
+        c = myDisplayGetClientFromWindow (display_info, ev->window, SEARCH_WINDOW);
+        cw = find_cwindow_in_display (display_info,
+                                      (c != NULL) ? c->frame : ev->window);
 
         if (is_on_compositor (cw))
         {
-            getBypassCompositor (display_info, cw->id, &cw->bypass_compositor);
+            getBypassCompositor (display_info, ev->window, &cw->bypass_compositor);
         }
     }
     else if (ev->atom == display_info->atoms[NET_WM_OPAQUE_REGION])
@@ -5613,10 +5625,28 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
     for (list = display_info->screens; list; list = g_slist_next (list))
     {
         screen = (ScreenInfo *) list->data;
-        active = screen->params->use_compositing &&
-                 !(screen->params->suspend_compositing_fullscreen &&
-                   (c != NULL) && (c->screen_info == screen) &&
-                   FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN));
+        gboolean suspend;
+
+        suspend = screen->params->suspend_compositing_fullscreen &&
+                  (c != NULL) && (c->screen_info == screen) &&
+                  FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN);
+
+        if (suspend)
+        {
+            CWindow *cw = find_cwindow_in_screen (screen, c->frame);
+
+            /*
+             * _NET_WM_BYPASS_COMPOSITOR of 2 means the window wants compositing
+             * kept whatever happens. Anything relying on us to present without
+             * tearing, a video player for one, can say so this way.
+             */
+            if ((cw != NULL) && (cw->bypass_compositor == 2))
+            {
+                suspend = FALSE;
+            }
+        }
+
+        active = screen->params->use_compositing && !suspend;
 
         /*
          * Keep the GL context and everything in it while a fullscreen window

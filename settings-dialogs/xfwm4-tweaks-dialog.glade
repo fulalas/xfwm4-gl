@@ -957,7 +957,7 @@ when switching via keyboard shortcuts</property>
                                 <child>
                                   <object class="GtkCheckButton" id="suspend_compositing_fullscreen_check">
                                     <property name="label" translatable="yes">_Suspend compositing for focused fullscreen windows</property>
-                                    <property name="tooltip_text" translatable="yes">Improves performance in fullscreen applications; compositing resumes when the window closes or loses focus</property>
+                                    <property name="tooltip_text" translatable="yes">Improves performance in fullscreen applications; compositing resumes when the window closes or loses focus. Video may tear while it is off</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
