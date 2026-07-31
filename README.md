@@ -96,11 +96,8 @@ only:
 | value | what happens |
 | --- | --- |
 | `auto` | (default) sync every frame to the screen |
-| `tear` | sync unless the frame is already late, so it tears only when needed |
+| `tear` | (new) sync unless the frame is already late, so it tears only when needed (requires `GLX_EXT_swap_control_tear`, otherwise falls back to `auto`) |
 | `off` | no sync at all, fastest, tears |
-
-`tear` needs `GLX_EXT_swap_control_tear` from the driver. Without it you get
-`auto` behaviour.
 
 Two more values exist: `glx` and `xpresent`. Since the OpenGL renderer presents
 its own frames and never goes through XPresent, both values behave exactly like
