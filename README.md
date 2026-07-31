@@ -1,7 +1,7 @@
 # xfwm4-gl
 
 xfwm4-gl is a compositor forked from Xfce
-[`xfwm4`](https://gitlab.xfce.org/xfce/xfwm4), adding support for OpenGL
+[xfwm4](https://gitlab.xfce.org/xfce/xfwm4), adding support for OpenGL
 compositing. The original way, XRender, is still available as a fallback.
 
 It also adds an option to switch the compositor off automatically while a
@@ -14,17 +14,17 @@ of the weakest points of `xfwm4`, as seen in the latest
 A compositor has to take the picture of every window and put those pictures
 together into the screen you see. `xfwm4` does that with XRender, an old drawing
 interface of the X server, and that choice shapes the code: the screen is built
-in an off screen image first, and that image is then copied to the screen, so
-every frame is drawn twice. On top of that, the X server is asked what area each
-window covers, for every window on every frame, and each answer has to be waited
-for.
+in an off-screen image first, and that image is then copied to the screen, so
+every frame is drawn twice. On top of that, the X server is asked what area a
+window covers, once for every window on every frame, and each answer has to be
+waited for.
 
-With `xfwm4-gl` windows are handed to the graphics card as textures and drawn
+With `xfwm4-gl`, windows are handed to the graphics card as textures and drawn
 straight to the screen instead.
 
 Four things come out of that:
 
-* One less full screen copy per frame.
+* One less copy of the whole screen per frame.
 * Only the parts of the screen that changed are redrawn.
 * The X server is asked once per frame for the area that changed, instead of
   once for every window on every frame.
@@ -44,8 +44,8 @@ select the Compositor tab:
 
 [screenshot here -- I'll do it]
 
-* **Use OpenGL for compositing (default on)** — enables the OpenGL renderer, or
-  falls back to XRender.
+* **Use OpenGL for compositing (default on)** — enables the OpenGL renderer;
+  XRender is used instead if it cannot start.
 * **Suspend compositing for focused fullscreen windows (default on)** —
   temporarily disables compositing while a fullscreen application has focus.
   This is especially useful for heavy applications such as games. While
@@ -63,8 +63,9 @@ select the Compositor tab:
 ## Requirements
 
 No extra dependency was added for building. `xfwm4` already builds against
-`libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well, so
-check that the configure summary says `Epoxy support: yes`.
+`libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well.
+It is optional upstream, so nothing complains when it is missing: check that the
+configure summary says `Epoxy support: yes`.
 
 At runtime a graphics driver with OpenGL 2.0 or newer is enough. That is every
 driver of the last fifteen years or so, and anything older simply gets XRender.
@@ -77,9 +78,9 @@ The OpenGL path is skipped, quietly and without breaking your session, if:
 * the driver reports a software renderer, such as `llvmpipe`
 * the driver is older than OpenGL 2.0
 * the driver cannot hand windows over to OpenGL as textures
-* the graphics context is lost while running, after a driver reset for
-  instance. The windows are handed back to XRender for the rest of the session,
-  and the reason is written to the log.
+* the graphics context is lost while running, after a driver reset for instance,
+  in which case the windows are handed back to XRender for the rest of the
+  session and the reason is written to the log
 
 ## Settings
 
@@ -89,31 +90,21 @@ restarts the compositor, so it takes effect immediately.
 `/general/suspend_compositing_fullscreen` turns off compositing while a
 fullscreen window has focus.
 
-`/general/vblank_mode`, or `--vblank` on the command line. This one is read at
-startup only:
+`/general/vblank_mode`, or `--vblank` on the command line, is read at startup
+only:
 
 | value | what happens |
 | --- | --- |
-| `auto` | sync every frame to the screen, the default |
+| `auto` | (default) sync every frame to the screen |
 | `tear` | sync unless the frame is already late, so it tears only when needed |
 | `off` | no sync at all, fastest, tears |
 
 `tear` needs `GLX_EXT_swap_control_tear` from the driver. Without it you get
-`auto` behaviour, and Window Manager Tweaks says so rather than claim otherwise.
+`auto` behaviour.
 
-Two more values exist, `glx` and `xpresent`, which force how XRender puts its
-image on the screen and are only of interest when chasing a driver problem. The
-OpenGL renderer presents its own frames and never goes through XPresent, so with
-it both values behave exactly like `auto`: every frame waits for the screen.
-
-## Limitations
-
-* A window is drawn only if the driver can hand a pixmap of its colour depth to
-  OpenGL. Depths are looked up as windows appear, and 24 and 32 bit, which is
-  what nearly everything uses, always work. A screen running at 30 bit for wider
-  colour depends on the driver: if it cannot bind that depth, the window is not
-  drawn and you see straight through it, and turning OpenGL compositing off is
-  the way out.
+Two more values exist: `glx` and `xpresent`. Since the OpenGL renderer presents
+its own frames and never goes through XPresent, both values behave exactly like
+`auto`: every frame waits for the screen.
 
 ## License
 
