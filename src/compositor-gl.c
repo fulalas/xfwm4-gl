@@ -606,14 +606,20 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     screen_info->gl_data = data;
 
     /*
-     * Normalised coordinates are easier, so GL_TEXTURE_2D comes first, but
-     * whichever target is picked has to work for opaque and ARGB windows
-     * alike, otherwise half of the windows cannot be bound at all.
+     * Rectangle textures come first. They are addressed in pixels, so there is
+     * no way for the sampling to disagree with the real width of the pixmap,
+     * while a normalised GL_TEXTURE_2D relies on the driver mapping 1.0 exactly
+     * onto the last texel. Drivers that pad the allocation do not, and the
+     * window is then drawn very slightly stretched, which is visible as the
+     * content wobbling while a window is resized.
+     *
+     * Whichever target is picked has to work for opaque and ARGB windows alike,
+     * otherwise half of the windows cannot be bound at all.
      */
-    if (!(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_2D_EXT) &&
-          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_2D_EXT)) &&
-        !(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_RECTANGLE_EXT) &&
-          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_RECTANGLE_EXT)))
+    if (!(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_RECTANGLE_EXT) &&
+          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_RECTANGLE_EXT)) &&
+        !(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_2D_EXT) &&
+          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_2D_EXT)))
     {
         g_warning ("No GLX config to bind windows as textures, GL compositing disabled.");
         xfwmGLScreenFinish (screen_info);
