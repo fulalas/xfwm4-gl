@@ -738,6 +738,32 @@ frameSetShape (Client * c, int state, FramePixmap * frame_pix, int button_x[BUTT
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
+/*
+ * Whether the frame of a window is drawn as the active one. That is not the
+ * same question as whether it has focus: a window asking for attention is
+ * drawn active while it blinks. Anything that has to agree with how the frame
+ * looks, hovering over a button for one, asks here.
+ */
+int
+frameGetState (Client * c)
+{
+    g_return_val_if_fail (c != NULL, INACTIVE);
+
+    if (c == clientGetFocus ())
+    {
+        return ACTIVE;
+    }
+
+    TRACE ("\"%s\" is not the active window", c->name);
+    if (FLAG_TEST (c->wm_flags, WM_FLAG_URGENT) &&
+        FLAG_TEST (c->xfwm_flags, XFWM_FLAG_SEEN_ACTIVE))
+    {
+        return ACTIVE;
+    }
+
+    return INACTIVE;
+}
+
 static void
 frameDrawWin (Client * c)
 {
@@ -764,29 +790,9 @@ frameDrawWin (Client * c)
     requires_clearing = FALSE;
     width_changed = FALSE;
     height_changed = FALSE;
-    state = ACTIVE;
+    state = frameGetState (c);
 
     myDisplayErrorTrapPush (display_info);
-
-    if (c != clientGetFocus ())
-    {
-        TRACE ("\"%s\" is not the active window", c->name);
-        if (FLAG_TEST (c->wm_flags, WM_FLAG_URGENT))
-        {
-            if (FLAG_TEST (c->xfwm_flags, XFWM_FLAG_SEEN_ACTIVE))
-            {
-                state = ACTIVE;
-            }
-            else
-            {
-                state = INACTIVE;
-            }
-        }
-        else
-        {
-            state = INACTIVE;
-        }
-    }
 
     if ((state == INACTIVE)
         && FLAG_TEST(c->xfwm_flags, XFWM_FLAG_DRAW_ACTIVE | XFWM_FLAG_FIRST_MAP))

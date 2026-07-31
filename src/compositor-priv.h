@@ -156,6 +156,12 @@ struct _CWindow
     cairo_region_t *gl_shape;
     cairo_region_t *gl_opaque;
     cairo_region_t *gl_paint_clip;
+    /*
+     * The rectangles _NET_WM_OPAQUE_REGION last gave us, kept so gl_opaque can
+     * be rebuilt without reading the property again.
+     */
+    XRectangle *gl_opaque_rects;
+    gint gl_n_opaque_rects;
 #endif /* HAVE_EPOXY */
 };
 
@@ -172,12 +178,12 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
-void             ensure_win_shadow              (CWindow *);
 XserverRegion    win_extents                    (CWindow *);
-XserverRegion    border_size                    (CWindow *);
-XserverRegion    client_size                    (CWindow *);
-void             clip_opaque_region             (CWindow *,
-                                                 XserverRegion);
+gboolean         client_area                    (CWindow *,
+                                                 gint *,
+                                                 gint *,
+                                                 gint *,
+                                                 gint *);
 
 #endif /* HAVE_COMPOSITOR */
 

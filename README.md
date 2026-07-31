@@ -28,10 +28,11 @@ Four things come out of that:
 * Only the parts of the screen that changed are redrawn.
 * The X server is asked once per frame for the area that changed, instead of
   once for every window on every frame.
-* Window shadows no longer need the CPU.
+* Window shadows are drawn by the graphics card, except for windows smaller
+  than the blur, which keep the shadow the CPU builds.
 
-Vsync changes too, allowing adaptive vsync, so a frame that is already late is
-shown right away instead of waiting for the next refresh. See
+Adaptive vsync, where a frame that is already late is shown right away instead
+of waiting for the next refresh, also works with the OpenGL renderer. See
 [Settings](#settings).
 
 ## Usage
@@ -67,17 +68,22 @@ No extra dependency was added for building. `xfwm4` already builds against
 It is optional upstream, so nothing complains when it is missing: check that the
 configure summary says `Epoxy support: yes`.
 
-At runtime a graphics driver with OpenGL 2.0 or newer is enough. That is every
-driver of the last fifteen years or so, and anything older simply gets XRender.
+At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
+`GLX_EXT_texture_from_pixmap`. Every driver of the last fifteen years or so has
+all three, and anything else simply gets XRender.
 
 ## When it falls back to XRender
 
 The OpenGL path is skipped, quietly and without breaking your session, if:
 
 * `libepoxy` was missing when it was built
-* the driver reports a software renderer, such as `llvmpipe`
-* the driver is older than OpenGL 2.0
+* the driver is older than OpenGL 2.0, or is missing frame buffer objects or
+  non power of two textures
+* the driver reports a software renderer such as `llvmpipe`, or a virtual GPU
+  such as VMware `SVGA3D` or virtio `virgl`
 * the driver cannot hand windows over to OpenGL as textures
+* a window turns up with a colour depth the driver cannot hand over, in which
+  case the whole screen goes back to XRender for the rest of the session
 * the graphics context is lost while running, after a driver reset for instance,
   in which case the windows are handed back to XRender for the rest of the
   session and the reason is written to the log
@@ -90,18 +96,22 @@ restarts the compositor, so it takes effect immediately.
 `/general/suspend_compositing_fullscreen` turns off compositing while a
 fullscreen window has focus.
 
-`/general/vblank_mode`, or `--vblank` on the command line, is read at startup
-only:
+`/general/vblank_mode` is read at startup only:
 
 | value | what happens |
 | --- | --- |
-| `auto` | (default) sync every frame to the screen |
-| `tear` | (new) sync unless the frame is already late, so it tears only when needed (requires `GLX_EXT_swap_control_tear`, otherwise falls back to `auto`) |
+| `auto` | (default) sync every frame to the screen, if the driver offers swap control at all |
+| `tear` | sync unless the frame is already late, so it tears only when needed (requires `GLX_EXT_swap_control_tear`, otherwise falls back to `auto`) |
 | `off` | no sync at all, fastest, tears |
 
-Two more values exist: `glx` and `xpresent`. Since the OpenGL renderer presents
-its own frames and never goes through XPresent, both values behave exactly like
-`auto`: every frame waits for the screen.
+Two more values exist: `glx` and `xpresent`. While the OpenGL renderer is
+running it presents its own frames and never goes through XPresent, so both
+behave like `auto`. They differ only once the compositor has fallen back to
+XRender, where they pick which of the two ways of presenting is used.
+
+`--vblank` on the command line sets the same thing, but it only accepts `tear`,
+`off`, `glx` and `xpresent`. There is no `auto` on the command line; leave the
+option out to get it.
 
 ## License
 

@@ -4261,7 +4261,8 @@ clientButtonPress (Client *c, Window w, XfwmEventButton *event)
          * Button was pressed at the time, means the pointer was still within
          * the button, so return to prelight if available, normal otherwise.
          */
-        if (!xfwmPixmapNone(clientGetButtonPixmap(c, b, PRELIGHT)))
+        if (!xfwmPixmapNone(clientGetButtonPixmap(c, b,
+                (frameGetState (c) == ACTIVE) ? PRELIGHT : INACTIVE_PRELIGHT)))
         {
             c->button_status[b] = BUTTON_STATE_PRELIGHT;
         }
@@ -4368,14 +4369,18 @@ clientGetButtonState (Client *c, int button, int state)
         return (state);
     }
 
+    /*
+     * clientGetButtonPixmap() always hands back an entry, an empty one when the
+     * theme ships no image for that state, so the entry itself has to be tested.
+     */
     if ((c->button_status[button] == BUTTON_STATE_PRESSED) &&
-        clientGetButtonPixmap (c, button, PRESSED))
+        !xfwmPixmapNone (clientGetButtonPixmap (c, button, PRESSED)))
     {
         return (PRESSED);
     }
 
     if ((c->button_status[button] == BUTTON_STATE_PRELIGHT) &&
-        clientGetButtonPixmap (c, button, PRELIGHT))
+        !xfwmPixmapNone (clientGetButtonPixmap (c, button, PRELIGHT)))
     {
         return (PRELIGHT);
     }

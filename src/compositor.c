@@ -679,37 +679,62 @@ translate_to_client_region (CWindow *cw, XserverRegion region)
     XFixesTranslateRegion (display_info->dpy, region, x, y);
 }
 
-XserverRegion
+/*
+ * Where the client window itself sits, with the decorations taken off. Returns
+ * FALSE for a window with no frame, and then fills in the whole window. Both
+ * renderers work this out from here so the two cannot drift apart.
+ */
+gboolean
+client_area (CWindow *cw, gint *x, gint *y, gint *width, gint *height)
+{
+    g_return_val_if_fail (cw != NULL, FALSE);
+
+    if (WIN_HAS_FRAME(cw))
+    {
+        Client *c = cw->c;
+
+        *x = frameX (c) + frameLeft (c);
+        *y = frameY (c) + frameTop (c);
+        *width = frameWidth (c) - frameLeft (c) - frameRight (c);
+        *height = frameHeight (c) - frameTop (c) - frameBottom (c);
+
+        return TRUE;
+    }
+
+    *x = cw->attr.x;
+    *y = cw->attr.y;
+    *width = cw->attr.width + 2 * cw->attr.border_width;
+    *height = cw->attr.height + 2 * cw->attr.border_width;
+
+    return FALSE;
+}
+
+static XserverRegion
 client_size (CWindow *cw)
 {
     DisplayInfo *display_info;
-    ScreenInfo *screen_info;
-    XserverRegion border;
+    XRectangle r;
+    gint x, y, width, height;
 
     g_return_val_if_fail (cw != NULL, None);
     TRACE ("window 0x%lx", cw->id);
 
-    screen_info = cw->screen_info;
-    display_info = screen_info->display_info;
-    border = None;
+    display_info = cw->screen_info->display_info;
 
-    if (WIN_HAS_FRAME(cw))
+    if (!client_area (cw, &x, &y, &width, &height))
     {
-        XRectangle  r;
-        Client *c;
-
-        c = cw->c;
-        r.x = frameX (c) + frameLeft (c);
-        r.y = frameY (c) + frameTop (c);
-        r.width = frameWidth (c) - frameLeft (c) - frameRight (c);
-        r.height = frameHeight (c) - frameTop (c) - frameBottom (c);
-        border = XFixesCreateRegion (display_info->dpy, &r, 1);
+        return None;
     }
 
-    return border;
+    r.x = x;
+    r.y = y;
+    r.width = width;
+    r.height = height;
+
+    return XFixesCreateRegion (display_info->dpy, &r, 1);
 }
 
-XserverRegion
+static XserverRegion
 border_size (CWindow *cw)
 {
     DisplayInfo *display_info;
@@ -856,6 +881,10 @@ free_win_data (CWindow *cw, gboolean delete)
             XFixesDestroyRegion (display_info->dpy, cw->opaque_region);
             cw->opaque_region = None;
         }
+
+#ifdef HAVE_EPOXY
+        xfwmGLSetOpaqueRects (cw, NULL, 0);
+#endif /* HAVE_EPOXY */
 
         g_slice_free (CWindow, cw);
     }
@@ -2026,7 +2055,7 @@ present_flip (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
  * should not have one. Whichever renderer is active builds it, the size ends
  * up in shadow_width and shadow_height either way.
  */
-void
+static void
 ensure_win_shadow (CWindow *cw)
 {
     ScreenInfo *screen_info;
@@ -2113,14 +2142,6 @@ win_extents (CWindow *cw)
     r.y = cw->attr.y;
     r.width = cw->attr.width + cw->attr.border_width * 2;
     r.height = cw->attr.height + cw->attr.border_width * 2;
-
-    /*
-       We apply a shadow to the window if:
-       - It's a window with a frame and the user asked for shadows under regular
-         windows,
-       - it's an override redirect window that is not shaped, not an argb and
-         the user asked for shadows on so called "popup" windows.
-     */
 
     ensure_win_shadow (cw);
 
@@ -2451,7 +2472,7 @@ paint_win (CWindow *cw, XserverRegion region, Picture paint_buffer, gboolean sol
     }
 }
 
-void
+static void
 clip_opaque_region (CWindow *cw, XserverRegion region)
 {
     ScreenInfo *screen_info;
@@ -2602,6 +2623,8 @@ set_render_backend_property (ScreenInfo *screen_info)
 }
 
 
+static void setup_presentation (ScreenInfo *screen_info);
+
 static void
 paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 {
@@ -2614,6 +2637,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     gint screen_width;
     gint screen_height;
     CWindow *cw;
+    gboolean repaint_whole_screen = FALSE;
 
     TRACE ("buffer %d", buffer);
     g_return_if_fail (screen_info);
@@ -2633,6 +2657,13 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         /* The GL backend gave up, fall back to XRender for good */
         g_warning ("GL compositing failed, falling back to XRender.");
         screen_info->use_gl_render = FALSE;
+
+        /*
+         * Everything below lets go of drawables the driver may already have
+         * taken away, so it all runs under a trap: this is the path that is
+         * supposed to keep the session alive, not end it.
+         */
+        myDisplayErrorTrapPush (display_info);
 
         /*
          * Hand the windows back: their GL resources have to go, their extents
@@ -2655,7 +2686,22 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 
         xfwmGLScreenFinish (screen_info);
         free_glx_data (screen_info);
+        myDisplayErrorTrapPopIgnored (display_info);
+
+        /*
+         * The GL renderer was the one putting frames on the screen, so a new
+         * way of doing that has to be picked or the session tears from here on.
+         */
+        setup_presentation (screen_info);
         set_render_backend_property (screen_info);
+
+        /*
+         * The buffers the other renderer draws into are made below and hold
+         * nothing yet, and XPresent may put a whole buffer on the screen at
+         * once, so this first frame has to cover the screen rather than the
+         * area that happened to change.
+         */
+        repaint_whole_screen = TRUE;
     }
 #endif /* HAVE_EPOXY */
 
@@ -2698,6 +2744,17 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     /* Copy the original given region */
     paint_region = XFixesCreateRegion (dpy, NULL, 0);
     XFixesCopyRegion (dpy, paint_region, region);
+
+    if (repaint_whole_screen)
+    {
+        XRectangle whole;
+
+        whole.x = 0;
+        whole.y = 0;
+        whole.width = screen_width;
+        whole.height = screen_height;
+        XFixesSetRegion (dpy, paint_region, &whole, 1);
+    }
 
     /*
      * Painting from top to bottom, reducing the clipping area at each iteration.
@@ -3495,11 +3552,15 @@ update_opaque_region (CWindow *cw, Window id)
 
     old_opaque_region = cw->opaque_region;
 
-#ifdef HAVE_EPOXY
-    xfwmGLInvalidateWindowRegions (cw);
-#endif /* HAVE_EPOXY */
-
     nrects = getOpaqueRegionRects (display_info, id, &rects);
+#ifdef HAVE_EPOXY
+    /*
+     * Hand the rectangles to the GL backend rather than let it read the same
+     * property a second time. Only the opaque region changed, the shape of the
+     * window is a separate fact and its cache is left alone.
+     */
+    xfwmGLSetOpaqueRects (cw, rects, (gint) nrects);
+#endif /* HAVE_EPOXY */
     if (nrects)
     {
         cw->opaque_region = XFixesCreateRegion (display_info->dpy, rects, nrects);
@@ -3766,7 +3827,9 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
         cw->extents = None;
     }
 
-    if ((cw->attr.width != width) || (cw->attr.height != height))
+    /* The border counts towards the size of the pixmap behind the window */
+    if ((cw->attr.width != width) || (cw->attr.height != height) ||
+        (cw->attr.border_width != bw))
     {
 #if HAVE_NAME_WINDOW_PIXMAP
 #ifdef HAVE_EPOXY
@@ -3795,7 +3858,8 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
     }
 
     if ((cw->attr.width != width) || (cw->attr.height != height) ||
-        (cw->attr.x != x) || (cw->attr.y != y))
+        (cw->attr.x != x) || (cw->attr.y != y) ||
+        (cw->attr.border_width != bw))
     {
         if (cw->borderSize)
         {
@@ -3810,7 +3874,19 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
         }
 
 #ifdef HAVE_EPOXY
-        xfwmGLInvalidateWindowRegions (cw);
+        /*
+         * A window that only moved covers the same shape somewhere else, so the
+         * cached regions are shifted. Anything else has to be worked out again.
+         */
+        if ((cw->attr.width == width) && (cw->attr.height == height) &&
+            (cw->attr.border_width == bw))
+        {
+            xfwmGLTranslateWindowRegions (cw, x - cw->attr.x, y - cw->attr.y);
+        }
+        else
+        {
+            xfwmGLInvalidateWindowRegions (cw);
+        }
 #endif /* HAVE_EPOXY */
     }
 
@@ -4208,6 +4284,15 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
         if (is_on_compositor (cw))
         {
             getBypassCompositor (display_info, ev->window, &cw->bypass_compositor);
+        }
+
+        /*
+         * The hint decides whether compositing is suspended for a fullscreen
+         * window, so a new value has to be acted on and not merely stored.
+         */
+        if (c != NULL)
+        {
+            compositorUpdateFullscreenSuspend (c->screen_info);
         }
     }
     else if (ev->atom == display_info->atoms[NET_WM_OPAQUE_REGION])
@@ -5070,7 +5155,7 @@ compositorInitDisplay (DisplayInfo *display_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
-#ifdef HAVE_EPOXY
+#if defined(HAVE_COMPOSITOR) && defined(HAVE_EPOXY)
 /*
  * Coming back from a suspend only the drawable is missing, the context and
  * everything built in it are still there. Returns FALSE when there is nothing
@@ -5161,7 +5246,62 @@ setup_gl (ScreenInfo *screen_info)
         free_glx_data (screen_info);
     }
 }
+#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
+
+/*
+ * Pick how finished frames reach the screen. The GL renderer swaps its own
+ * buffers, so this only has to choose for the XRender path, and it has to be
+ * possible to run again if the GL renderer gives up halfway through a session.
+ */
+static void
+setup_presentation (ScreenInfo *screen_info)
+{
+#ifdef HAVE_COMPOSITOR
+    DisplayInfo *display_info = screen_info->display_info;
+
+#ifdef HAVE_EPOXY
+    if (screen_info->use_gl_render)
+    {
+        screen_info->use_present = FALSE;
+        g_info ("Compositor presenting through the GL renderer");
+
+        return;
+    }
 #endif /* HAVE_EPOXY */
+
+#ifdef HAVE_PRESENT_EXTENSION
+    screen_info->use_present = display_info->have_present &&
+#ifdef HAVE_EPOXY
+                               !screen_info->use_glx &&
+#endif /* HAVE_EPOXY */
+                               (screen_info->vblank_mode == VBLANK_AUTO ||
+                                screen_info->vblank_mode == VBLANK_XPRESENT);
+    if (screen_info->use_present)
+    {
+        screen_info->use_n_buffers = N_BUFFERS;
+        screen_info->present_pending = FALSE;
+        XPresentSelectInput (display_info->dpy,
+                             screen_info->output,
+                             PresentCompleteNotifyMask);
+    }
+#else /* HAVE_PRESENT_EXTENSION */
+    screen_info->use_present = FALSE;
+#endif /* HAVE_PRESENT_EXTENSION */
+
+    if (screen_info->use_present)
+    {
+        g_info ("Compositor using XPresent for vsync");
+    }
+    else if (screen_info->use_glx)
+    {
+        g_info ("Compositor using GLX for vsync");
+    }
+    else
+    {
+        g_info ("No vsync support in compositor");
+    }
+#endif /* HAVE_COMPOSITOR */
+}
 
 gboolean
 compositorManageScreen (ScreenInfo *screen_info)
@@ -5309,45 +5449,7 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->use_glx = FALSE;
 #endif /* HAVE_EPOXY */
 
-#ifdef HAVE_PRESENT_EXTENSION
-    screen_info->use_present = display_info->have_present &&
-#ifdef HAVE_EPOXY
-                               !screen_info->use_glx &&
-                               !screen_info->use_gl_render &&
-#endif /* HAVE_EPOXY */
-                               (screen_info->vblank_mode == VBLANK_AUTO ||
-                                screen_info->vblank_mode == VBLANK_XPRESENT);
-    if (screen_info->use_present)
-    {
-        screen_info->use_n_buffers = N_BUFFERS;
-        screen_info->present_pending = FALSE;
-        XPresentSelectInput (display_info->dpy,
-                             screen_info->output,
-                             PresentCompleteNotifyMask);
-    }
-#else /* HAVE_PRESENT_EXTENSION */
-    screen_info->use_present = FALSE;
-#endif /* HAVE_PRESENT_EXTENSION */
-
-#ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render)
-    {
-        /* The GL renderer presents the screen itself, see set_swap_interval_gl() */
-    }
-    else
-#endif /* HAVE_EPOXY */
-    if (screen_info->use_present)
-    {
-        g_info ("Compositor using XPresent for vsync");
-    }
-    else if (screen_info->use_glx)
-    {
-        g_info ("Compositor using GLX for vsync");
-    }
-    else
-    {
-        g_info ("No vsync support in compositor");
-    }
+    setup_presentation (screen_info);
 
     /* The renderer and the presentation are both settled by now */
     set_render_backend_property (screen_info);
@@ -5362,6 +5464,29 @@ compositorManageScreen (ScreenInfo *screen_info)
 #else
     return FALSE;
 #endif /* HAVE_COMPOSITOR */
+}
+
+/*
+ * Compositing that is only paused for a fullscreen window keeps its GL context
+ * and everything built in it, and the screen is not active while that lasts.
+ * This is how that held state is let go of without the compositor running.
+ */
+static void
+release_retained_gl (ScreenInfo *screen_info)
+{
+#if defined(HAVE_COMPOSITOR) && defined(HAVE_EPOXY)
+    if (screen_info->compositor_active || !screen_info->use_gl_render)
+    {
+        return;
+    }
+
+    TRACE ("dropping the GL renderer held over a suspend");
+    xfwmGLScreenFinish (screen_info);
+    screen_info->use_gl_render = FALSE;
+    free_glx_data (screen_info);
+#else
+    (void) screen_info;
+#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
 }
 
 static void
@@ -5383,6 +5508,10 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
 
     if (!screen_info->compositor_active)
     {
+        if (!keep_gl)
+        {
+            release_retained_gl (screen_info);
+        }
         TRACE ("compositor not active on screen %i", screen_info->screen);
         return;
     }
@@ -5587,6 +5716,16 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
 
     if (screen_info->compositor_active == active)
     {
+        /*
+         * Already stopped, but a stop that keeps the GL context may have been
+         * followed by a reason to let it go, the user turning compositing off
+         * for instance. Nothing else would ever get to it.
+         */
+        if (!active && !keep_gl)
+        {
+            release_retained_gl (screen_info);
+        }
+
         return FALSE;
     }
 
@@ -5639,13 +5778,28 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
         if (suspend)
         {
             CWindow *cw = find_cwindow_in_screen (screen, c->frame);
+            guint32 bypass = 0;
 
             /*
              * _NET_WM_BYPASS_COMPOSITOR of 2 means the window wants compositing
              * kept whatever happens. Anything relying on us to present without
              * tearing, a video player for one, can say so this way.
+             *
+             * While compositing is already stopped there are no windows to ask,
+             * so the hint is read straight off the client. Without that, moving
+             * from one fullscreen window to another could never start
+             * compositing again.
              */
-            if ((cw != NULL) && (cw->bypass_compositor == 2))
+            if (cw != NULL)
+            {
+                bypass = cw->bypass_compositor;
+            }
+            else
+            {
+                getBypassCompositor (display_info, c->window, &bypass);
+            }
+
+            if (bypass == 2)
             {
                 suspend = FALSE;
             }

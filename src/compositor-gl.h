@@ -52,7 +52,14 @@ gboolean         xfwmGLPaintAll                 (ScreenInfo *,
 void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
-void             xfwmGLInvalidateWindowRegions   (CWindow *);
+void             xfwmGLInvalidateWindowRegions  (CWindow *);
+void             xfwmGLInvalidateOpaqueRegion   (CWindow *);
+void             xfwmGLTranslateWindowRegions   (CWindow *,
+                                                 gint,
+                                                 gint);
+void             xfwmGLSetOpaqueRects           (CWindow *,
+                                                 XRectangle *,
+                                                 gint);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);

@@ -166,8 +166,22 @@ cb_borderless_maximize_button_toggled (GtkToggleButton *toggle, GtkWidget *title
 #define RENDER_BACKEND_PROP     "_XFWM4_RENDER_BACKEND"
 #define VSYNC_PROP              "_XFWM4_VSYNC"
 
+/* Looked up once, the filter below sees every root window event */
+static Atom render_backend_atom = None;
+static Atom vsync_atom = None;
+
+static void
+intern_backend_atoms (Display *dpy)
+{
+    if (render_backend_atom == None)
+    {
+        render_backend_atom = XInternAtom (dpy, RENDER_BACKEND_PROP, False);
+        vsync_atom = XInternAtom (dpy, VSYNC_PROP, False);
+    }
+}
+
 static gchar *
-read_root_string (Display *dpy, Window root, const gchar *name)
+read_root_string (Display *dpy, Window root, Atom property)
 {
     Atom actual_type;
     gint actual_format;
@@ -175,10 +189,10 @@ read_root_string (Display *dpy, Window root, const gchar *name)
     unsigned char *prop = NULL;
     gchar *value = NULL;
 
-    if ((XGetWindowProperty (dpy, root, XInternAtom (dpy, name, False),
+    if ((XGetWindowProperty (dpy, root, property,
                              0, 256, False, AnyPropertyType, &actual_type,
                              &actual_format, &nitems, &bytes_after, &prop) == Success)
-        && (prop != NULL) && (nitems > 0))
+        && (prop != NULL) && (actual_format == 8) && (nitems > 0))
     {
         value = g_strndup ((const gchar *) prop, nitems);
     }
@@ -204,14 +218,15 @@ update_render_backend_label (GtkWidget *label)
 
     dpy = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
     root = GDK_WINDOW_XID (gdk_get_default_root_window ());
+    intern_backend_atoms (dpy);
 
     /*
      * The window manager puts what it settled on on the root window. Only the
      * renderer is shown, not the card: xfce4-about already reports the
      * hardware, and it knows how to enumerate it properly.
      */
-    backend = read_root_string (dpy, root, RENDER_BACKEND_PROP);
-    vsync = read_root_string (dpy, root, VSYNC_PROP);
+    backend = read_root_string (dpy, root, render_backend_atom);
+    vsync = read_root_string (dpy, root, vsync_atom);
 
     if (backend != NULL)
     {
@@ -242,11 +257,16 @@ update_render_backend_label (GtkWidget *label)
     {
         text = g_strdup_printf (_("(currently using: %s)"), renderer);
     }
+    else
+    {
+        /* Nothing is advertised, so nothing is compositing right now */
+        text = g_strdup (_("(currently off)"));
+    }
 
     g_free (backend);
     g_free (vsync);
 
-    gtk_label_set_text (GTK_LABEL (label), (text != NULL) ? text : "");
+    gtk_label_set_text (GTK_LABEL (label), text);
     g_free (text);
 }
 
@@ -255,11 +275,14 @@ render_backend_filter (GdkXEvent *xevent, GdkEvent *event, gpointer data)
 {
     XEvent *xev = (XEvent *) xevent;
 
-    if (xev->type == PropertyNotify &&
-        (xev->xproperty.atom == XInternAtom (xev->xproperty.display,
-                                            RENDER_BACKEND_PROP, False) ||
-         xev->xproperty.atom == XInternAtom (xev->xproperty.display,
-                                             VSYNC_PROP, False)))
+    if (xev->type != PropertyNotify)
+    {
+        return GDK_FILTER_CONTINUE;
+    }
+
+    intern_backend_atoms (xev->xproperty.display);
+    if (xev->xproperty.atom == render_backend_atom ||
+        xev->xproperty.atom == vsync_atom)
     {
         update_render_backend_label (GTK_WIDGET (data));
     }
