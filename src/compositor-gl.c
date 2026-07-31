@@ -100,7 +100,6 @@ typedef struct
     cairo_region_t *damage_history[GL_DAMAGE_HISTORY];
     guint damage_index;
     gboolean full_repaint;
-    guint frame_serial;
 
     GLXPixmap root_glx_pixmap;
     GLuint root_texture;
@@ -1044,7 +1043,6 @@ xfwmGLFreeWindowData (CWindow *cw)
         glDeleteTextures (1, &cw->gl_texture);
         cw->gl_texture = 0;
     }
-    cw->gl_bind_serial = 0;
 }
 
 void
@@ -1272,7 +1270,6 @@ bind_window_texture (CWindow *cw)
 
     if (cw->gl_texture == 0)
     {
-        cw->gl_bind_serial = 0;
         glGenTextures (1, &cw->gl_texture);
         glBindTexture (data->tex_type, cw->gl_texture);
         set_tex_params (data->tex_type, GL_NEAREST);
@@ -1283,12 +1280,13 @@ bind_window_texture (CWindow *cw)
     }
 
     /*
-     * The contents behind the GLX pixmap change as the window draws, the
-     * texture has to be released and bound again to see the new content. Once
-     * per frame is enough, an opaque window with a translucent frame is
-     * painted in both passes.
+     * The contents behind the GLX pixmap change as the window draws, and the
+     * texture has to be released and bound again for the new content to be
+     * guaranteed visible. Only worth doing when the window has actually drawn
+     * something, which is what repair_win() records: a window repainted merely
+     * because a neighbour changed still holds what it held at the last bind.
      */
-    if (cw->gl_bind_serial != data->frame_serial)
+    if (!cw->gl_texture_bound || cw->gl_content_dirty)
     {
         if (cw->gl_texture_bound)
         {
@@ -1297,7 +1295,7 @@ bind_window_texture (CWindow *cw)
         }
         glXBindTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT, NULL);
         cw->gl_texture_bound = TRUE;
-        cw->gl_bind_serial = data->frame_serial;
+        cw->gl_content_dirty = FALSE;
     }
 
     return TRUE;
@@ -1966,11 +1964,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         zoomed = FALSE;
     }
 
-    data->frame_serial++;
-    if (data->frame_serial == 0)
-    {
-        data->frame_serial = 1;
-    }
     glViewport (0, 0, screen_info->width, screen_info->height);
     glUseProgram (data->program_win);
     glActiveTexture (GL_TEXTURE0);

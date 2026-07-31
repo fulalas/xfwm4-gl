@@ -147,7 +147,7 @@ struct _CWindow
     GLuint gl_shadow_texture;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
-    guint gl_bind_serial;
+    gboolean gl_content_dirty;
     /*
      * Client side regions, so the paint loop never has to ask the X server
      * what a window covers. Cached until the geometry, the shape or the

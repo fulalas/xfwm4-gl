@@ -3173,6 +3173,11 @@ repair_win (CWindow *cw, XRectangle *r)
         return;
     }
 
+#ifdef HAVE_EPOXY
+    /* The window drew something, so its texture has to be bound again */
+    cw->gl_content_dirty = TRUE;
+#endif /* HAVE_EPOXY */
+
     myDisplayErrorTrapPush (display_info);
     if (cw->damaged)
     {
