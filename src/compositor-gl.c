@@ -423,9 +423,8 @@ link_program (const gchar *fragment_source)
 }
 
 /*
- * Find a frame buffer config able to bind a pixmap of that depth as a
- * texture. GL_TEXTURE_2D is preferred over the rectangle target so that
- * texture coordinates stay normalised.
+ * Find a frame buffer config able to bind a pixmap of that depth as a texture
+ * on the given target. See pick_texture_target() for how the target is chosen.
  */
 static gboolean
 choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth, GLenum want_target)
@@ -581,6 +580,58 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     g_info ("No swap control available, frames are not synced to the screen");
 }
 
+/*
+ * Rectangle textures come first. They are addressed in pixels, so there is no
+ * way for the sampling to disagree with the real width of the pixmap, while a
+ * normalised GL_TEXTURE_2D relies on the driver mapping 1.0 exactly onto the
+ * last texel. Drivers that pad the allocation do not, and the window is then
+ * drawn very slightly stretched, which is visible as the content wobbling while
+ * a window is resized.
+ *
+ * Whichever target is picked has to work for opaque and ARGB windows alike,
+ * otherwise half of the windows cannot be bound at all, and the shader for it
+ * has to compile: a driver can offer rectangle pixmaps without offering
+ * sampler2DRect in its GLSL.
+ */
+static gboolean
+pick_texture_target (ScreenInfo *screen_info)
+{
+    XfwmGLData *data = gl_data (screen_info);
+    guint i;
+
+    for (i = 0; i < 2; i++)
+    {
+        GLenum target = (i == 0) ? GLX_TEXTURE_RECTANGLE_EXT : GLX_TEXTURE_2D_EXT;
+
+        if (target == GLX_TEXTURE_RECTANGLE_EXT &&
+            !epoxy_has_gl_extension ("GL_ARB_texture_rectangle") &&
+            epoxy_gl_version () < 31)
+        {
+            continue;
+        }
+
+        data->fbconfig[GL_DEPTH_RGB] = NULL;
+        data->fbconfig[GL_DEPTH_RGBA] = NULL;
+        if (!choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, target) ||
+            !choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, target))
+        {
+            continue;
+        }
+
+        data->program_win = link_program ((data->tex_type == GL_TEXTURE_2D)
+                                          ? fragment_source_2d
+                                          : fragment_source_rect);
+        if (data->program_win != 0)
+        {
+            return TRUE;
+        }
+
+        g_info ("The shader for this texture target does not compile, trying another");
+    }
+
+    return FALSE;
+}
+
 gboolean
 xfwmGLScreenInit (ScreenInfo *screen_info)
 {
@@ -626,10 +677,7 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
      * Whichever target is picked has to work for opaque and ARGB windows alike,
      * otherwise half of the windows cannot be bound at all.
      */
-    if (!(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_RECTANGLE_EXT) &&
-          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_RECTANGLE_EXT)) &&
-        !(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_2D_EXT) &&
-          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_2D_EXT)))
+    if (!pick_texture_target (screen_info))
     {
         g_warning ("No GLX config to bind windows as textures, GL compositing disabled.");
         xfwmGLScreenFinish (screen_info);
@@ -646,13 +694,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    data->program_win = link_program ((data->tex_type == GL_TEXTURE_2D)
-                                      ? fragment_source_2d : fragment_source_rect);
-    if (data->program_win == 0)
-    {
-        xfwmGLScreenFinish (screen_info);
-        return FALSE;
-    }
     data->u_tex_win = glGetUniformLocation (data->program_win, "tex");
     data->u_opacity_win = glGetUniformLocation (data->program_win, "opacity");
     glUseProgram (data->program_win);
@@ -1335,7 +1376,7 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
  * window blended. Mirrors paint_win() of the XRender path, including the
  * frame drawn separately when the title bar is translucent.
  */
-static void
+static gboolean
 paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 {
     ScreenInfo *screen_info = cw->screen_info;
@@ -1343,7 +1384,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 
     if (!bind_window_texture (cw))
     {
-        return;
+        return FALSE;
     }
 
     opacity = solid_part ? 1.0f : (gfloat) cw->opacity / (gfloat) NET_WM_OPAQUE;
@@ -1402,6 +1443,8 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y, width, height,
                           clip);
     }
+
+    return TRUE;
 }
 
 static void
@@ -1713,7 +1756,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     glUseProgram (data->program_2d);
     glUniform1f (data->u_opacity_2d, 1.0f);
 
-
     {
         /* The scene texture has its origin at the bottom left */
         gfloat u1 = (gfloat) (x_offset / screen_info->width);
@@ -1776,7 +1818,6 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
         glXQueryDrawable (dpy, screen_info->glx_window,
                           GLX_BACK_BUFFER_AGE_EXT, &age);
     }
-
 
     if (age == 0 || age > GL_DAMAGE_HISTORY || data->full_repaint)
     {
@@ -1857,15 +1898,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     myDisplayErrorTrapPush (display_info);
 
-    /*
-     * Window contents are drawn by the X server, and we are about to read those
-     * same pixmaps as textures. Without this the GPU can sample a window while
-     * the server is still drawing into it, which shows up as the window content
-     * flickering while it repaints. The XRender path never sees this because all
-     * of its drawing goes through the server in order.
-     */
-    glXWaitX ();
-
     frame_damage = fetch_damage (dpy, damage);
     paint_region = get_paint_region (screen_info, frame_damage);
 
@@ -1942,14 +1974,26 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         if (WIN_IS_OPAQUE(cw))
         {
+            gboolean painted = TRUE;
+
             clip = cairo_region_copy (paint_region);
             cairo_region_intersect (clip, shape);
             if (!cairo_region_is_empty (clip))
             {
                 glDisable (GL_BLEND);
-                paint_window_gl (cw, TRUE, clip);
+                painted = paint_window_gl (cw, TRUE, clip);
             }
             cairo_region_destroy (clip);
+
+            if (!painted)
+            {
+                /*
+                 * We could not bind this window, so it is not on screen and
+                 * must not hide what is below it either.
+                 */
+                cw->skipped = TRUE;
+                continue;
+            }
 
             /*
              * Nothing below shows through an opaque window. A window with a

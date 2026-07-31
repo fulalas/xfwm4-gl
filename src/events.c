@@ -1403,7 +1403,13 @@ handleEnterNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
         {
             if (MYWINDOW_XWINDOW(c->buttons[b]) == event->meta.window)
             {
-                if (!xfwmPixmapNone(clientGetButtonPixmap(c, b, PRELIGHT)))
+                /*
+                 * An unfocused window is drawn with the inactive pixmaps, so
+                 * that is the one that has to exist for hovering to show
+                 * anything, see clientGetButtonState().
+                 */
+                if (!xfwmPixmapNone(clientGetButtonPixmap(c, b,
+                        (c == clientGetFocus ()) ? PRELIGHT : INACTIVE_PRELIGHT)))
                 {
                     c->button_status[b] = BUTTON_STATE_PRELIGHT;
                     need_redraw = TRUE;

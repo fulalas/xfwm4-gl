@@ -2612,8 +2612,9 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         screen_info->use_gl_render = FALSE;
 
         /*
-         * Hand the windows back: their GL resources have to go, and their
-         * shadows have to be built again by the other renderer.
+         * Hand the windows back: their GL resources have to go, their extents
+         * have to be worked out again so the other renderer builds their
+         * shadows, and the context we were drawing with is of no use now.
          */
         for (list = screen_info->cwindows; list; list = g_list_next (list))
         {
@@ -2622,9 +2623,15 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
             drop_win_shadow (cw2);
             xfwmGLFreeWindowData (cw2);
             xfwmGLInvalidateWindowRegions (cw2);
+            if (cw2->extents)
+            {
+                XFixesDestroyRegion (display_info->dpy, cw2->extents);
+                cw2->extents = None;
+            }
         }
 
         xfwmGLScreenFinish (screen_info);
+        free_glx_data (screen_info);
         set_render_backend_property (screen_info);
     }
 #endif /* HAVE_EPOXY */
@@ -4071,17 +4078,27 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
         if (ev->atom == backgroundProps[p] && ev->state == PropertyNewValue)
         {
             ScreenInfo *screen_info = myDisplayGetScreenFromRoot (display_info, ev->window);
-            if ((screen_info) && (screen_info->compositor_active) && (screen_info->rootTile))
+
+            /*
+             * Whichever renderer is running has the old background pixmap
+             * bound, and the pixmap is about to be freed by whoever set the
+             * new one. The XRender path keeps it in rootTile, the GL path as a
+             * texture, and only one of the two exists at a time.
+             */
+            if ((screen_info) && (screen_info->compositor_active))
             {
                 myDisplayErrorTrapPush (display_info);
                 XClearArea (display_info->dpy, screen_info->output, 0, 0, 0, 0, TRUE);
 #ifdef HAVE_EPOXY
                 xfwmGLInvalidateRootTexture (screen_info);
 #endif /* HAVE_EPOXY */
-                XRenderFreePicture (display_info->dpy, screen_info->rootTile);
+                if (screen_info->rootTile)
+                {
+                    XRenderFreePicture (display_info->dpy, screen_info->rootTile);
+                    screen_info->rootTile = None;
+                }
                 myDisplayErrorTrapPopIgnored (display_info);
 
-                screen_info->rootTile = None;
                 damage_screen (screen_info);
 
                 return;
@@ -5090,6 +5107,12 @@ setup_gl (ScreenInfo *screen_info)
      * mode asks for it and the GL renderer is not the one driving the screen.
      */
     screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
+
+    if (!screen_info->use_glx && !screen_info->use_gl_render)
+    {
+        /* Nobody ended up needing the context we just made */
+        free_glx_data (screen_info);
+    }
 }
 #endif /* HAVE_EPOXY */
 
@@ -5216,6 +5239,10 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_EPOXY */
     }
     XClearArea (display_info->dpy, screen_info->output, 0, 0, 0, 0, TRUE);
+
+    /* Everything the state depends on has been decided by now */
+    set_render_backend_property (screen_info);
+
     TRACE ("manual compositing enabled");
 
 #ifdef HAVE_EPOXY
@@ -5238,8 +5265,6 @@ compositorManageScreen (ScreenInfo *screen_info)
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
 #endif /* HAVE_EPOXY */
-
-    set_render_backend_property (screen_info);
 
 #ifdef HAVE_PRESENT_EXTENSION
     screen_info->use_present = display_info->have_present &&
