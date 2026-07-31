@@ -2556,6 +2556,20 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         /* The GL backend gave up, fall back to XRender for good */
         g_warning ("GL compositing failed, falling back to XRender.");
         screen_info->use_gl_render = FALSE;
+
+        /*
+         * Hand the windows back: their GL resources have to go, and their
+         * shadows have to be built again by the other renderer.
+         */
+        for (list = screen_info->cwindows; list; list = g_list_next (list))
+        {
+            CWindow *cw2 = (CWindow *) list->data;
+
+            drop_win_shadow (cw2);
+            xfwmGLFreeWindowData (cw2);
+            xfwmGLInvalidateWindowRegions (cw2);
+        }
+
         xfwmGLScreenFinish (screen_info);
         set_render_backend_property (screen_info);
     }
@@ -3664,6 +3678,10 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
     if ((cw->attr.width != width) || (cw->attr.height != height))
     {
 #if HAVE_NAME_WINDOW_PIXMAP
+#ifdef HAVE_EPOXY
+        /* The GLX pixmap wraps the pixmap below, it cannot outlive it */
+        xfwmGLFreeWindowData (cw);
+#endif /* HAVE_EPOXY */
         if (cw->name_window_pixmap)
         {
             XFreePixmap (display_info->dpy, cw->name_window_pixmap);
@@ -4956,6 +4974,16 @@ resume_gl (ScreenInfo *screen_info)
         return FALSE;
     }
 
+    if (!screen_info->params->use_gl_compositing)
+    {
+        /* Turned off while we were away */
+        xfwmGLScreenFinish (screen_info);
+        free_glx_data (screen_info);
+        screen_info->use_gl_render = FALSE;
+
+        return FALSE;
+    }
+
     screen_info->use_n_buffers = 1;
     if (!attach_glx_window (screen_info))
     {
@@ -5476,10 +5504,11 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
                    FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN));
 
         /*
-         * Keep the GL context and everything in it, this is a short stop for
-         * as long as a fullscreen window has focus.
+         * Keep the GL context and everything in it while a fullscreen window
+         * has focus, this is a short stop. When the user turned compositing
+         * off it is not, so let it all go.
          */
-        activate_screen (screen, active, TRUE);
+        activate_screen (screen, active, screen->params->use_compositing);
     }
 #endif /* HAVE_COMPOSITOR */
 }

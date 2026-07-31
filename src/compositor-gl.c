@@ -426,7 +426,7 @@ link_program (const gchar *fragment_source)
  * texture coordinates stay normalised.
  */
 static gboolean
-choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth)
+choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth, GLenum want_target)
 {
     XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
@@ -482,20 +482,27 @@ choose_fbconfig (ScreenInfo *screen_info, gint slot, gint depth)
             continue;
         }
 
-        if (value & GLX_TEXTURE_2D_BIT_EXT)
+        /*
+         * Both depths have to end up on the same target, the pixmaps are all
+         * bound and sampled by the same code.
+         */
+        if (want_target == GLX_TEXTURE_2D_EXT)
         {
+            if (!(value & GLX_TEXTURE_2D_BIT_EXT))
+            {
+                continue;
+            }
             data->tex_type = GL_TEXTURE_2D;
-            data->tex_target = GLX_TEXTURE_2D_EXT;
-        }
-        else if (value & GLX_TEXTURE_RECTANGLE_BIT_EXT)
-        {
-            data->tex_type = GL_TEXTURE_RECTANGLE_ARB;
-            data->tex_target = GLX_TEXTURE_RECTANGLE_EXT;
         }
         else
         {
-            continue;
+            if (!(value & GLX_TEXTURE_RECTANGLE_BIT_EXT))
+            {
+                continue;
+            }
+            data->tex_type = GL_TEXTURE_RECTANGLE_ARB;
         }
+        data->tex_target = want_target;
 
         status = glXGetFBConfigAttrib (dpy, configs[i], GLX_Y_INVERTED_EXT, &value);
         data->y_inverted[slot] = (status == Success && value == True);
@@ -598,14 +605,21 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     data = g_new0 (XfwmGLData, 1);
     screen_info->gl_data = data;
 
-    if (!choose_fbconfig (screen_info, GL_DEPTH_RGB, 24))
+    /*
+     * Normalised coordinates are easier, so GL_TEXTURE_2D comes first, but
+     * whichever target is picked has to work for opaque and ARGB windows
+     * alike, otherwise half of the windows cannot be bound at all.
+     */
+    if (!(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_2D_EXT) &&
+          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_2D_EXT)) &&
+        !(choose_fbconfig (screen_info, GL_DEPTH_RGB, 24, GLX_TEXTURE_RECTANGLE_EXT) &&
+          choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32, GLX_TEXTURE_RECTANGLE_EXT)))
     {
-        g_warning ("No GLX config to bind opaque windows, GL compositing disabled.");
+        g_warning ("No GLX config to bind windows as textures, GL compositing disabled.");
         xfwmGLScreenFinish (screen_info);
+
         return FALSE;
     }
-    /* An ARGB config is only needed for windows that have one */
-    choose_fbconfig (screen_info, GL_DEPTH_RGBA, 32);
 
     if (data->tex_type == GL_TEXTURE_2D &&
         !epoxy_has_gl_extension ("GL_ARB_texture_non_power_of_two") &&
@@ -766,6 +780,26 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
         return;
     }
 
+    if (glXGetCurrentContext () == NULL)
+    {
+        /*
+         * Reached after the context was lost, the driver already dropped
+         * everything that lived in it. Only our own memory is left to free.
+         */
+        for (i = 0; i < GL_DAMAGE_HISTORY; i++)
+        {
+            if (data->damage_history[i] != NULL)
+            {
+                cairo_region_destroy (data->damage_history[i]);
+            }
+        }
+        g_free (data->renderer);
+        g_free (data);
+        screen_info->gl_data = NULL;
+
+        return;
+    }
+
     free_root_texture (screen_info);
     free_fbo (screen_info);
 
@@ -870,27 +904,32 @@ xfwmGLFreeWindowData (CWindow *cw)
     g_return_if_fail (cw != NULL);
 
     screen_info = cw->screen_info;
-    if (screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
+    if (screen_info->gl_data == NULL)
     {
         return;
     }
     dpy = myScreenGetXDisplay (screen_info);
 
+    /*
+     * The GLX pixmap must go whatever happens, it is tied to an X pixmap that
+     * is about to be freed. Only the texture calls need a current context.
+     */
     if (cw->gl_pixmap != None)
     {
-        if (cw->gl_texture_bound)
+        if (cw->gl_texture_bound && glXGetCurrentContext () != NULL)
         {
             glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
-            cw->gl_texture_bound = FALSE;
         }
+        cw->gl_texture_bound = FALSE;
         glXDestroyPixmap (dpy, cw->gl_pixmap);
         cw->gl_pixmap = None;
     }
-    if (cw->gl_texture != 0)
+    if (cw->gl_texture != 0 && glXGetCurrentContext () != NULL)
     {
         glDeleteTextures (1, &cw->gl_texture);
         cw->gl_texture = 0;
     }
+    cw->gl_bind_serial = 0;
 }
 
 void
@@ -1041,8 +1080,19 @@ build_shadow_profile (ScreenInfo *screen_info)
 
     data->shadow_profile_size = gaussian_size;
     data->shadow_profile_peak = (gfloat) peak / 255.0f;
-    glUseProgram (data->program_shadow_profile);
-    glUniform1f (data->u_prof_ramp, (gfloat) gaussian_size);
+
+    /*
+     * This can happen in the middle of a frame, so put back whatever program
+     * was in use once the ramp is set.
+     */
+    {
+        GLint current = 0;
+
+        glGetIntegerv (GL_CURRENT_PROGRAM, &current);
+        glUseProgram (data->program_shadow_profile);
+        glUniform1f (data->u_prof_ramp, (gfloat) gaussian_size);
+        glUseProgram ((GLuint) current);
+    }
 
     g_free (profile);
     XDestroyImage (image);
@@ -1429,12 +1479,6 @@ bind_root_texture (ScreenInfo *screen_info)
     glGenTextures (1, &data->root_texture);
     glBindTexture (data->tex_type, data->root_texture);
     set_tex_params (data->tex_type, GL_NEAREST);
-    /*
-     * The background pixmap can be smaller than the screen, the X server tiles
-     * it, so the texture repeats rather than stretches.
-     */
-    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri (data->tex_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
 
     return TRUE;
@@ -1457,10 +1501,24 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
         gint tex_width = (data->root_width > 0) ? data->root_width : screen_info->width;
         gint tex_height = (data->root_height > 0) ? data->root_height : screen_info->height;
 
+        gint x, y;
+
         glUniform1f (data->u_opacity_win, 1.0f);
-        draw_quad (screen_info, data->tex_type, data->y_inverted[GL_DEPTH_RGB],
-                   0, 0, tex_width, tex_height,
-                   0, 0, screen_info->width, screen_info->height, clip);
+        /*
+         * A background pixmap smaller than the screen is tiled by the X
+         * server, so tile it here too rather than stretch it. Usually that is
+         * one single tile.
+         */
+        for (y = 0; y < screen_info->height; y += tex_height)
+        {
+            for (x = 0; x < screen_info->width; x += tex_width)
+            {
+                draw_quad (screen_info, data->tex_type,
+                           data->y_inverted[GL_DEPTH_RGB],
+                           0, 0, tex_width, tex_height,
+                           x, y, tex_width, tex_height, clip);
+            }
+        }
     }
     else
     {
@@ -1695,7 +1753,6 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
         r.width = screen_info->width;
         r.height = screen_info->height;
         region = cairo_region_create_rectangle (&r);
-        data->full_repaint = FALSE;
     }
     else
     {
@@ -1712,15 +1769,25 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
         }
     }
 
-    /* Remember this frame's damage for the next rounds */
+    return region;
+}
+
+/*
+ * Only frames that reach the screen may advance the history, otherwise the
+ * buffer age of the next frames points at the wrong entries and areas keep
+ * stale pixels.
+ */
+static void
+record_damage (ScreenInfo *screen_info, cairo_region_t *damage)
+{
+    XfwmGLData *data = gl_data (screen_info);
+
     if (data->damage_history[data->damage_index] != NULL)
     {
         cairo_region_destroy (data->damage_history[data->damage_index]);
     }
     data->damage_history[data->damage_index] = cairo_region_copy (damage);
     data->damage_index = (data->damage_index + 1) % GL_DAMAGE_HISTORY;
-
-    return region;
 }
 
 gboolean
@@ -1758,15 +1825,20 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     frame_damage = fetch_damage (dpy, damage);
     paint_region = get_paint_region (screen_info, frame_damage);
-    cairo_region_destroy (frame_damage);
 
     if (cairo_region_is_empty (paint_region))
     {
+        /* Nothing reaches the screen, so nothing is recorded either */
         cairo_region_destroy (paint_region);
+        cairo_region_destroy (frame_damage);
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
+
+    record_damage (screen_info, frame_damage);
+    cairo_region_destroy (frame_damage);
+    data->full_repaint = FALSE;
 
     zoomed = screen_info->zoomed;
     if (zoomed && !bind_zoom_fbo (screen_info))
