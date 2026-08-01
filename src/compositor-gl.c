@@ -774,14 +774,12 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    if (data->tex_type == GL_TEXTURE_2D &&
-        !epoxy_has_gl_extension ("GL_ARB_texture_non_power_of_two") &&
-        epoxy_gl_version () < 30)
-    {
-        g_warning ("Non power of two textures are missing, GL compositing disabled.");
-        xfwmGLScreenFinish (screen_info);
-        return FALSE;
-    }
+    /*
+     * Textures of any size are part of OpenGL 2.0, which is required above, and
+     * everything uploaded here stays within what even the earliest hardware to
+     * offer them can do: no mipmaps and no repeating. So there is nothing left
+     * to check for separately.
+     */
 
     data->u_tex_win = glGetUniformLocation (data->program_win, "tex");
     data->u_opacity_win = glGetUniformLocation (data->program_win, "opacity");

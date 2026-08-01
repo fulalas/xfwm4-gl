@@ -85,6 +85,8 @@
 #ifdef HAVE_COMPOSITOR
 static gboolean compositor = TRUE;
 static vblankMode vblank_mode = VBLANK_AUTO;
+/* Whether --vblank was given at all, so that asking for auto overrides the setting */
+static gboolean vblank_given = FALSE;
 #define XFWM4_ERROR      (xfwm4_error_quark ())
 
 static GQuark
@@ -403,6 +405,11 @@ vblank_callback (const gchar  *name,
 {
     g_return_val_if_fail (value != NULL, FALSE);
 
+    if (strcmp (value, "auto") == 0)
+    {
+        vblank_mode = VBLANK_AUTO;
+    }
+    else
 #ifdef HAVE_PRESENT_EXTENSION
     if (strcmp (value, "xpresent") == 0)
     {
@@ -431,6 +438,7 @@ vblank_callback (const gchar  *name,
         g_set_error (error, XFWM4_ERROR, 0, "Unrecognized compositor option \"%s\"", value);
         return FALSE;
     }
+    vblank_given = TRUE;
 
     return TRUE;
 }
@@ -441,7 +449,7 @@ init_compositor_screen (ScreenInfo *screen_info)
     DisplayInfo *display_info;
 
     display_info = screen_info->display_info;
-    if (vblank_mode != VBLANK_AUTO)
+    if (vblank_given)
     {
         compositorSetVblankMode (screen_info, vblank_mode);
     }
@@ -620,7 +628,7 @@ main (int argc, char **argv)
         { "compositor", 'c', 0, G_OPTION_ARG_CALLBACK,
           compositor_callback, N_("Set the compositor mode"), "on|off" },
         { "vblank", 'b', 0, G_OPTION_ARG_CALLBACK,
-          vblank_callback, N_("Set the vblank mode"), "off"
+          vblank_callback, N_("Set the vblank mode"), "auto|off"
 #ifdef HAVE_PRESENT_EXTENSION
           "|xpresent"
 #endif /* HAVE_PRESENT_EXTENSION */
