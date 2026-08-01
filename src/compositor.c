@@ -34,6 +34,10 @@
 #include <glib.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
 #include <libxfce4util/libxfce4util.h>
 
 #ifdef HAVE_EPOXY
@@ -1193,21 +1197,143 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
     return FALSE;
 }
 
-/* Whether GL can be used at all on this driver */
+static gboolean renderer_is_blacklisted (const char *renderer);
+
+/*
+ * Whether this machine looks like it can render with a GPU at all.
+ *
+ * Loading the GL stack costs tens of megabytes that never come back: most of it
+ * is the driver and the compiler behind it being mapped into the process, and
+ * only unloading those libraries would release it, which libGL never does. The
+ * first call into GLX is enough to pay the whole price, before any context
+ * exists, so where there plainly is no acceleration the question is not asked.
+ *
+ * This looks at the X server and at the render nodes the kernel exposes, which
+ * costs nothing, and errs towards trying: a wrong yes only means the renderer
+ * check below has the last word, as it always did.
+ */
 static gboolean
-check_glx_renderer (ScreenInfo *screen_info)
+acceleration_is_available (ScreenInfo *screen_info)
 {
-    const char *glRenderer;
+    Display *dpy;
+    GDir *dir;
+    const gchar *name;
+    int op, event, error;
+    gboolean have_node;
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+
+    /* Software rendering was asked for, so there is nothing to look for */
+    if (g_getenv ("LIBGL_ALWAYS_SOFTWARE") != NULL)
+    {
+        g_info ("Software rendering was requested, staying on XRender");
+
+        return FALSE;
+    }
+
+    dpy = myScreenGetXDisplay (screen_info);
+    if (!XQueryExtension (dpy, "DRI3", &op, &event, &error) &&
+        !XQueryExtension (dpy, "DRI2", &op, &event, &error))
+    {
+        g_info ("The X server has no direct rendering, staying on XRender");
+
+        return FALSE;
+    }
+
+    /*
+     * A render node is what a card able to render offers, and the kernel makes
+     * one only for drivers that can render: a card that merely drives a display
+     * never has one. That its presence is the whole answer, with no list of
+     * driver names needed.
+     *
+     * Whether we could open it ourselves is deliberately not asked. Under DRI3
+     * the X server opens the card and hands us the file descriptor, so hardware
+     * rendering works even where we have no rights to the node at all.
+     */
+    have_node = FALSE;
+    dir = g_dir_open ("/dev/dri", 0, NULL);
+    if (dir == NULL)
+    {
+        g_info ("No render node to draw with, staying on XRender");
+
+        return FALSE;
+    }
+
+    while ((name = g_dir_read_name (dir)) != NULL)
+    {
+        if (g_str_has_prefix (name, "renderD"))
+        {
+            have_node = TRUE;
+            break;
+        }
+    }
+    g_dir_close (dir);
+
+    if (!have_node)
+    {
+        g_info ("No render node we can use, staying on XRender");
+    }
+
+    return have_node;
+}
+
+/*
+ * Hand back to the system what the GL stack took from the heap and let go of
+ * again. glibc keeps freed memory for itself unless asked.
+ */
+static void
+release_unused_heap (void)
+{
+#ifdef __GLIBC__
+    malloc_trim (0);
+#endif
+}
+
+/*
+ * Renderers we do not draw with.
+ *
+ * The first four draw on the processor, so they would be slower than XRender
+ * while costing the memory of a whole GL stack on top.
+ *
+ * virgl is different: it does pass the drawing to the graphics card of the host,
+ * but binding a window as a texture through GLX_EXT_texture_from_pixmap gives
+ * nothing but black with it, which leaves the whole screen black. Compositors
+ * that go through EGL instead are fine there, ours does not, so it stays here.
+ *
+ * SVGA3D, which is what a VirtualBox guest with 3D turned on reports, was tried
+ * and draws correctly, so it is deliberately not in this list.
+ */
+static gboolean
+renderer_is_blacklisted (const char *renderer)
+{
     const char *blacklisted[] = {
         "Software Rasterizer",
         "Mesa X11",
         "llvmpipe",
         "softpipe",
-        "SVGA3D",
+        "swrast",
         "virgl",
         NULL
     };
     int i;
+
+    g_return_val_if_fail (renderer != NULL, TRUE);
+
+    for (i = 0; blacklisted[i] != NULL; i++)
+    {
+        if (strcasestr (renderer, blacklisted[i]))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static gboolean
+check_glx_renderer (ScreenInfo *screen_info)
+{
+    const char *glRenderer;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
@@ -1220,10 +1346,7 @@ check_glx_renderer (ScreenInfo *screen_info)
     }
     DBG ("Using GL renderer: %s", glRenderer);
 
-    i = 0;
-    while (blacklisted[i] && !strcasestr (glRenderer, blacklisted[i]))
-        i++;
-    if (blacklisted[i])
+    if (renderer_is_blacklisted (glRenderer))
     {
         g_warning ("Unsupported GL renderer (%s).", glRenderer);
         return FALSE;
@@ -5238,6 +5361,13 @@ setup_gl (ScreenInfo *screen_info)
         return;
     }
 
+    if (!acceleration_is_available (screen_info))
+    {
+        screen_info->use_glx = FALSE;
+
+        return;
+    }
+
     screen_info->use_n_buffers = 1;
     screen_info->glx_context = None;
     screen_info->glx_window = None;
@@ -5248,6 +5378,7 @@ setup_gl (ScreenInfo *screen_info)
     if (!init_glx (screen_info))
     {
         screen_info->use_glx = FALSE;
+        release_unused_heap ();
 
         return;
     }
@@ -5273,6 +5404,7 @@ setup_gl (ScreenInfo *screen_info)
     {
         /* Nobody ended up needing the context we just made */
         free_glx_data (screen_info);
+        release_unused_heap ();
     }
 }
 #endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
