@@ -226,7 +226,13 @@ window_shape (CWindow *cw)
         return cw->gl_shape;
     }
 
-    if (WIN_IS_SHAPED(cw))
+    /*
+     * cw->shaped, not WIN_IS_SHAPED(): the latter tests the client, while the
+     * window tracked here can be the frame, which themes with rounded corners
+     * shape on their own. Treating such a frame as a rectangle draws the
+     * undefined corners of its pixmap and hides what is really behind them.
+     */
+    if (cw->shaped)
     {
         XRectangle *rects;
         gint nrects = 0, ordering;
