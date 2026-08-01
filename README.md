@@ -78,10 +78,8 @@ The OpenGL path is skipped, quietly and without breaking your session, if:
 * the driver is older than OpenGL 2.0, is missing frame buffer objects, or
   cannot hand windows over to OpenGL as textures
 * the driver reports a software renderer such as `llvmpipe` or `swrast`
-* a window turns up with a colour depth the driver cannot hand over, in which
-  case the whole screen goes back to XRender
-* the graphics context is lost while running, after a driver reset for instance,
-  in which case the windows are handed back to XRender
+* a window turns up with a colour depth the driver cannot hand over
+* the graphics context is lost while running, after a driver reset for instance
 
 ## Settings
 
