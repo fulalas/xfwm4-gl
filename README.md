@@ -42,7 +42,7 @@ is installed the session should load it automatically.
 It is also possible to try it without installing, by replacing the window
 manager that is already running:
 
-    ./path_to_new_build/xfwm4 --replace
+    ./path_to_new_build/src/xfwm4 --replace
 
 ## Features
 
