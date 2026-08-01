@@ -71,6 +71,8 @@ At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
 `GLX_EXT_texture_from_pixmap`. Every driver of the last fifteen years or so has
 all three.
 
+Both VirtualBox and QEMU work as long as they have 3D acceleration turned on.
+
 ## When it falls back to XRender
 
 The OpenGL path is skipped, quietly and without breaking your session, if:

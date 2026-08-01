@@ -1295,13 +1295,11 @@ release_unused_heap (void)
  * The first four draw on the processor, so they would be slower than XRender
  * while costing the memory of a whole GL stack on top.
  *
- * virgl is different: it does pass the drawing to the graphics card of the host,
- * but binding a window as a texture through GLX_EXT_texture_from_pixmap gives
- * nothing but black with it, which leaves the whole screen black. Compositors
- * that go through EGL instead are fine there, ours does not, so it stays here.
- *
- * SVGA3D, which is what a VirtualBox guest with 3D turned on reports, was tried
- * and draws correctly, so it is deliberately not in this list.
+ * The paravirtual renderers of a virtual machine are not among them, since they
+ * pass the drawing to the graphics card of the host: SVGA3D, which a VirtualBox
+ * guest with 3D turned on reports, and virgl, which a QEMU guest reports, were
+ * both tried and draw correctly. virgl needs the texture target chosen for it,
+ * see renderer_needs_2d_target() in compositor-gl.c.
  */
 static gboolean
 renderer_is_blacklisted (const char *renderer)
@@ -1312,7 +1310,6 @@ renderer_is_blacklisted (const char *renderer)
         "llvmpipe",
         "softpipe",
         "swrast",
-        "virgl",
         NULL
     };
     int i;

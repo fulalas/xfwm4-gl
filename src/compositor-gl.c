@@ -671,6 +671,25 @@ depth_config (ScreenInfo *screen_info, gint depth)
 }
 
 /*
+ * Drivers that offer the rectangle texture target and then do not honour it.
+ *
+ * virgl, which is what a QEMU guest with 3D reports, advertises the target and
+ * binds a window to it without complaint, and then every window samples black,
+ * so the whole screen goes black. The same windows on the 2D target draw
+ * correctly, so that is what it gets.
+ */
+static gboolean
+renderer_needs_2d_target (const char *renderer)
+{
+    if (renderer == NULL)
+    {
+        return FALSE;
+    }
+
+    return (strcasestr (renderer, "virgl") != NULL);
+}
+
+/*
  * Rectangle textures come first. They are addressed in pixels, so there is no
  * way for the sampling to disagree with the real width of the pixmap, while a
  * normalised GL_TEXTURE_2D relies on the driver mapping 1.0 exactly onto the
@@ -687,11 +706,28 @@ static gboolean
 pick_texture_target (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
+    gboolean prefer_2d;
     guint i;
+
+    /*
+     * Rectangle textures first, since they are addressed in pixels and so cannot
+     * be stretched by a driver that pads its allocations, except where the
+     * driver cannot be trusted with them.
+     */
+    prefer_2d = renderer_needs_2d_target ((const char *) glGetString (GL_RENDERER));
 
     for (i = 0; i < 2; i++)
     {
-        GLenum target = (i == 0) ? GLX_TEXTURE_RECTANGLE_EXT : GLX_TEXTURE_2D_EXT;
+        GLenum target;
+
+        if (prefer_2d)
+        {
+            target = (i == 0) ? GLX_TEXTURE_2D_EXT : GLX_TEXTURE_RECTANGLE_EXT;
+        }
+        else
+        {
+            target = (i == 0) ? GLX_TEXTURE_RECTANGLE_EXT : GLX_TEXTURE_2D_EXT;
+        }
 
         if (target == GLX_TEXTURE_RECTANGLE_EXT &&
             !epoxy_has_gl_extension ("GL_ARB_texture_rectangle") &&
@@ -717,6 +753,9 @@ pick_texture_target (ScreenInfo *screen_info)
                                           : fragment_source_rect);
         if (data->program_win != 0)
         {
+            g_info ("Using the %s texture target",
+                    (data->tex_type == GL_TEXTURE_2D) ? "2D" : "rectangle");
+
             return TRUE;
         }
 
