@@ -94,7 +94,7 @@ only:
 
 | value | description |
 | --- | --- |
-| `auto` | (default) sync every frame to the screen — in `xfwm4-gl` it also works with `--vblank=auto` |
+| `auto` | (default) sync every frame to the screen — it also works with `--vblank=auto` |
 | `adaptive` | (new) dynamically toggles vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (requires `GLX_EXT_swap_control_tear`, otherwise behaves like `auto`) |
 | `off` | no sync at all, fastest, tears |
 
