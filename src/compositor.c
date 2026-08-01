@@ -34,7 +34,6 @@
 #include <glib.h>
 #include <math.h>
 #include <string.h>
-#include <unistd.h>
 #ifdef __GLIBC__
 #include <malloc.h>
 #endif
@@ -660,22 +659,16 @@ static void
 translate_to_client_region (CWindow *cw, XserverRegion region)
 {
     DisplayInfo *display_info;
-    ScreenInfo *screen_info;
-    int x, y;
+    gint x, y, width, height;
 
     g_return_if_fail (cw != NULL);
     TRACE ("window 0x%lx", cw->id);
 
-    screen_info = cw->screen_info;
-    display_info = screen_info->display_info;
+    display_info = cw->screen_info->display_info;
 
-    if (WIN_HAS_FRAME(cw))
+    if (!client_area (cw, &x, &y, &width, &height))
     {
-        x = frameX (cw->c) + frameLeft (cw->c);
-        y = frameY (cw->c) + frameTop (cw->c);
-    }
-    else
-    {
+        /* No frame, so the region is relative to the window itself */
         x = cw->attr.x + cw->attr.border_width;
         y = cw->attr.y + cw->attr.border_width;
     }
@@ -697,10 +690,17 @@ client_area (CWindow *cw, gint *x, gint *y, gint *width, gint *height)
     {
         Client *c = cw->c;
 
-        *x = frameX (c) + frameLeft (c);
-        *y = frameY (c) + frameTop (c);
-        *width = frameWidth (c) - frameLeft (c) - frameRight (c);
-        *height = frameHeight (c) - frameTop (c) - frameBottom (c);
+        /*
+         * Where the frame sits comes from cw->attr, not from the client. The
+         * client is moved the moment the window manager decides to move it,
+         * while cw->attr only catches up when the X server confirms, and both
+         * renderers draw the window at cw->attr. Mixing the two puts the
+         * client area somewhere other than the pixels on screen.
+         */
+        *x = cw->attr.x + cw->attr.border_width + frameLeft (c);
+        *y = cw->attr.y + cw->attr.border_width + frameTop (c);
+        *width = MAX (cw->attr.width - frameLeft (c) - frameRight (c), 0);
+        *height = MAX (cw->attr.height - frameTop (c) - frameBottom (c), 0);
 
         return TRUE;
     }
@@ -808,7 +808,6 @@ free_win_data (CWindow *cw, gboolean delete)
 #ifdef HAVE_EPOXY
     /* The GLX pixmap has to go before the pixmap it is bound to */
     xfwmGLFreeWindowData (cw);
-    xfwmGLFreeWindowShadow (cw);
 #endif /* HAVE_EPOXY */
 #if HAVE_NAME_WINDOW_PIXMAP
     if (cw->name_window_pixmap)
@@ -1197,8 +1196,6 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
     return FALSE;
 }
 
-static gboolean renderer_is_blacklisted (const char *renderer);
-
 /*
  * Whether this machine looks like it can render with a GPU at all.
  *
@@ -1292,7 +1289,7 @@ release_unused_heap (void)
 /*
  * Renderers we do not draw with.
  *
- * The first four draw on the processor, so they would be slower than XRender
+ * These all draw on the processor, so they would be slower than XRender
  * while costing the memory of a whole GL stack on top.
  *
  * The paravirtual renderers of a virtual machine are not among them, since they
@@ -1371,9 +1368,9 @@ check_gl_extensions (ScreenInfo *screen_info)
 }
 
 static gboolean
-choose_glx_settings (ScreenInfo *screen_info)
+choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
 {
-    static GLint visual_attribs[] = {
+    GLint visual_attribs[] = {
         GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT | GLX_WINDOW_BIT,
         GLX_X_RENDERABLE,  True,
         GLX_DOUBLEBUFFER,  True,
@@ -1398,6 +1395,17 @@ choose_glx_settings (ScreenInfo *screen_info)
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
+
+    /*
+     * Binding a pixmap as a texture is what the XRender path needs to hand its
+     * buffer to GLX. The GL renderer looks up its own config for every colour
+     * depth it meets, so all it wants here is a window it can draw into, and
+     * asking for more would turn it away on screens where it works perfectly.
+     */
+    if (!need_tfp)
+    {
+        visual_attribs[1] = GLX_WINDOW_BIT;
+    }
 
     configs = glXChooseFBConfig (myScreenGetXDisplay (screen_info),
                                  screen_info->screen,
@@ -1428,6 +1436,14 @@ choose_glx_settings (ScreenInfo *screen_info)
             continue;
         }
         XFree (visual_info);
+
+        if (!need_tfp)
+        {
+            /* Nothing below is about drawing into a window */
+            fb_config = configs[i];
+            fb_match = TRUE;
+            break;
+        }
 
         status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
                                        configs[i],
@@ -1626,7 +1642,7 @@ attach_glx_window (ScreenInfo *screen_info)
 }
 
 static gboolean
-init_glx (ScreenInfo *screen_info)
+init_glx (ScreenInfo *screen_info, gboolean need_tfp)
 {
     int error_base, event_base;
     int version;
@@ -1654,7 +1670,7 @@ init_glx (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    if (!choose_glx_settings (screen_info))
+    if (!choose_glx_settings (screen_info, need_tfp))
     {
         g_warning ("Cannot find a matching GLX config, vsync disabled.");
         return FALSE;
@@ -1700,7 +1716,7 @@ init_glx (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    if (!check_gl_extensions (screen_info))
+    if (need_tfp && !check_gl_extensions (screen_info))
     {
         g_warning ("Screen is missing required GL extension, GL support disabled.");
         free_glx_data (screen_info);
@@ -1871,7 +1887,7 @@ wanted_swap_interval (ScreenInfo *screen_info)
     {
         case VBLANK_OFF:
             return 0;
-        case VBLANK_TEAR:
+        case VBLANK_ADAPTIVE:
             return screen_info->has_ext_swap_control_tear ? -1 : 1;
         default:
             return 1;
@@ -2247,6 +2263,11 @@ ensure_win_shadow (CWindow *cw)
 #ifdef HAVE_EPOXY
         if (screen_info->use_gl_render)
         {
+            /*
+             * Nothing to answer: on failure the shadow stays unbuilt and
+             * cw->shadow_width stays zero, which is what brings us back here
+             * on the next repaint.
+             */
             xfwmGLUpdateWindowShadow (cw, shadow_opacity, width, height);
         }
         else
@@ -2779,6 +2800,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 {
     DisplayInfo *display_info;
     XserverRegion paint_region;
+    XserverRegion copy_region;
     XRectangle region_bounds;
     Picture paint_buffer;
     Display *dpy;
@@ -2836,6 +2858,14 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         xfwmGLScreenFinish (screen_info);
         free_glx_data (screen_info);
         myDisplayErrorTrapPopIgnored (display_info);
+        /* This path lets go of more than either start up failure does */
+        release_unused_heap ();
+
+        /*
+         * Remember it, or every later restart of the compositor would load the
+         * GL stack again, fail on the same window and fall back again.
+         */
+        screen_info->gl_render_failed = TRUE;
 
         /*
          * The GL renderer was the one putting frames on the screen, so a new
@@ -2845,10 +2875,8 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         set_render_backend_property (screen_info);
 
         /*
-         * The buffers the other renderer draws into are made below and hold
-         * nothing yet, and XPresent may put a whole buffer on the screen at
-         * once, so this first frame has to cover the screen rather than the
-         * area that happened to change.
+         * The other renderer has drawn none of this screen yet, so this first
+         * frame has to cover it rather than the area that happened to change.
          */
         repaint_whole_screen = TRUE;
     }
@@ -2860,6 +2888,12 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     if (screen_info->rootPixmap[buffer] == None)
     {
         screen_info->rootPixmap[buffer] = create_root_pixmap (screen_info);
+        /*
+         * A buffer nothing has ever been drawn into holds plain black, and
+         * XPresent puts the whole of it on the screen, so it has to be filled
+         * in full rather than only where the damage is.
+         */
+        repaint_whole_screen = TRUE;
 #ifdef HAVE_EPOXY
         if (screen_info->use_glx)
         {
@@ -2894,6 +2928,13 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     paint_region = XFixesCreateRegion (dpy, NULL, 0);
     XFixesCopyRegion (dpy, paint_region, region);
 
+    /*
+     * What gets drawn and what gets put on the screen are the same area, but
+     * the painting below eats its way through paint_region, so the area is
+     * kept here as well.
+     */
+    copy_region = region;
+
     if (repaint_whole_screen)
     {
         XRectangle whole;
@@ -2903,6 +2944,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         whole.width = screen_width;
         whole.height = screen_height;
         XFixesSetRegion (dpy, paint_region, &whole, 1);
+        copy_region = XFixesCreateRegion (dpy, &whole, 1);
     }
 
     /*
@@ -3043,7 +3085,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     {
         if (screen_info->zoomed && screen_info->cursor_is_zoomed)
         {
-            paint_cursor (screen_info, region, paint_buffer);
+            paint_cursor (screen_info, copy_region, paint_buffer);
         }
         fence_reset (screen_info, buffer);
     }
@@ -3054,7 +3096,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         {
             if (screen_info->cursor_is_zoomed)
             {
-                paint_cursor (screen_info, region, paint_buffer);
+                paint_cursor (screen_info, copy_region, paint_buffer);
             }
             /* Fixme: copy back whole screen if zoomed
                It would be better to scale the clipping region if possible. */
@@ -3064,7 +3106,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         else
         {
             /* Set clipping back to the given region */
-            XFixesSetPictureClipRegion (dpy, screen_info->rootBuffer[buffer], 0, 0, region);
+            XFixesSetPictureClipRegion (dpy, screen_info->rootBuffer[buffer], 0, 0, copy_region);
         }
     }
 
@@ -3078,7 +3120,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
                               None, screen_info->rootBuffer[buffer],
                               0, 0, 0, 0, 0, 0, screen_width, screen_height);
         }
-        present_flip (screen_info, region, buffer);
+        present_flip (screen_info, copy_region, buffer);
     }
     else
 #endif /* HAVE_PRESENT_EXTENSION */
@@ -3099,7 +3141,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         }
         else
         {
-            get_region_bounds (dpy, region, &region_bounds);
+            get_region_bounds (dpy, copy_region, &region_bounds);
             XRenderComposite (dpy, PictOpSrc, paint_buffer,
                               None, screen_info->rootPicture,
                               region_bounds.x, region_bounds.y,
@@ -3110,6 +3152,10 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         XFlush (dpy);
     }
 
+    if (copy_region != region)
+    {
+        XFixesDestroyRegion (dpy, copy_region);
+    }
     XFixesDestroyRegion (dpy, paint_region);
 
     myDisplayErrorTrapPopIgnored (display_info);
@@ -4309,7 +4355,34 @@ compositorHandleDamage (DisplayInfo *display_info, XDamageNotifyEvent *ev)
         screen_info = cw->screen_info;
         repair_win (cw, &ev->area);
         screen_info->damages_pending = ev->more;
+
+        return;
     }
+
+#ifdef HAVE_EPOXY
+    /*
+     * Not a window: the GL renderer also watches the desktop background
+     * pixmap, so that a desktop repainting in place is picked up.
+     */
+    if (cw == NULL)
+    {
+        GSList *list;
+
+        for (list = display_info->screens; list; list = g_slist_next (list))
+        {
+            screen_info = (ScreenInfo *) list->data;
+            if (xfwmGLDamageRootPixmap (screen_info, ev->drawable))
+            {
+                myDisplayErrorTrapPush (display_info);
+                XDamageSubtract (display_info->dpy, ev->damage, None, None);
+                myDisplayErrorTrapPopIgnored (display_info);
+                damage_screen (screen_info);
+
+                return;
+            }
+        }
+    }
+#endif /* HAVE_EPOXY */
 }
 
 static void
@@ -4797,6 +4870,18 @@ compositorScaleWindowPixmap (CWindow *cw, guint *width, guint *height)
     dpy = myScreenGetXDisplay (screen_info);
 
     srcPicture = cw->picture;
+    if (!srcPicture && WIN_IS_VISIBLE(cw) && WIN_IS_REDIRECTED(cw))
+    {
+        /*
+         * The GL renderer draws from a texture and never builds one of these,
+         * so a window it has been drawing has nothing to scale down here.
+         * Building it on demand is what keeps the window previews working
+         * whichever renderer is running, and it costs nothing until a preview
+         * is actually asked for.
+         */
+        cw->picture = get_window_picture (cw);
+        srcPicture = cw->picture;
+    }
     if (!srcPicture)
     {
         srcPicture = cw->saved_picture;
@@ -5350,19 +5435,36 @@ resume_gl (ScreenInfo *screen_info)
 static void
 setup_gl (ScreenInfo *screen_info)
 {
+    gboolean want_gl_render;
+
     screen_info->use_gl_render = FALSE;
     screen_info->gl_data = NULL;
 
-    if (!screen_info->use_glx && !screen_info->params->use_gl_compositing)
+    /*
+     * A renderer that already gave up on this screen would give up again on
+     * the same window, so do not load the whole GL stack a second time.
+     */
+    want_gl_render = screen_info->params->use_gl_compositing &&
+                     !screen_info->gl_render_failed;
+
+    if (!screen_info->use_glx && !want_gl_render)
     {
         return;
     }
 
-    if (!acceleration_is_available (screen_info))
+    /*
+     * Only the GL renderer needs a GPU of its own. Presenting the XRender
+     * buffer through GLX asks far less of the driver and worked on machines
+     * with no render node long before the GL renderer existed.
+     */
+    if (want_gl_render && !acceleration_is_available (screen_info))
     {
-        screen_info->use_glx = FALSE;
+        want_gl_render = FALSE;
 
-        return;
+        if (!screen_info->use_glx)
+        {
+            return;
+        }
     }
 
     screen_info->use_n_buffers = 1;
@@ -5372,15 +5474,24 @@ setup_gl (ScreenInfo *screen_info)
     screen_info->texture_filter = GL_LINEAR;
     screen_info->gl_sync = 0;
 
-    if (!init_glx (screen_info))
+    if (!init_glx (screen_info, TRUE))
     {
+        /*
+         * No config that can bind a pixmap as a texture, so the XRender path
+         * cannot be presented through GLX. The GL renderer asks for far less,
+         * give it a config of its own before giving up on it too.
+         */
         screen_info->use_glx = FALSE;
-        release_unused_heap ();
 
-        return;
+        if (!want_gl_render || !init_glx (screen_info, FALSE))
+        {
+            release_unused_heap ();
+
+            return;
+        }
     }
 
-    if (screen_info->params->use_gl_compositing)
+    if (want_gl_render)
     {
         screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
     }
@@ -5594,7 +5705,7 @@ compositorManageScreen (ScreenInfo *screen_info)
      */
     screen_info->use_glx = (screen_info->vblank_mode == VBLANK_AUTO ||
                             screen_info->vblank_mode == VBLANK_GLX ||
-                            screen_info->vblank_mode == VBLANK_TEAR);
+                            screen_info->vblank_mode == VBLANK_ADAPTIVE);
 #ifdef HAVE_XSYNC
     screen_info->use_glx &= display_info->have_xsync;
 #endif /* HAVE_XSYNC */
@@ -5909,6 +6020,20 @@ compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
     return activate_screen (screen_info, active, FALSE);
 }
 
+/*
+ * Give the GL renderer another chance. Turning the setting off and on again is
+ * how a user says the reason it gave up may have gone away.
+ */
+void
+compositorResetGLRenderer (ScreenInfo *screen_info)
+{
+#if defined(HAVE_COMPOSITOR) && defined(HAVE_EPOXY)
+    g_return_if_fail (screen_info != NULL);
+
+    screen_info->gl_render_failed = FALSE;
+#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
+}
+
 void
 compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
 {
@@ -6120,9 +6245,9 @@ compositorParseVblankMode (const gchar *vblank_setting)
         return VBLANK_GLX;
     }
     else
-    if (g_ascii_strcasecmp (vblank_setting, "tear") == 0)
+    if (g_ascii_strcasecmp (vblank_setting, "adaptive") == 0)
     {
-        return VBLANK_TEAR;
+        return VBLANK_ADAPTIVE;
     }
     else
 #endif /* HAVE_EPOXY */

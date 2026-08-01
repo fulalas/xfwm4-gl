@@ -53,7 +53,6 @@ void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
 void             xfwmGLInvalidateWindowRegions  (CWindow *);
-void             xfwmGLInvalidateOpaqueRegion   (CWindow *);
 void             xfwmGLTranslateWindowRegions   (CWindow *,
                                                  gint,
                                                  gint);
@@ -62,10 +61,12 @@ void             xfwmGLSetOpaqueRects           (CWindow *,
                                                  gint);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
+gboolean         xfwmGLDamageRootPixmap         (ScreenInfo *,
+                                                 Drawable);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);
 gboolean         xfwmGLGetSwapInterval          (ScreenInfo *,
                                                  gint *);
-gboolean         xfwmGLUpdateWindowShadow       (CWindow *,
+void             xfwmGLUpdateWindowShadow       (CWindow *,
                                                  gdouble,
                                                  gint,
                                                  gint);

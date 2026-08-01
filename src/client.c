@@ -4261,8 +4261,7 @@ clientButtonPress (Client *c, Window w, XfwmEventButton *event)
          * Button was pressed at the time, means the pointer was still within
          * the button, so return to prelight if available, normal otherwise.
          */
-        if (!xfwmPixmapNone(clientGetButtonPixmap(c, b,
-                (frameGetState (c) == ACTIVE) ? PRELIGHT : INACTIVE_PRELIGHT)))
+        if (clientCanPrelight (c, b))
         {
             c->button_status[b] = BUTTON_STATE_PRELIGHT;
         }
@@ -4353,6 +4352,23 @@ clientGetButtonPixmap (Client *c, int button, int state)
             break;
     }
     return &screen_info->buttons[button][state];
+}
+
+/*
+ * Whether hovering this button is worth remembering at all. The pointer being
+ * on a button is a fact about the pointer, not about the state the frame
+ * happens to be drawn in, so a theme that only ships one of the two prelight
+ * images still has to have the hover recorded: the window can be focused
+ * without the pointer ever moving, and no further crossing event would arrive
+ * to put it right. clientGetButtonState() decides what is actually drawn.
+ */
+gboolean
+clientCanPrelight (Client *c, int button)
+{
+    g_return_val_if_fail (c != NULL, FALSE);
+
+    return (!xfwmPixmapNone (clientGetButtonPixmap (c, button, PRELIGHT)) ||
+            !xfwmPixmapNone (clientGetButtonPixmap (c, button, INACTIVE_PRELIGHT)));
 }
 
 int

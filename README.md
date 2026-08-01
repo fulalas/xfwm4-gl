@@ -75,11 +75,11 @@ select the Compositor tab:
 The OpenGL path is skipped, quietly and without breaking your session, if:
 
 * `libepoxy` was missing when it was built
+* the driver reports a software renderer such as `llvmpipe` or `swrast`
 * the driver is older than OpenGL 2.0, is missing frame buffer objects, or
   cannot hand windows over to OpenGL as textures
-* the driver reports a software renderer such as `llvmpipe` or `swrast`
-* a window turns up with a colour depth the driver cannot hand over
 * the graphics context is lost while running, after a driver reset for instance
+* a colour depth the driver cannot hand over
 
 ## Settings
 
@@ -94,14 +94,13 @@ only:
 
 | value | description |
 | --- | --- |
-| `auto` | (default) sync every frame to the screen, if the driver offers swap control at all |
-| `tear` | (new) sync unless the frame is already late, so it tears only when needed (requires `GLX_EXT_swap_control_tear`, otherwise falls back to `auto`) |
+| `auto` | (default) sync every frame to the screen — in `xfwm4-gl` it also works with `--vblank=auto` |
+| `adaptive` | (new) dynamically toggles vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (requires `GLX_EXT_swap_control_tear`, otherwise behaves like `auto`) |
 | `off` | no sync at all, fastest, tears |
 
-Two more values exist: `glx` and `xpresent`. While the OpenGL renderer is
-running it presents its own frames and never goes through XPresent, so both
-behave like `auto`. They differ only once the compositor has fallen back to
-XRender, where they pick which of the two ways of presenting is used.
+Two more values exist: `glx` and `xpresent`, but when using OpenGL renderer
+both behave like `auto`. They differ only once the compositor has fallen back
+to XRender.
 
 ## Requirements
 
@@ -111,7 +110,7 @@ Because it is optional upstream, nothing complains when it is missing, so
 check that the configure summary says `Epoxy support: yes`.
 
 At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
-`GLX_EXT_texture_from_pixmap`. Every driver of the last fifteen years or so has
+`GLX_EXT_texture_from_pixmap`. Every driver of the last 15 years or so has
 all three.
 
 Both VirtualBox and QEMU work as long as they have 3D acceleration turned on.

@@ -423,9 +423,9 @@ vblank_callback (const gchar  *name,
         vblank_mode = VBLANK_GLX;
     }
     else
-    if (strcmp (value, "tear") == 0)
+    if (strcmp (value, "adaptive") == 0)
     {
-        vblank_mode = VBLANK_TEAR;
+        vblank_mode = VBLANK_ADAPTIVE;
     }
     else
 #endif /* HAVE_EPOXY */
@@ -633,7 +633,7 @@ main (int argc, char **argv)
           "|xpresent"
 #endif /* HAVE_PRESENT_EXTENSION */
 #ifdef HAVE_EPOXY
-          "|glx|tear"
+          "|glx|adaptive"
 #endif /* HAVE_EPOXY */
         },
 #endif /* HAVE_COMPOSITOR */

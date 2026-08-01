@@ -1403,17 +1403,22 @@ handleEnterNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
         {
             if (MYWINDOW_XWINDOW(c->buttons[b]) == event->meta.window)
             {
-                /*
-                 * The frame of an unfocused window is drawn with the inactive
-                 * pixmaps, unless it is asking for attention, so ask how it
-                 * will be drawn rather than only whether it has focus.
-                 */
-                if (!xfwmPixmapNone(clientGetButtonPixmap(c, b,
-                        (frameGetState (c) == ACTIVE) ? PRELIGHT
-                                                      : INACTIVE_PRELIGHT)))
+                if (clientCanPrelight (c, b))
                 {
                     c->button_status[b] = BUTTON_STATE_PRELIGHT;
-                    need_redraw = TRUE;
+                    /*
+                     * The frame of an unfocused window is drawn with the
+                     * inactive pixmaps, unless it is asking for attention, so
+                     * ask how it will be drawn rather than only whether it has
+                     * focus. Nothing to redraw when the theme has no image for
+                     * the state the frame is in.
+                     */
+                    if (!xfwmPixmapNone(clientGetButtonPixmap(c, b,
+                            (frameGetState (c) == ACTIVE) ? PRELIGHT
+                                                          : INACTIVE_PRELIGHT)))
+                    {
+                        need_redraw = TRUE;
+                    }
                 }
             }
         }

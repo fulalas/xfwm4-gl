@@ -84,7 +84,7 @@ typedef enum
     VBLANK_AUTO,
     VBLANK_XPRESENT,
     VBLANK_GLX,
-    VBLANK_TEAR,
+    VBLANK_ADAPTIVE,
     VBLANK_ERROR,
 } vblankMode;
 
@@ -247,6 +247,7 @@ struct _ScreenInfo
 
     /* GL compositing backend, see compositor-gl.c */
     gboolean use_gl_render;
+    gboolean gl_render_failed;
     gpointer gl_data;
 #ifdef HAVE_XSYNC
     XSyncFence fence[N_BUFFERS];

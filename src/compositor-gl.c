@@ -107,6 +107,9 @@ typedef struct
     gboolean root_missing;
     gint root_width;
     gint root_height;
+    Pixmap root_pixmap;
+    Damage root_damage;
+    gboolean root_dirty;
 
     GLuint fbo;
     GLuint fbo_texture;
@@ -275,12 +278,15 @@ window_shape (CWindow *cw)
     return cw->gl_shape;
 }
 
-/* The client area of a framed window, the whole window for anything else */
-static void
+/*
+ * The client area of a framed window, the whole window for anything else.
+ * Returns FALSE when the window has no frame, as client_area() does.
+ */
+static gboolean
 window_client_area (CWindow *cw, cairo_rectangle_int_t *r)
 {
     /* The rule lives in compositor.c so both renderers read the same one */
-    client_area (cw, &r->x, &r->y, &r->width, &r->height);
+    return client_area (cw, &r->x, &r->y, &r->width, &r->height);
 }
 
 /*
@@ -308,16 +314,19 @@ window_opaque_region (CWindow *cw)
         return NULL;
     }
 
-    if (WIN_HAS_FRAME(cw))
+    /*
+     * The rectangles are relative to the client window, which is where the
+     * client area starts. Taking the origin from there rather than from the
+     * client keeps this cache, the bounding shape and the drawing itself on
+     * the same coordinates while a move is still on its way to the X server.
+     */
+    if (!window_client_area (cw, &client))
     {
-        dx = frameX (cw->c) + frameLeft (cw->c);
-        dy = frameY (cw->c) + frameTop (cw->c);
+        client.x = cw->attr.x + cw->attr.border_width;
+        client.y = cw->attr.y + cw->attr.border_width;
     }
-    else
-    {
-        dx = cw->attr.x + cw->attr.border_width;
-        dy = cw->attr.y + cw->attr.border_width;
-    }
+    dx = client.x;
+    dy = client.y;
 
     cw->gl_opaque = region_from_rects (cw->gl_opaque_rects,
                                        cw->gl_n_opaque_rects, dx, dy);
@@ -334,7 +343,7 @@ window_opaque_region (CWindow *cw)
  * Only what the window itself says is opaque. The bounding shape is a separate
  * fact and a change of one says nothing about the other.
  */
-void
+static void
 xfwmGLInvalidateOpaqueRegion (CWindow *cw)
 {
     g_return_if_fail (cw != NULL);
@@ -587,9 +596,10 @@ find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
  * Sync the swaps to the screen. The XRender path does this on the pixmap it
  * presents, here the frames go straight to the overlay window.
  *
- *   off   no sync at all, the fastest but it tears
- *   tear  adaptive, sync unless the frame is already late
- *   other sync to every vblank
+ *   off      no sync at all, the fastest but it tears
+ *   adaptive sync, except that a late frame is shown at once rather than
+ *            held back until the next refresh
+ *   other    sync to every vblank
  */
 static void
 set_swap_interval_gl (ScreenInfo *screen_info)
@@ -601,7 +611,7 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     data->swap_control = FALSE;
     interval = wanted_swap_interval (screen_info);
 
-    if ((screen_info->vblank_mode == VBLANK_TEAR) && (interval >= 0))
+    if ((screen_info->vblank_mode == VBLANK_ADAPTIVE) && (interval >= 0))
     {
         g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
     }
@@ -903,6 +913,13 @@ free_root_texture (ScreenInfo *screen_info)
         return;
     }
 
+    if (data->root_damage != None)
+    {
+        myDisplayErrorTrapPush (display_info);
+        XDamageDestroy (dpy, data->root_damage);
+        myDisplayErrorTrapPopIgnored (display_info);
+        data->root_damage = None;
+    }
     if (data->root_glx_pixmap != None)
     {
         myDisplayErrorTrapPush (display_info);
@@ -919,7 +936,34 @@ free_root_texture (ScreenInfo *screen_info)
         glDeleteTextures (1, &data->root_texture);
     }
     data->root_texture = 0;
+    data->root_pixmap = None;
+    data->root_dirty = FALSE;
     data->root_missing = FALSE;
+}
+
+/*
+ * Whoever drew the desktop may paint into the same pixmap again without
+ * announcing it, and the contents of a bound texture are undefined once that
+ * happens. Damage on the background pixmap is what says the image has to be
+ * taken again, the same way a window says it with cw->gl_content_dirty.
+ */
+gboolean
+xfwmGLDamageRootPixmap (ScreenInfo *screen_info, Drawable drawable)
+{
+    XfwmGLData *data;
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+
+    data = gl_data (screen_info);
+    if (data == NULL || data->root_pixmap == None ||
+        data->root_pixmap != (Pixmap) drawable)
+    {
+        return FALSE;
+    }
+
+    data->root_dirty = TRUE;
+
+    return TRUE;
 }
 
 void
@@ -950,6 +994,13 @@ free_fbo (ScreenInfo *screen_info)
     }
     data->fbo_width = 0;
     data->fbo_height = 0;
+
+    if (data->cursor_texture != 0)
+    {
+        glDeleteTextures (1, &data->cursor_texture);
+        data->cursor_texture = 0;
+        data->cursor_serial = 0;
+    }
 }
 
 void
@@ -1145,7 +1196,7 @@ xfwmGLFreeWindowShadow (CWindow *cw)
     cw->gl_shadow_opacity = 0.0f;
 }
 
-gboolean
+void
 xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
 {
     ScreenInfo *screen_info;
@@ -1153,15 +1204,15 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     XImage *image;
     gint gaussian_size, shadow_width = 0, shadow_height = 0;
 
-    g_return_val_if_fail (cw != NULL, FALSE);
+    g_return_if_fail (cw != NULL);
 
     screen_info = cw->screen_info;
     data = gl_data (screen_info);
-    g_return_val_if_fail (data != NULL, FALSE);
-    g_return_val_if_fail (screen_info->gaussianMap != NULL, FALSE);
+    g_return_if_fail (data != NULL);
+    g_return_if_fail (screen_info->gaussianMap != NULL);
     if (glXGetCurrentContext () == NULL)
     {
-        return FALSE;
+        return;
     }
 
     xfwmGLFreeWindowShadow (cw);
@@ -1183,13 +1234,13 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
         cw->shadow_height = shadow_height;
         cw->gl_shadow_opacity = (gfloat) opacity * data->shadow_profile_peak;
 
-        return TRUE;
+        return;
     }
 
     image = make_shadow (screen_info, opacity, width, height);
     if (image == NULL)
     {
-        return FALSE;
+        return;
     }
 
     glGenTextures (1, &cw->gl_shadow_texture);
@@ -1207,8 +1258,6 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     cw->shadow_width = image->width;
     cw->shadow_height = image->height;
     XDestroyImage (image);
-
-    return TRUE;
 }
 
 /*
@@ -1358,6 +1407,19 @@ bind_window_texture (CWindow *cw)
         }
         if (cw->gl_pixmap == None)
         {
+            /*
+             * The depth is one the driver said it could bind, so a refusal
+             * here is the driver changing its mind and it will keep saying
+             * no. Skipping the window would leave a hole in the screen, so
+             * hand the screen to XRender the same way an unusable depth does.
+             */
+            if (!data->give_up)
+            {
+                g_warning ("A window of depth %i cannot be bound as a texture, "
+                           "falling back to XRender.", cw->attr.depth);
+                data->give_up = TRUE;
+            }
+
             return FALSE;
         }
     }
@@ -1634,6 +1696,7 @@ bind_root_texture (ScreenInfo *screen_info)
     Pixmap pixmap;
     Window root_ret;
     gint x_ret, y_ret;
+    gint tiles_x, tiles_y;
     guint width_ret, height_ret, border_ret, depth_ret;
     gint attribs[] = {
         GLX_TEXTURE_TARGET_EXT, 0,
@@ -1645,14 +1708,16 @@ bind_root_texture (ScreenInfo *screen_info)
     {
         glBindTexture (data->tex_type, data->root_texture);
         /*
-         * Whoever drew the desktop may have painted into the same pixmap
-         * again, and the contents of a bound texture are undefined once that
-         * happens, so the image is taken again. Same reason as for windows.
+         * Only when the desktop drew into the same pixmap again. Without a
+         * damage handle there is nothing to say when that happened, so the
+         * image is taken again on every frame as it used to be.
          */
-        if (data->root_glx_pixmap != None)
+        if ((data->root_dirty || data->root_damage == None) &&
+            data->root_glx_pixmap != None)
         {
             glXReleaseTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT);
             glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
+            data->root_dirty = FALSE;
         }
 
         return TRUE;
@@ -1701,10 +1766,14 @@ bind_root_texture (ScreenInfo *screen_info)
      * The background is drawn one tile at a time, so a pattern small enough to
      * need thousands of them would cost more than the frame is worth. Nothing
      * that sets a wallpaper does this, but a stray tiny pixmap must not be able
-     * to bring the compositor to a halt.
+     * to bring the compositor to a halt. Count the tiles rather than compare
+     * areas: a wide and short pattern needs many tiles for a small area, and
+     * an area in pixels overflows on a large screen.
      */
-    if (((gint) width_ret * (gint) height_ret) * GL_MAX_ROOT_TILES <
-        (screen_info->width * screen_info->height))
+    tiles_x = screen_info->width / (gint) width_ret + 2;
+    tiles_y = screen_info->height / (gint) height_ret + 2;
+    if (tiles_x > GL_MAX_ROOT_TILES || tiles_y > GL_MAX_ROOT_TILES ||
+        tiles_x * tiles_y > GL_MAX_ROOT_TILES)
     {
         g_warning ("The desktop background is a %ux%u tile, too small for the "
                    "GL renderer to repeat; drawing it plain.",
@@ -1739,6 +1808,16 @@ bind_root_texture (ScreenInfo *screen_info)
     set_tex_params (data->tex_type, GL_NEAREST);
     glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
 
+    /* Watch for a desktop that repaints in place, see xfwmGLDamageRootPixmap() */
+    data->root_pixmap = pixmap;
+    data->root_dirty = FALSE;
+    myDisplayErrorTrapPush (display_info);
+    data->root_damage = XDamageCreate (dpy, pixmap, XDamageReportNonEmpty);
+    if (myDisplayErrorTrapPop (display_info) != Success)
+    {
+        data->root_damage = None;
+    }
+
     return TRUE;
 }
 
@@ -1756,8 +1835,8 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
 
     if (bind_root_texture (screen_info))
     {
-        gint tex_width = (data->root_width > 0) ? data->root_width : screen_info->width;
-        gint tex_height = (data->root_height > 0) ? data->root_height : screen_info->height;
+        gint tex_width = data->root_width;
+        gint tex_height = data->root_height;
         cairo_rectangle_int_t area;
         gint x, y, first_x, first_y;
 
@@ -2001,7 +2080,8 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
                           GLX_BACK_BUFFER_AGE_EXT, &age);
     }
 
-    if (age == 0 || age > GL_DAMAGE_HISTORY || data->full_repaint)
+    /* A full repaint leaves the age at zero, it never asks the driver */
+    if (age == 0 || age > GL_DAMAGE_HISTORY)
     {
         cairo_rectangle_int_t r;
 
@@ -2100,6 +2180,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     if (zoomed && !bind_zoom_fbo (screen_info))
     {
         zoomed = FALSE;
+    }
+    if (!screen_info->zoomed && data->fbo != 0)
+    {
+        /*
+         * The magnifier holds a texture the size of the screen, so give it
+         * back as soon as the magnifier is off. The XRender path frees its
+         * own buffer the same way.
+         */
+        free_fbo (screen_info);
     }
 
     glViewport (0, 0, screen_info->width, screen_info->height);
@@ -2228,7 +2317,8 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         cairo_region_t *shape;
 
         cw = (CWindow *) list->data;
-        if (cw->skipped || cw->gl_paint_clip == NULL)
+        /* The first pass leaves a clip behind only for the windows it drew */
+        if (cw->gl_paint_clip == NULL)
         {
             continue;
         }
@@ -2272,6 +2362,20 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     glUseProgram (0);
     glBindTexture (data->tex_type, 0);
 
+    /*
+     * A window turned up whose colour depth this GPU cannot bind. Skipping it
+     * would leave a hole in the screen for the rest of the session, so hand the
+     * whole screen back to XRender, which can draw it. The frame that has the
+     * hole in it must not reach the screen first.
+     */
+    if (data->give_up)
+    {
+        cairo_region_destroy (paint_region);
+        myDisplayErrorTrapPopIgnored (display_info);
+
+        return FALSE;
+    }
+
     glXSwapBuffers (dpy, screen_info->glx_window);
 
     /*
@@ -2293,16 +2397,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     cairo_region_destroy (paint_region);
     myDisplayErrorTrapPopIgnored (display_info);
-
-    /*
-     * A window turned up whose colour depth this GPU cannot bind. Skipping it
-     * would leave a hole in the screen for the rest of the session, so hand the
-     * whole screen back to XRender, which can draw it.
-     */
-    if (data->give_up)
-    {
-        return FALSE;
-    }
 
     return TRUE;
 }
