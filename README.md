@@ -31,8 +31,8 @@ Four things come out of that:
 * Window shadows are drawn by the graphics card instead of the CPU. Very small
   windows, such as tooltips, are the exception.
 
-Adaptive vsync is new, and works with both renderers. See
-[Settings](#settings).
+Adaptive vsync can now be picked, rather than only happening when the driver
+supports it, and it works with both renderers. See [Settings](#settings).
 
 ## Usage
 

@@ -56,7 +56,8 @@
 #ifdef HAVE_EPOXY
 
 #define GL_DAMAGE_HISTORY       3
-#define GL_MAX_DEPTHS           8
+/* Well past the handful of depths an X server can advertise, so it cannot fill */
+#define GL_MAX_DEPTHS           32
 #define GL_MAX_ROOT_TILES       256
 
 /*
@@ -592,24 +593,11 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     gint interval;
 
     data->swap_control = FALSE;
+    interval = wanted_swap_interval (screen_info);
 
-    switch (screen_info->vblank_mode)
+    if ((screen_info->vblank_mode == VBLANK_TEAR) && (interval >= 0))
     {
-        case VBLANK_OFF:
-            interval = 0;
-            break;
-        case VBLANK_TEAR:
-            if (screen_info->has_ext_swap_control_tear)
-            {
-                interval = -1;
-                break;
-            }
-            g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
-            interval = 1;
-            break;
-        default:
-            interval = 1;
-            break;
+        g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
     }
 
 #if defined (glXSwapIntervalEXT)
@@ -1292,12 +1280,11 @@ bind_window_texture (CWindow *cw)
     if (dc == NULL || !dc->usable)
     {
         /*
-         * A depth with no config of its own will never get one, so the window
-         * would stay invisible: hand the screen to XRender, which can draw it.
-         * Running out of room in the table is a different thing, that one is
-         * not the driver's answer, so it is left alone.
+         * Nothing is going to change this window's mind about its depth, so
+         * skipping it would leave a hole in the screen for good. Hand the whole
+         * screen to XRender instead, which can draw any of them.
          */
-        if ((dc != NULL) && !data->give_up)
+        if (!data->give_up)
         {
             g_warning ("A window of depth %i cannot be bound as a texture, "
                        "falling back to XRender.", cw->attr.depth);

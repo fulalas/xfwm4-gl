@@ -1735,24 +1735,40 @@ fence_destroy (ScreenInfo *screen_info, gushort buffer)
 #endif /* HAVE_XSYNC */
 }
 
+/*
+ * How many screen refreshes a finished frame should wait for, as the vblank
+ * mode asks for it: none at all, every one, or -1 for "every one unless the
+ * frame is already late". Both renderers and the state we advertise read this,
+ * so what the user picked cannot mean one thing in one place and another
+ * somewhere else.
+ */
+gint
+wanted_swap_interval (ScreenInfo *screen_info)
+{
+    g_return_val_if_fail (screen_info != NULL, 1);
+
+    switch (screen_info->vblank_mode)
+    {
+        case VBLANK_OFF:
+            return 0;
+        case VBLANK_TEAR:
+            return screen_info->has_ext_swap_control_tear ? -1 : 1;
+        default:
+            return 1;
+    }
+}
+
 static void
 set_swap_interval (ScreenInfo *screen_info, gushort buffer)
 {
+    gint interval = wanted_swap_interval (screen_info);
+
 #if defined (glXSwapIntervalEXT)
     if (screen_info->has_ext_swap_control)
     {
-        if (screen_info->has_ext_swap_control_tear)
-        {
-            DBG ("Setting adaptive vsync using GLX_EXT_swap_control");
-            glXSwapIntervalEXT (myScreenGetXDisplay (screen_info),
-                                screen_info->glx_drawable[buffer], -1);
-        }
-        else
-        {
-            DBG ("Setting swap interval using GLX_EXT_swap_control");
-            glXSwapIntervalEXT (myScreenGetXDisplay (screen_info),
-                                screen_info->glx_drawable[buffer], 1);
-        }
+        DBG ("Setting swap interval %i using GLX_EXT_swap_control", interval);
+        glXSwapIntervalEXT (myScreenGetXDisplay (screen_info),
+                            screen_info->glx_drawable[buffer], interval);
         return;
     }
 #else
@@ -1762,8 +1778,9 @@ set_swap_interval (ScreenInfo *screen_info, gushort buffer)
 #if defined (glXSwapIntervalMESA)
     if (screen_info->has_mesa_swap_control)
     {
+        /* MESA_swap_control knows nothing about negative intervals */
         DBG ("Setting swap interval using GLX_MESA_swap_control");
-        glXSwapIntervalMESA (1);
+        glXSwapIntervalMESA ((guint) ((interval < 0) ? 1 : interval));
         return;
     }
 #else
@@ -2556,12 +2573,24 @@ vsync_state (ScreenInfo *screen_info)
     if (screen_info->use_glx)
     {
         /* The XRender path presents through GLX, see set_swap_interval() */
+        interval = wanted_swap_interval (screen_info);
+
         if (screen_info->has_ext_swap_control)
         {
-            return screen_info->has_ext_swap_control_tear ? "adaptive" : "on";
+            if (interval < 0)
+            {
+                return "adaptive";
+            }
+
+            return (interval > 0) ? "on" : "off";
+        }
+        if (screen_info->has_mesa_swap_control)
+        {
+            /* No adaptive interval there, it ends up syncing every frame */
+            return (interval != 0) ? "on" : "off";
         }
 
-        return screen_info->has_mesa_swap_control ? "on" : "off";
+        return "off";
     }
 #endif /* HAVE_EPOXY */
 

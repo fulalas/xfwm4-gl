@@ -178,6 +178,7 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
+gint             wanted_swap_interval           (ScreenInfo *);
 XserverRegion    win_extents                    (CWindow *);
 gboolean         client_area                    (CWindow *,
                                                  gint *,
