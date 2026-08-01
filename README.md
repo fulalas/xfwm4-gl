@@ -111,7 +111,7 @@ XRender, where they pick which of the two ways of presenting is used.
 
 No extra dependency was added for building. `xfwm4` already builds against
 `libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well.
-Because it's optional upstream, nothing complains when it is missing, so
+Because it is optional upstream, nothing complains when it is missing, so
 check that the configure summary says `Epoxy support: yes`.
 
 At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
