@@ -36,6 +36,16 @@ supports it, and it works with both renderers. See [Settings](#settings).
 
 ## Usage
 
+All files respect the same names and paths as the original, so once `xfwm4-gl`
+is installed the session should load it automatically.
+
+It is also possible to try it without installing, by replacing the window
+manager that is already running:
+
+    % ./path_to_new_build/xfwm4 --replace
+
+## Features
+
 OpenGL compositing is on by default, and if the driver cannot do it, XRender is
 used instead.
 
@@ -59,19 +69,6 @@ select the Compositor tab:
   about compositing, which in practice means quite old games and players. An
   application that explicitly asks to bypass the compositor is let through
   whether this option is on or off.
-
-## Requirements
-
-No extra dependency was added for building. `xfwm4` already builds against
-`libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well.
-It is optional upstream, so nothing complains when it is missing: check that the
-configure summary says `Epoxy support: yes`.
-
-At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
-`GLX_EXT_texture_from_pixmap`. Every driver of the last fifteen years or so has
-all three.
-
-Both VirtualBox and QEMU work as long as they have 3D acceleration turned on.
 
 ## When it falls back to XRender
 
@@ -109,6 +106,19 @@ Two more values exist: `glx` and `xpresent`. While the OpenGL renderer is
 running it presents its own frames and never goes through XPresent, so both
 behave like `auto`. They differ only once the compositor has fallen back to
 XRender, where they pick which of the two ways of presenting is used.
+
+## Requirements
+
+No extra dependency was added for building. `xfwm4` already builds against
+`libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well.
+It is optional upstream, so nothing complains when it is missing: check that the
+configure summary says `Epoxy support: yes`.
+
+At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
+`GLX_EXT_texture_from_pixmap`. Every driver of the last fifteen years or so has
+all three.
+
+Both VirtualBox and QEMU work as long as they have 3D acceleration turned on.
 
 ## License
 
