@@ -1381,24 +1381,70 @@ static gboolean
 config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
 {
     Display *dpy = myScreenGetXDisplay (screen_info);
-    const gint attribs[] = { GLX_DEPTH_SIZE, GLX_STENCIL_SIZE, GLX_SAMPLE_BUFFERS };
-    guint i;
+    int value;
 
-    for (i = 0; i < G_N_ELEMENTS (attribs); i++)
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_DEPTH_SIZE, &value) != Success) ||
+        (value != 0))
     {
-        int value;
-
-        if (glXGetFBConfigAttrib (dpy, config, attribs[i], &value) != Success)
-        {
-            return FALSE;
-        }
-        if (value != 0)
-        {
-            return FALSE;
-        }
+        return FALSE;
+    }
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_STENCIL_SIZE, &value) != Success) ||
+        (value != 0))
+    {
+        return FALSE;
+    }
+    /*
+     * Multisampling only became part of GLX in 1.4 and 1.3 is enough to run
+     * here, so a server that cannot answer this has none of it to report.
+     */
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_SAMPLE_BUFFERS, &value) == Success) &&
+        (value != 0))
+    {
+        return FALSE;
     }
 
     return TRUE;
+}
+
+/*
+ * Whether a pixmap can be bound to a texture on this config, which is what the
+ * XRender path needs to hand its buffer to GLX. The same conditions
+ * choose_glx_settings() applies when it is asked for a config that can.
+ */
+static gboolean
+config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+    int value;
+
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_DRAWABLE_TYPE, &value) != Success) ||
+        !(value & GLX_PIXMAP_BIT))
+    {
+        return FALSE;
+    }
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_BIND_TO_TEXTURE_TARGETS_EXT, &value) != Success) ||
+        !(value & (GLX_TEXTURE_2D_BIT_EXT | GLX_TEXTURE_RECTANGLE_BIT_EXT)))
+    {
+        return FALSE;
+    }
+    /* Ten bit colour is turned away there, so it is of no use here either */
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_RED_SIZE, &value) == Success) &&
+        (value > 8))
+    {
+        return FALSE;
+    }
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_BIND_TO_TEXTURE_RGBA_EXT, &value) == Success) &&
+        (value == True))
+    {
+        return TRUE;
+    }
+    if ((glXGetFBConfigAttrib (dpy, config, GLX_BIND_TO_TEXTURE_RGB_EXT, &value) == Success) &&
+        (value == True))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /*
@@ -1448,13 +1494,14 @@ prefer_configs_without_extra_buffers (ScreenInfo *screen_info,
  * has to know: the pixel format stays the same, so the XRender path can still
  * present into the same window and windows can still be bound as textures.
  *
- * Returns NULL when there is no such visual, which just leaves things as they
- * were.
+ * Returns NULL when there is no such visual and when the visual of the screen
+ * is already one, both of which just leave things as they were.
  */
 static Visual *
 pick_gl_visual (ScreenInfo *screen_info)
 {
     Display *dpy = myScreenGetXDisplay (screen_info);
+    int error_base, event_base;
     GLint attribs[] = {
         GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT | GLX_WINDOW_BIT,
         GLX_X_RENDERABLE,  True,
@@ -1471,9 +1518,27 @@ pick_gl_visual (ScreenInfo *screen_info)
     GLXFBConfig *configs;
     XVisualInfo *screen_vi, template;
     Visual *visual = NULL;
-    int n_configs = 0, n_screen = 0, i;
+    int n_configs = 0, n_screen = 0, i, pass;
 
     g_return_val_if_fail (screen_info != NULL, NULL);
+
+    /*
+     * The same three things init_glx() asks for, since a visual picked here is
+     * of no use to anyone if it never gets a context. The screen comes first,
+     * as it is the one question that can be answered without loading GL.
+     */
+    if (!xfwm_is_default_screen (screen_info->gscr))
+    {
+        return NULL;
+    }
+    if (!glXQueryExtension (dpy, &error_base, &event_base))
+    {
+        return NULL;
+    }
+    if (epoxy_glx_version (dpy, screen_info->screen) < 13)
+    {
+        return NULL;
+    }
 
     template.visualid = XVisualIDFromVisual (screen_info->visual);
     screen_vi = XGetVisualInfo (dpy, VisualIDMask, &template, &n_screen);
@@ -1490,37 +1555,56 @@ pick_gl_visual (ScreenInfo *screen_info)
         return NULL;
     }
 
-    for (i = 0; i < n_configs; i++)
+    /*
+     * The first pass only takes a config the XRender path could present through
+     * as well, so that choose_glx_settings() cannot end up looking for a config
+     * for this visual and finding none: it would then give up on presenting
+     * through GLX for the rest of the session. Only if there is no such config
+     * does the second pass take one the GL renderer alone can use.
+     */
+    for (pass = 0; (pass < 2) && (visual == NULL); pass++)
     {
-        XVisualInfo *config_vi;
-        gboolean same_format;
-
-        if (!config_has_no_extra_buffers (screen_info, configs[i]))
+        for (i = 0; i < n_configs; i++)
         {
-            continue;
-        }
+            XVisualInfo *config_vi;
+            gboolean same_format;
 
-        config_vi = glXGetVisualFromFBConfig (dpy, configs[i]);
-        if (config_vi == NULL)
-        {
-            continue;
-        }
+            if (!config_has_no_extra_buffers (screen_info, configs[i]))
+            {
+                continue;
+            }
+            if ((pass == 0) && !config_can_bind_pixmaps (screen_info, configs[i]))
+            {
+                continue;
+            }
 
-        same_format = (config_vi->depth == screen_vi->depth) &&
-                      (config_vi->class == screen_vi->class) &&
-                      (config_vi->red_mask == screen_vi->red_mask) &&
-                      (config_vi->green_mask == screen_vi->green_mask) &&
-                      (config_vi->blue_mask == screen_vi->blue_mask);
-        if (same_format)
-        {
-            /* Owned by the display, it outlives the XVisualInfo around it */
-            visual = config_vi->visual;
-        }
-        XFree (config_vi);
+            config_vi = glXGetVisualFromFBConfig (dpy, configs[i]);
+            if (config_vi == NULL)
+            {
+                continue;
+            }
 
-        if (visual != NULL)
-        {
-            break;
+            same_format = (config_vi->depth == screen_vi->depth) &&
+                          (config_vi->class == screen_vi->class) &&
+                          (config_vi->red_mask == screen_vi->red_mask) &&
+                          (config_vi->green_mask == screen_vi->green_mask) &&
+                          (config_vi->blue_mask == screen_vi->blue_mask);
+            /*
+             * The visual of the screen needs none of this. Where one of its own
+             * configs will do, putting that config first is the whole of it, see
+             * prefer_configs_without_extra_buffers().
+             */
+            if (same_format && (config_vi->visualid != screen_vi->visualid))
+            {
+                /* Owned by the display, it outlives the XVisualInfo around it */
+                visual = config_vi->visual;
+            }
+            XFree (config_vi);
+
+            if (visual != NULL)
+            {
+                break;
+            }
         }
     }
     XFree (configs);
