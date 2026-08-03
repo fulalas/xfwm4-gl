@@ -3329,6 +3329,19 @@ add_damage (ScreenInfo *screen_info, XserverRegion damage)
         return;
     }
 
+    /*
+     * Nothing repaints while the compositor is stopped, and starting it again
+     * begins with regions of its own and a repaint of the whole screen, so
+     * anything kept here would only be leaked. The GL renderer watching the
+     * desktop background is one way to get here during a suspend.
+     */
+    if (!screen_info->compositor_active)
+    {
+        XFixesDestroyRegion (screen_info->display_info->dpy, damage);
+
+        return;
+    }
+
     if (screen_info->screenRegion == None)
     {
         screen_info->screenRegion = get_screen_region (screen_info);
@@ -5539,11 +5552,19 @@ setup_presentation (ScreenInfo *screen_info)
 #endif /* HAVE_EPOXY */
 
 #ifdef HAVE_PRESENT_EXTENSION
+    /*
+     * Adaptive vsync needs GLX, so when GLX is not there it falls back to
+     * behaving like auto, which is what it says it does. Asking for glx or
+     * xpresent by name is asking for that one and nothing else.
+     */
     screen_info->use_present = display_info->have_present &&
 #ifdef HAVE_EPOXY
                                !screen_info->use_glx &&
 #endif /* HAVE_EPOXY */
                                (screen_info->vblank_mode == VBLANK_AUTO ||
+#ifdef HAVE_EPOXY
+                                screen_info->vblank_mode == VBLANK_ADAPTIVE ||
+#endif /* HAVE_EPOXY */
                                 screen_info->vblank_mode == VBLANK_XPRESENT);
     if (screen_info->use_present)
     {

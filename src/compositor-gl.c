@@ -103,6 +103,8 @@ typedef struct
 
     GLXPixmap root_glx_pixmap;
     GLuint root_texture;
+    GLenum root_tex_type;
+    gboolean root_repeat;
     GLuint black_texture;
     gboolean root_missing;
     gint root_width;
@@ -115,6 +117,7 @@ typedef struct
     GLuint fbo_texture;
     gint fbo_width;
     gint fbo_height;
+    gboolean fbo_failed;
 
     GLuint cursor_texture;
     gint cursor_width;
@@ -409,6 +412,13 @@ xfwmGLSetOpaqueRects (CWindow *cw, XRectangle *rects, gint nrects)
     g_free (cw->gl_opaque_rects);
     cw->gl_opaque_rects = NULL;
     cw->gl_n_opaque_rects = 0;
+    xfwmGLInvalidateOpaqueRegion (cw);
+
+    /* Nothing reads a copy of these unless the GL renderer is the one drawing */
+    if (cw->screen_info->gl_data == NULL)
+    {
+        return;
+    }
 
     if (rects != NULL && nrects > 0)
     {
@@ -416,8 +426,6 @@ xfwmGLSetOpaqueRects (CWindow *cw, XRectangle *rects, gint nrects)
         memcpy (cw->gl_opaque_rects, rects, nrects * sizeof (XRectangle));
         cw->gl_n_opaque_rects = nrects;
     }
-
-    xfwmGLInvalidateOpaqueRegion (cw);
 }
 
 static void
@@ -680,6 +688,15 @@ depth_config (ScreenInfo *screen_info, gint depth)
     return entry;
 }
 
+/* There is no entry at all once the table is full, which is not usable either */
+static gboolean
+depth_is_usable (ScreenInfo *screen_info, gint depth)
+{
+    XfwmGLDepth *dc = depth_config (screen_info, depth);
+
+    return (dc != NULL && dc->usable);
+}
+
 /*
  * Drivers that offer the rectangle texture target and then do not honour it.
  *
@@ -752,8 +769,8 @@ pick_texture_target (ScreenInfo *screen_info)
                                                         : GL_TEXTURE_RECTANGLE_ARB;
 
         /* Opaque and ARGB windows both have to work, they are always around */
-        if (!depth_config (screen_info, 24)->usable ||
-            !depth_config (screen_info, 32)->usable)
+        if (!depth_is_usable (screen_info, 24) ||
+            !depth_is_usable (screen_info, 32))
         {
             continue;
         }
@@ -790,6 +807,18 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
                                   "GLX_EXT_texture_from_pixmap"))
     {
         g_warning ("GLX_EXT_texture_from_pixmap is missing, GL compositing disabled.");
+        return FALSE;
+    }
+
+    /*
+     * A window is drawn from the pixmap the Composite extension names for it,
+     * and there is nothing else to draw it from here: the XRender path can fall
+     * back to the window drawable itself, a texture cannot. Without this the
+     * binding below would fail on every window, one at a time, forever.
+     */
+    if (!screen_info->display_info->have_name_window_pixmap)
+    {
+        g_warning ("The X server cannot name window pixmaps, GL compositing disabled.");
         return FALSE;
     }
 
@@ -936,6 +965,7 @@ free_root_texture (ScreenInfo *screen_info)
         glDeleteTextures (1, &data->root_texture);
     }
     data->root_texture = 0;
+    data->root_repeat = FALSE;
     data->root_pixmap = None;
     data->root_dirty = FALSE;
     data->root_missing = FALSE;
@@ -994,6 +1024,18 @@ free_fbo (ScreenInfo *screen_info)
     }
     data->fbo_width = 0;
     data->fbo_height = 0;
+}
+
+/*
+ * The cursor image is only drawn by the magnifier, but it has nothing to do
+ * with the frame buffer the magnifier renders into: it does not change with the
+ * size of the screen and it is cheap to keep, so it only goes when the
+ * magnifier is turned off altogether.
+ */
+static void
+free_cursor_texture (ScreenInfo *screen_info)
+{
+    XfwmGLData *data = gl_data (screen_info);
 
     if (data->cursor_texture != 0)
     {
@@ -1028,11 +1070,8 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     if (glXGetCurrentContext () != NULL)
     {
         free_fbo (screen_info);
+        free_cursor_texture (screen_info);
 
-        if (data->cursor_texture != 0)
-        {
-            glDeleteTextures (1, &data->cursor_texture);
-        }
         if (data->black_texture != 0)
         {
             glDeleteTextures (1, &data->black_texture);
@@ -1137,6 +1176,8 @@ xfwmGLScreenSizeChanged (ScreenInfo *screen_info)
 
     free_root_texture (screen_info);
     free_fbo (screen_info);
+    /* A frame buffer that was too big for the driver may fit the new size */
+    gl_data (screen_info)->fbo_failed = FALSE;
     gl_data (screen_info)->full_repaint = TRUE;
 }
 
@@ -1693,6 +1734,8 @@ bind_root_texture (ScreenInfo *screen_info)
     DisplayInfo *display_info = screen_info->display_info;
     Display *dpy = myScreenGetXDisplay (screen_info);
     XfwmGLDepth *dc;
+    GLXFBConfig fbconfig;
+    GLenum target;
     Pixmap pixmap;
     Window root_ret;
     gint x_ret, y_ret;
@@ -1706,7 +1749,7 @@ bind_root_texture (ScreenInfo *screen_info)
 
     if (data->root_texture != 0)
     {
-        glBindTexture (data->tex_type, data->root_texture);
+        glBindTexture (data->root_tex_type, data->root_texture);
         /*
          * Only when the desktop drew into the same pixmap again. Without a
          * damage handle there is nothing to say when that happened, so the
@@ -1761,22 +1804,53 @@ bind_root_texture (ScreenInfo *screen_info)
 
         return FALSE;
     }
+    fbconfig = dc->fbconfig;
+    target = data->tex_target;
+    data->root_tex_type = data->tex_type;
+    data->root_repeat = FALSE;
 
     /*
-     * The background is drawn one tile at a time, so a pattern small enough to
-     * need thousands of them would cost more than the frame is worth. Nothing
-     * that sets a wallpaper does this, but a stray tiny pixmap must not be able
-     * to bring the compositor to a halt. Count the tiles rather than compare
-     * areas: a wide and short pattern needs many tiles for a small area, and
-     * an area in pixels overflows on a large screen.
+     * A background pixmap smaller than the screen is tiled by the X server, so
+     * it has to be tiled here as well rather than stretched. GL repeats a
+     * texture on its own, which turns the whole desktop into one single quad,
+     * but only on the 2D target: a rectangle texture cannot repeat. So a
+     * pattern is bound on the 2D target whatever the windows use, and only
+     * where that target is not available is it drawn one tile at a time.
+     */
+    if (((gint) width_ret < screen_info->width) ||
+        ((gint) height_ret < screen_info->height))
+    {
+        GLXFBConfig fbconfig_2d;
+
+        if (data->tex_target == GLX_TEXTURE_2D_EXT)
+        {
+            data->root_repeat = TRUE;
+        }
+        else if (find_fbconfig (screen_info, (gint) depth_ret,
+                                GLX_TEXTURE_2D_EXT, &fbconfig_2d))
+        {
+            fbconfig = fbconfig_2d;
+            target = GLX_TEXTURE_2D_EXT;
+            data->root_tex_type = GL_TEXTURE_2D;
+            data->root_repeat = TRUE;
+        }
+    }
+
+    /*
+     * Tile by tile a pattern small enough to need thousands of them would cost
+     * more than the frame is worth, and a stray tiny pixmap must not be able to
+     * bring the compositor to a halt. Count the tiles rather than compare areas:
+     * a wide and short pattern needs many tiles for a small area, and an area in
+     * pixels overflows on a large screen.
      */
     tiles_x = screen_info->width / (gint) width_ret + 2;
     tiles_y = screen_info->height / (gint) height_ret + 2;
-    if (tiles_x > GL_MAX_ROOT_TILES || tiles_y > GL_MAX_ROOT_TILES ||
-        tiles_x * tiles_y > GL_MAX_ROOT_TILES)
+    if (!data->root_repeat &&
+        (tiles_x > GL_MAX_ROOT_TILES || tiles_y > GL_MAX_ROOT_TILES ||
+         tiles_x * tiles_y > GL_MAX_ROOT_TILES))
     {
-        g_warning ("The desktop background is a %ux%u tile, too small for the "
-                   "GL renderer to repeat; drawing it plain.",
+        g_warning ("The desktop background is a %ux%u tile and this driver "
+                   "cannot repeat it, so the desktop is drawn black.",
                    width_ret, height_ret);
         data->root_missing = TRUE;
 
@@ -1786,12 +1860,12 @@ bind_root_texture (ScreenInfo *screen_info)
     data->root_width = (gint) width_ret;
     data->root_height = (gint) height_ret;
 
-    attribs[1] = (gint) data->tex_target;
+    attribs[1] = (gint) target;
     attribs[3] = (depth_ret == 32) ? GLX_TEXTURE_FORMAT_RGBA_EXT
                                    : GLX_TEXTURE_FORMAT_RGB_EXT;
 
     myDisplayErrorTrapPush (display_info);
-    data->root_glx_pixmap = glXCreatePixmap (dpy, dc->fbconfig, pixmap, attribs);
+    data->root_glx_pixmap = glXCreatePixmap (dpy, fbconfig, pixmap, attribs);
     if (myDisplayErrorTrapPop (display_info) != Success)
     {
         data->root_glx_pixmap = None;
@@ -1804,8 +1878,13 @@ bind_root_texture (ScreenInfo *screen_info)
     }
 
     glGenTextures (1, &data->root_texture);
-    glBindTexture (data->tex_type, data->root_texture);
-    set_tex_params (data->tex_type, GL_NEAREST);
+    glBindTexture (data->root_tex_type, data->root_texture);
+    set_tex_params (data->root_tex_type, GL_NEAREST);
+    if (data->root_repeat)
+    {
+        glTexParameteri (data->root_tex_type, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri (data->root_tex_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
     glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
 
     /* Watch for a desktop that repaints in place, see xfwmGLDamageRootPixmap() */
@@ -1837,26 +1916,44 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
     {
         gint tex_width = data->root_width;
         gint tex_height = data->root_height;
-        cairo_rectangle_int_t area;
-        gint x, y, first_x, first_y;
 
-        set_win_opacity (data, 1.0f);
-        /*
-         * A background pixmap smaller than the screen is tiled by the X
-         * server, so tile it here too rather than stretch it. Usually that is
-         * one single tile, and only the tiles the repaint can touch are drawn.
-         */
-        cairo_region_get_extents (clip, &area);
-        first_x = (area.x / tex_width) * tex_width;
-        first_y = (area.y / tex_height) * tex_height;
-
-        for (y = first_y; y < area.y + area.height; y += tex_height)
+        if (data->root_repeat)
         {
-            for (x = first_x; x < area.x + area.width; x += tex_width)
+            /*
+             * One quad for the whole screen, the texture repeats itself. The
+             * pattern is on the 2D target here, see bind_root_texture(), so it
+             * takes the plain 2D program rather than the one for windows.
+             */
+            use_program (data->program_2d, data->u_opacity_2d, 1.0f);
+            draw_quad (screen_info, GL_TEXTURE_2D,
+                       0, 0, tex_width, tex_height,
+                       0, 0, screen_info->width, screen_info->height, clip);
+            glUseProgram (data->program_win);
+        }
+        else
+        {
+            cairo_rectangle_int_t area;
+            gint x, y, first_x, first_y;
+
+            set_win_opacity (data, 1.0f);
+            /*
+             * The background covers the screen, or the driver cannot repeat it
+             * and it has to be laid down one tile at a time. Usually that is
+             * one single tile, and only the tiles the repaint can touch are
+             * drawn.
+             */
+            cairo_region_get_extents (clip, &area);
+            first_x = (area.x / tex_width) * tex_width;
+            first_y = (area.y / tex_height) * tex_height;
+
+            for (y = first_y; y < area.y + area.height; y += tex_height)
             {
-                draw_quad (screen_info, data->tex_type,
-                           0, 0, tex_width, tex_height,
-                           x, y, tex_width, tex_height, clip);
+                for (x = first_x; x < area.x + area.width; x += tex_width)
+                {
+                    draw_quad (screen_info, data->root_tex_type,
+                               0, 0, tex_width, tex_height,
+                               x, y, tex_width, tex_height, clip);
+                }
             }
         }
     }
@@ -1950,6 +2047,12 @@ bind_zoom_fbo (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
 
+    /* Asking again every frame would build and drop a screen sized texture */
+    if (data->fbo_failed)
+    {
+        return FALSE;
+    }
+
     if (data->fbo_width != screen_info->width ||
         data->fbo_height != screen_info->height)
     {
@@ -1976,6 +2079,7 @@ bind_zoom_fbo (ScreenInfo *screen_info)
             g_warning ("Incomplete frame buffer object, magnifier disabled.");
             glBindFramebuffer (GL_FRAMEBUFFER, 0);
             free_fbo (screen_info);
+            data->fbo_failed = TRUE;
 
             return FALSE;
         }
@@ -2181,14 +2285,18 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     {
         zoomed = FALSE;
     }
-    if (!screen_info->zoomed && data->fbo != 0)
+    if (!screen_info->zoomed)
     {
         /*
          * The magnifier holds a texture the size of the screen, so give it
          * back as soon as the magnifier is off. The XRender path frees its
          * own buffer the same way.
          */
-        free_fbo (screen_info);
+        if (data->fbo != 0)
+        {
+            free_fbo (screen_info);
+        }
+        free_cursor_texture (screen_info);
     }
 
     glViewport (0, 0, screen_info->width, screen_info->height);
@@ -2350,12 +2458,18 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         cw->gl_paint_clip = NULL;
     }
 
+    /*
+     * The real pointer is hidden for as long as the magnifier is on, so the
+     * cursor is painted whenever it is, even where the frame buffer is missing
+     * and the scene ends up not magnified: otherwise there would be no pointer
+     * on the screen at all.
+     */
+    if (screen_info->zoomed && screen_info->cursor_is_zoomed)
+    {
+        paint_cursor_gl (screen_info);
+    }
     if (zoomed)
     {
-        if (screen_info->cursor_is_zoomed)
-        {
-            paint_cursor_gl (screen_info);
-        }
         draw_zoomed_scene (screen_info);
     }
 
