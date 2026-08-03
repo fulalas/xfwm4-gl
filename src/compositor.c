@@ -1367,6 +1367,168 @@ check_gl_extensions (ScreenInfo *screen_info)
     return TRUE;
 }
 
+/*
+ * Whether a config comes without a depth buffer, a stencil buffer and
+ * multisampling.
+ *
+ * Nothing here draws with any of those: depth testing is turned off, the
+ * stencil is never touched and the windows are drawn as plain quads. The
+ * drawable is the whole screen though, so every one of those buffers the config
+ * carries is another screen sized allocation the driver has to make and keep,
+ * and make again on every resolution change.
+ */
+static gboolean
+config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+    const gint attribs[] = { GLX_DEPTH_SIZE, GLX_STENCIL_SIZE, GLX_SAMPLE_BUFFERS };
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (attribs); i++)
+    {
+        int value;
+
+        if (glXGetFBConfigAttrib (dpy, config, attribs[i], &value) != Success)
+        {
+            return FALSE;
+        }
+        if (value != 0)
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/*
+ * Put the configs carrying none of those buffers first, keeping the order the
+ * server gave them in within each group. The loop that picks a config walks the
+ * list once and takes the first that fits, so this is what makes it land on a
+ * plain config where there is one, and still fall back to any other where there
+ * is not.
+ */
+static void
+prefer_configs_without_extra_buffers (ScreenInfo *screen_info,
+                                      GLXFBConfig *configs, int n_configs)
+{
+    int i, next = 0;
+
+    for (i = 0; i < n_configs; i++)
+    {
+        GLXFBConfig plain;
+        int j;
+
+        if (!config_has_no_extra_buffers (screen_info, configs[i]))
+        {
+            continue;
+        }
+
+        plain = configs[i];
+        for (j = i; j > next; j--)
+        {
+            configs[j] = configs[j - 1];
+        }
+        configs[next++] = plain;
+    }
+}
+
+/*
+ * Pick the visual for the window the compositor draws into.
+ *
+ * Which buffers a drawable gets is decided by the GLX config, and which config
+ * it can have is decided by the visual of its window. A driver usually offers
+ * one single config per visual, and the config of the screen's own visual
+ * carries a depth and a stencil buffer: on a 3840x2160 screen that is over
+ * 40MB of graphics memory, allocated for the whole session, for buffers this
+ * compositor never touches. Giving the window a visual whose config has none of
+ * them is what avoids that.
+ *
+ * Only visuals laid out exactly like the screen's are taken, so nothing else
+ * has to know: the pixel format stays the same, so the XRender path can still
+ * present into the same window and windows can still be bound as textures.
+ *
+ * Returns NULL when there is no such visual, which just leaves things as they
+ * were.
+ */
+static Visual *
+pick_gl_visual (ScreenInfo *screen_info)
+{
+    Display *dpy = myScreenGetXDisplay (screen_info);
+    GLint attribs[] = {
+        GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT | GLX_WINDOW_BIT,
+        GLX_X_RENDERABLE,  True,
+        GLX_DOUBLEBUFFER,  True,
+        GLX_CONFIG_CAVEAT, GLX_NONE,
+        GLX_DEPTH_SIZE,    0,
+        GLX_STENCIL_SIZE,  0,
+        GLX_RED_SIZE,      1,
+        GLX_GREEN_SIZE,    1,
+        GLX_BLUE_SIZE,     1,
+        GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+        None
+    };
+    GLXFBConfig *configs;
+    XVisualInfo *screen_vi, template;
+    Visual *visual = NULL;
+    int n_configs = 0, n_screen = 0, i;
+
+    g_return_val_if_fail (screen_info != NULL, NULL);
+
+    template.visualid = XVisualIDFromVisual (screen_info->visual);
+    screen_vi = XGetVisualInfo (dpy, VisualIDMask, &template, &n_screen);
+    if (screen_vi == NULL)
+    {
+        return NULL;
+    }
+
+    configs = glXChooseFBConfig (dpy, screen_info->screen, attribs, &n_configs);
+    if (configs == NULL)
+    {
+        XFree (screen_vi);
+
+        return NULL;
+    }
+
+    for (i = 0; i < n_configs; i++)
+    {
+        XVisualInfo *config_vi;
+        gboolean same_format;
+
+        if (!config_has_no_extra_buffers (screen_info, configs[i]))
+        {
+            continue;
+        }
+
+        config_vi = glXGetVisualFromFBConfig (dpy, configs[i]);
+        if (config_vi == NULL)
+        {
+            continue;
+        }
+
+        same_format = (config_vi->depth == screen_vi->depth) &&
+                      (config_vi->class == screen_vi->class) &&
+                      (config_vi->red_mask == screen_vi->red_mask) &&
+                      (config_vi->green_mask == screen_vi->green_mask) &&
+                      (config_vi->blue_mask == screen_vi->blue_mask);
+        if (same_format)
+        {
+            /* Owned by the display, it outlives the XVisualInfo around it */
+            visual = config_vi->visual;
+        }
+        XFree (config_vi);
+
+        if (visual != NULL)
+        {
+            break;
+        }
+    }
+    XFree (configs);
+    XFree (screen_vi);
+
+    return visual;
+}
+
 static gboolean
 choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
 {
@@ -1375,7 +1537,13 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
         GLX_X_RENDERABLE,  True,
         GLX_DOUBLEBUFFER,  True,
         GLX_CONFIG_CAVEAT, GLX_NONE,
-        GLX_DEPTH_SIZE,    1,
+        /*
+         * Zero is not a minimum but a preference, so this asks for a config
+         * with no depth or stencil buffer at all rather than turning away the
+         * ones that have none. See config_has_no_extra_buffers().
+         */
+        GLX_DEPTH_SIZE,    0,
+        GLX_STENCIL_SIZE,  0,
         GLX_RED_SIZE,      1,
         GLX_GREEN_SIZE,    1,
         GLX_BLUE_SIZE,     1,
@@ -1417,8 +1585,17 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
         return FALSE;
     }
 
+    prefer_configs_without_extra_buffers (screen_info, configs, n_configs);
+
     fb_match = FALSE;
-    xvisual_id = XVisualIDFromVisual (screen_info->visual);
+    /*
+     * The config has to go with the visual of the window it will be used on,
+     * which is not the visual of the screen when one without the buffers we
+     * never use was found. See pick_gl_visual().
+     */
+    xvisual_id = XVisualIDFromVisual ((screen_info->gl_visual != NULL)
+                                      ? screen_info->gl_visual
+                                      : screen_info->visual);
     for (i = 0; i < n_configs; i++)
     {
         visual_info = glXGetVisualFromFBConfig (myScreenGetXDisplay (screen_info),
@@ -1540,6 +1717,12 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
     {
         g_warning ("Cannot find a matching visual for the frame buffer config.");
         return FALSE;
+    }
+
+    if (!config_has_no_extra_buffers (screen_info, fb_config))
+    {
+        g_info ("This driver only offers GLX configs with a depth, stencil or "
+                "multisample buffer, so the screen is drawn into one of those");
     }
     DBG ("Selected texture type 0x%x target 0x%x format 0x%x (%s)",
          texture_type, texture_target, texture_format,
@@ -1730,7 +1913,8 @@ init_glx (ScreenInfo *screen_info, gboolean need_tfp)
 
     glLoadIdentity();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /* There is no depth buffer to clear, see choose_glx_settings() */
+    glClear(GL_COLOR_BUFFER_BIT);
 
     /* Swap control methods available */
     screen_info->has_mesa_swap_control =
@@ -5615,6 +5799,11 @@ compositorManageScreen (ScreenInfo *screen_info)
     display_info = screen_info->display_info;
 
     screen_info->output = screen_info->xroot;
+#ifdef HAVE_EPOXY
+    /* Nothing is drawn into a window of our own yet, see pick_gl_visual() */
+    screen_info->gl_visual = NULL;
+    screen_info->gl_colormap = None;
+#endif /* HAVE_EPOXY */
 #if HAVE_OVERLAYS
     if (display_info->have_overlays)
     {
@@ -5633,9 +5822,64 @@ compositorManageScreen (ScreenInfo *screen_info)
                                         ShapeInput, 0, 0, region);
             XFixesDestroyRegion (display_info->dpy, region);
 
+            Visual *visual = screen_info->visual;
+            unsigned long valuemask = 0;
+
+#ifdef HAVE_EPOXY
+            /*
+             * Only when the GL renderer is the one that is going to draw. The
+             * lookup loads the GL stack, which setup_gl() is about to do anyway
+             * under the very same conditions, and which is far too expensive to
+             * do for a screen that will never use it.
+             */
+            if (screen_info->params->use_gl_compositing &&
+                !screen_info->gl_render_failed &&
+                acceleration_is_available (screen_info))
+            {
+                screen_info->gl_visual = pick_gl_visual (screen_info);
+            }
+
+            if (screen_info->gl_visual != NULL)
+            {
+                /* A window whose visual is not its parent's needs a colormap of its own */
+                screen_info->gl_colormap = XCreateColormap (display_info->dpy,
+                                                            screen_info->xroot,
+                                                            screen_info->gl_visual,
+                                                            AllocNone);
+                attributes.colormap = screen_info->gl_colormap;
+                attributes.border_pixel = 0;
+                valuemask = CWColormap | CWBorderPixel;
+                visual = screen_info->gl_visual;
+            }
+#endif /* HAVE_EPOXY */
+
+            myDisplayErrorTrapPush (display_info);
             screen_info->root_overlay = XCreateWindow (display_info->dpy, screen_info->overlay,
                                                        0, 0, screen_info->width, screen_info->height, 0, screen_info->depth,
-                                                       InputOutput, screen_info->visual, 0, &attributes);
+                                                       InputOutput, visual, valuemask, &attributes);
+#ifdef HAVE_EPOXY
+            if (myDisplayErrorTrapPop (display_info) != Success)
+            {
+                /*
+                 * The server would not have the visual we picked. Nothing is
+                 * lost by asking for the screen's own again, which is what
+                 * every version before this one used.
+                 */
+                g_info ("The server refused the visual picked for the overlay, "
+                        "using the visual of the screen");
+                if (screen_info->gl_colormap != None)
+                {
+                    XFreeColormap (display_info->dpy, screen_info->gl_colormap);
+                    screen_info->gl_colormap = None;
+                }
+                screen_info->gl_visual = NULL;
+                screen_info->root_overlay = XCreateWindow (display_info->dpy, screen_info->overlay,
+                                                           0, 0, screen_info->width, screen_info->height, 0, screen_info->depth,
+                                                           InputOutput, screen_info->visual, 0, &attributes);
+            }
+#else /* HAVE_EPOXY */
+            myDisplayErrorTrapPopIgnored (display_info);
+#endif /* HAVE_EPOXY */
             XMapRaised (display_info->dpy, screen_info->root_overlay);
 
             screen_info->output = screen_info->root_overlay;
@@ -5654,7 +5898,15 @@ compositorManageScreen (ScreenInfo *screen_info)
     XCompositeRedirectSubwindows (display_info->dpy, screen_info->xroot, CompositeRedirectManual);
     screen_info->compositor_active = TRUE;
 
+    /*
+     * The format of the window we draw into, which is laid out like the screen
+     * whichever visual it ended up with, see pick_gl_visual().
+     */
     visual_format = XRenderFindVisualFormat (display_info->dpy,
+#ifdef HAVE_EPOXY
+                                             (screen_info->gl_visual != NULL)
+                                             ? screen_info->gl_visual :
+#endif /* HAVE_EPOXY */
                                              DefaultVisual (display_info->dpy,
                                                             screen_info->screen));
     if (!visual_format)
@@ -5936,6 +6188,16 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
         screen_info->overlay = None;
     }
 #endif /* HAVE_OVERLAYS */
+
+#ifdef HAVE_EPOXY
+    /* The window it belonged to is gone, see pick_gl_visual() */
+    if (screen_info->gl_colormap != None)
+    {
+        XFreeColormap (display_info->dpy, screen_info->gl_colormap);
+        screen_info->gl_colormap = None;
+    }
+    screen_info->gl_visual = NULL;
+#endif /* HAVE_EPOXY */
 
     screen_info->gaussianSize = -1;
     screen_info->wins_unredirected = 0;

@@ -245,6 +245,13 @@ struct _ScreenInfo
     GLXWindow glx_window;
     GLsync gl_sync;
 
+    /*
+     * The visual the window we draw into was created with, and the colormap it
+     * needs, when it is not the visual of the screen. See pick_gl_visual().
+     */
+    Visual *gl_visual;
+    Colormap gl_colormap;
+
     /* GL compositing backend, see compositor-gl.c */
     gboolean use_gl_render;
     gboolean gl_render_failed;
