@@ -4355,12 +4355,10 @@ clientGetButtonPixmap (Client *c, int button, int state)
 }
 
 /*
- * Whether hovering this button is worth remembering at all. The pointer being
- * on a button is a fact about the pointer, not about the state the frame
- * happens to be drawn in, so a theme that only ships one of the two prelight
- * images still has to have the hover recorded: the window can be focused
- * without the pointer ever moving, and no further crossing event would arrive
- * to put it right. clientGetButtonState() decides what is actually drawn.
+ * Whether hovering this button is worth remembering. The pointer being on a
+ * button says nothing about how the frame is drawn, so the hover is recorded
+ * even for a theme with only one prelight image: the window can be focused
+ * without the pointer moving, with no crossing event to put it right.
  */
 gboolean
 clientCanPrelight (Client *c, int button)

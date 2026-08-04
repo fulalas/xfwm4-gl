@@ -314,12 +314,10 @@ window_opaque_region (CWindow *cw)
     }
 
     /*
-     * The rectangles are relative to the client window, which is where the
-     * client area starts. Taking the origin from there rather than from the
-     * client keeps this cache, the bounding shape and the drawing itself on
-     * the same coordinates while a move is still on its way to the X server.
-     * A frameless window starts inside its own border, and its rectangle is
-     * kept whole for the clamp below.
+     * The rectangles are relative to the client window. Taking the origin from
+     * the client area rather than from the client keeps this cache, the bounding
+     * shape and the drawing on the same coordinates while a move is still on its
+     * way to the X server. A frameless window starts inside its own border.
      */
     if (window_client_area (cw, &client))
     {
@@ -695,12 +693,10 @@ depth_is_usable (ScreenInfo *screen_info, gint depth)
 }
 
 /*
- * Drivers that offer the rectangle texture target and then do not honour it.
- *
- * virgl, which is what a QEMU guest with 3D reports, advertises the target and
- * binds a window to it without complaint, and then every window samples black,
- * so the whole screen goes black. The same windows on the 2D target draw
- * correctly, so that is what it gets.
+ * Drivers that offer the rectangle texture target and then do not honour it:
+ * binding a window to it is accepted and then samples black, which blacks out
+ * the screen. The same windows draw correctly on the 2D target, so they get
+ * that one.
  */
 static gboolean
 renderer_needs_2d_target (const char *renderer)
@@ -716,17 +712,13 @@ renderer_needs_2d_target (const char *renderer)
 }
 
 /*
- * Rectangle textures come first. They are addressed in pixels, so there is no
- * way for the sampling to disagree with the real width of the pixmap, while a
- * normalised GL_TEXTURE_2D relies on the driver mapping 1.0 exactly onto the
- * last texel. Drivers that pad the allocation do not, and the window is then
- * drawn very slightly stretched, which is visible as the content wobbling while
- * a window is resized.
+ * Rectangle textures come first: addressed in pixels, they cannot disagree with
+ * the real width of the pixmap, while a normalised GL_TEXTURE_2D relies on the
+ * driver mapping 1.0 onto the last texel. Where it pads the allocation instead,
+ * the window is drawn slightly stretched and the content wobbles as it resizes.
  *
- * Whichever target is picked has to work for opaque and ARGB windows alike,
- * otherwise half of the windows cannot be bound at all, and the shader for it
- * has to compile: a driver can offer rectangle pixmaps without offering
- * sampler2DRect in its GLSL.
+ * The target picked has to work for opaque and ARGB windows alike, and its
+ * shader has to compile: rectangle pixmaps can be offered without sampler2DRect.
  */
 static gboolean
 pick_texture_target (ScreenInfo *screen_info)
@@ -1801,11 +1793,9 @@ bind_root_texture (ScreenInfo *screen_info)
 
     /*
      * A background pixmap smaller than the screen is tiled by the X server, so
-     * it has to be tiled here as well rather than stretched. GL repeats a
-     * texture on its own, which turns the whole desktop into one single quad,
-     * but only on the 2D target: a rectangle texture cannot repeat. So a
-     * pattern is bound on the 2D target whatever the windows use, and only
-     * where that target is not available is it drawn one tile at a time.
+     * it is tiled here too rather than stretched. GL repeats a texture by
+     * itself, one quad for the whole desktop, but only on the 2D target: so a
+     * pattern is bound there, and drawn tile by tile only where it is missing.
      */
     if (((gint) width_ret < screen_info->width) ||
         ((gint) height_ret < screen_info->height))
@@ -1827,11 +1817,10 @@ bind_root_texture (ScreenInfo *screen_info)
     }
 
     /*
-     * Tile by tile a pattern small enough to need thousands of them would cost
-     * more than the frame is worth, and a stray tiny pixmap must not be able to
-     * bring the compositor to a halt. Count the tiles rather than compare areas:
-     * a wide and short pattern needs many tiles for a small area, and an area in
-     * pixels overflows on a large screen.
+     * A pattern needing thousands of tiles would cost more than the frame is
+     * worth, and a stray tiny pixmap must not stall the compositor. Tiles are
+     * counted rather than areas compared: a wide short pattern needs many tiles
+     * for a small area, and an area in pixels overflows on a large screen.
      */
     tiles_x = screen_info->width / (gint) width_ret + 2;
     tiles_y = screen_info->height / (gint) height_ret + 2;
@@ -2419,12 +2408,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         /*
          * What is still unpainted below this window, for the second pass. Taken
-         * after the window has claimed the area it just drew solid, so the
-         * blended pass does not draw over it again, but before the region the
-         * window merely declares opaque is taken out: the window itself still
-         * has to be drawn there. Same order as the XRender path. Only windows
-         * that pass has any work on keep a copy, for the rest it would only
-         * be thrown away unused.
+         * after the area it drew solid is claimed, so the blended pass does not
+         * cover it again, but before its merely opaque region is taken out,
+         * where the window itself still has to be drawn. Only the windows that
+         * pass works on keep a copy.
          */
         if ((cw->shadow_width > 0) || !opaque_window ||
             WIN_HAS_TRANSLUCENT_FRAME(cw))

@@ -1410,11 +1410,9 @@ handleEnterNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
 
                     c->button_status[b] = BUTTON_STATE_PRELIGHT;
                     /*
-                     * clientGetButtonState() owns the decision of what a
-                     * button is drawn with, so ask it rather than repeat its
-                     * rules here. Nothing to redraw when the answer did not
-                     * change, as when the theme has no image for the state
-                     * the frame is in.
+                     * clientGetButtonState() owns what a button is drawn with,
+                     * so ask it rather than repeat its rules. Nothing to redraw
+                     * when the answer did not change.
                      */
                     if (clientGetButtonState (c, b, frame_state) != drawn_before)
                     {

@@ -691,11 +691,10 @@ client_area (CWindow *cw, gint *x, gint *y, gint *width, gint *height)
         Client *c = cw->c;
 
         /*
-         * Where the frame sits comes from cw->attr, not from the client. The
-         * client is moved the moment the window manager decides to move it,
-         * while cw->attr only catches up when the X server confirms, and both
-         * renderers draw the window at cw->attr. Mixing the two puts the
-         * client area somewhere other than the pixels on screen.
+         * Where the frame sits comes from cw->attr, not from the client: the
+         * client moves as soon as the window manager decides to, while cw->attr
+         * catches up when the X server confirms, and that is where both
+         * renderers draw. Mixing the two misplaces the client area.
          */
         *x = cw->attr.x + cw->attr.border_width + frameLeft (c);
         *y = cw->attr.y + cw->attr.border_width + frameTop (c);
@@ -1223,15 +1222,11 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
 /*
  * Whether this machine looks like it can render with a GPU at all.
  *
- * Loading the GL stack costs tens of megabytes that never come back: most of it
- * is the driver and the compiler behind it being mapped into the process, and
- * only unloading those libraries would release it, which libGL never does. The
- * first call into GLX is enough to pay the whole price, before any context
- * exists, so where there plainly is no acceleration the question is not asked.
- *
- * This looks at the X server and at the render nodes the kernel exposes, which
- * costs nothing, and errs towards trying: a wrong yes only means the renderer
- * check below has the last word, as it always did.
+ * The first GLX call maps the driver and its compiler into us, tens of
+ * megabytes that are never given back, so where there plainly is no
+ * acceleration the question is not asked. The X server and the render nodes
+ * answer it for free, and a wrong yes costs nothing: the renderer check below
+ * still has the last word.
  */
 static gboolean
 acceleration_is_available (ScreenInfo *screen_info)
@@ -1253,10 +1248,9 @@ acceleration_is_available (ScreenInfo *screen_info)
     }
 
     /*
-     * Either sign is enough on its own, because each covers a hole in the
-     * other: NVIDIA's own driver renders through GLX without speaking DRI2 or
-     * DRI3, and a container can hide /dev/dri while the X server behind it
-     * still has a GPU.
+     * Either sign is enough on its own: some drivers render through GLX without
+     * speaking DRI2 or DRI3, and a container can hide /dev/dri while the X
+     * server behind it still has a GPU.
      */
     dpy = myScreenGetXDisplay (screen_info);
     if (XQueryExtension (dpy, "DRI3", &op, &event, &error) ||
@@ -1266,14 +1260,10 @@ acceleration_is_available (ScreenInfo *screen_info)
     }
 
     /*
-     * A render node is what a card able to render offers, and the kernel makes
-     * one only for drivers that can render: a card that merely drives a display
-     * never has one. That its presence is the whole answer, with no list of
-     * driver names needed.
-     *
-     * Whether we could open it ourselves is deliberately not asked. Under DRI3
-     * the X server opens the card and hands us the file descriptor, so hardware
-     * rendering works even where we have no rights to the node at all.
+     * The kernel makes a render node only for a card that can render, so its
+     * presence is the whole answer. Whether we may open it is not asked: under
+     * DRI3 the X server opens the card for us, so rendering works even with no
+     * rights to the node.
      */
     have_node = FALSE;
     dir = g_dir_open ("/dev/dri", 0, NULL);
@@ -1300,10 +1290,9 @@ acceleration_is_available (ScreenInfo *screen_info)
 
 /*
  * Whether the GL renderer is wanted on this screen. compositorManageScreen()
- * and setup_gl() both act on this, so it lives in one place: the overlay must
- * get a GL visual exactly when the renderer is going to start. A renderer that
- * already gave up on this screen would give up again on the same window, so
- * the whole GL stack is not loaded a second time.
+ * and setup_gl() both ask here, so the overlay gets a GL visual exactly when
+ * the renderer is going to start. One that already gave up would give up again,
+ * so the GL stack is not loaded twice.
  */
 static gboolean
 want_gl_renderer (ScreenInfo *screen_info)
@@ -1315,7 +1304,7 @@ want_gl_renderer (ScreenInfo *screen_info)
 
 /*
  * Hand back to the system what the GL stack took from the heap and let go of
- * again. glibc keeps freed memory for itself unless asked.
+ * again. The C library keeps freed memory for itself unless asked.
  */
 static void
 release_unused_heap (void)
@@ -1326,16 +1315,11 @@ release_unused_heap (void)
 }
 
 /*
- * Renderers we do not draw with.
+ * Renderers we do not draw with: these all draw on the CPU, so they would be
+ * slower than XRender and cost the memory of a whole GL stack on top.
  *
- * These all draw on the processor, so they would be slower than XRender
- * while costing the memory of a whole GL stack on top.
- *
- * The paravirtual renderers of a virtual machine are not among them, since they
- * pass the drawing to the graphics card of the host: SVGA3D, which a VirtualBox
- * guest with 3D turned on reports, and virgl, which a QEMU guest reports, were
- * both tried and draw correctly. virgl needs the texture target chosen for it,
- * see renderer_needs_2d_target() in compositor-gl.c.
+ * The paravirtual renderer of a virtual machine is not one of them, as it
+ * passes the drawing to the graphics card of the host.
  */
 static gboolean
 renderer_is_blacklisted (const char *renderer)
@@ -1408,13 +1392,9 @@ check_gl_extensions (ScreenInfo *screen_info)
 
 /*
  * Whether a config comes without a depth buffer, a stencil buffer and
- * multisampling.
- *
- * Nothing here draws with any of those: depth testing is turned off, the
- * stencil is never touched and the windows are drawn as plain quads. The
- * drawable is the whole screen though, so every one of those buffers the config
- * carries is another screen sized allocation the driver has to make and keep,
- * and make again on every resolution change.
+ * multisampling. Nothing here draws with any of them, and the drawable is the
+ * whole screen, so each one the config carries is another screen sized
+ * allocation the driver has to keep.
  */
 static gboolean
 config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
@@ -1487,11 +1467,10 @@ config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
 }
 
 /*
- * The three things a GLX context needs, asked in an order that loads nothing
- * until it has to: the screen check costs nothing, while the first GLX call
- * pulls the whole GL stack into the process. init_glx() and pick_gl_visual()
- * both ask through here, so they cannot disagree on what is enough. Warnings
- * are for the caller about to use GLX, a caller merely probing stays quiet.
+ * The three things a GLX context needs, in an order that loads nothing until it
+ * has to: the screen check is free, the first GLX call is not. init_glx() and
+ * pick_gl_visual() both ask here so they cannot disagree. A caller merely
+ * probing keeps quiet.
  */
 static gboolean
 glx_available (ScreenInfo *screen_info, gboolean verbose)
@@ -1535,20 +1514,14 @@ glx_available (ScreenInfo *screen_info, gboolean verbose)
 /*
  * Pick the visual for the window the compositor draws into.
  *
- * Which buffers a drawable gets is decided by the GLX config, and which config
- * it can have is decided by the visual of its window. A driver usually offers
- * one single config per visual, and the config of the screen's own visual
- * carries a depth and a stencil buffer: on a 3840x2160 screen that is over
- * 40MB of graphics memory, allocated for the whole session, for buffers this
- * compositor never touches. Giving the window a visual whose config has none of
- * them is what avoids that.
+ * The visual decides which GLX config the window can have, and the config
+ * decides which buffers it gets. The screen's own visual usually carries a
+ * depth and a stencil buffer, tens of megabytes of graphics memory for buffers
+ * never touched here, so a visual without them is looked for instead.
  *
- * Only visuals laid out exactly like the screen's are taken, so nothing else
- * has to know: the pixel format stays the same, so the XRender path can still
- * present into the same window and windows can still be bound as textures.
- *
- * Returns NULL when there is no such visual and when the visual of the screen
- * is already one, both of which just leave things as they were.
+ * Only visuals laid out like the screen's are taken, so the pixel format stays
+ * the same and nothing else has to know. Returns NULL when there is no such
+ * visual, or when the screen's own already is one.
  */
 static Visual *
 pick_gl_visual (ScreenInfo *screen_info)
@@ -1597,10 +1570,9 @@ pick_gl_visual (ScreenInfo *screen_info)
 
     /*
      * The first pass only takes a config the XRender path could present through
-     * as well, so that choose_glx_settings() cannot end up looking for a config
-     * for this visual and finding none: it would then give up on presenting
-     * through GLX for the rest of the session. Only if there is no such config
-     * does the second pass take one the GL renderer alone can use.
+     * too, so choose_glx_settings() cannot come up empty for this visual and
+     * give up on GLX for the session. The second pass takes one only the GL
+     * renderer can use.
      */
     for (pass = 0; (pass < 2) && (visual == NULL); pass++)
     {
@@ -2136,11 +2108,9 @@ fence_destroy (ScreenInfo *screen_info, gushort buffer)
 }
 
 /*
- * How many screen refreshes a finished frame should wait for, as the vblank
- * mode asks for it: none at all, every one, or -1 for "every one unless the
- * frame is already late". Both renderers and the state we advertise read this,
- * so what the user picked cannot mean one thing in one place and another
- * somewhere else.
+ * How many screen refreshes a finished frame waits for, as the vblank mode asks
+ * for it: none, every one, or -1 for "every one unless the frame is late". Both
+ * renderers read this, so the setting cannot mean two different things.
  */
 gint
 wanted_swap_interval (ScreenInfo *screen_info)
@@ -2161,10 +2131,7 @@ wanted_swap_interval (ScreenInfo *screen_info)
 /*
  * Apply the interval on whichever swap control the driver offers, preferring
  * the EXT one as the only one that understands adaptive sync. Hands back the
- * interval as it was really set, the MESA clamp included, and whether any
- * control took it. Both renderers apply and advertise through this, so the
- * same vblank setting cannot mean one thing in one of them and another in the
- * other.
+ * interval as really set, clamp included, and whether any control took it.
  */
 gboolean
 apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
@@ -2184,7 +2151,7 @@ apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
 #if defined (glXSwapIntervalMESA)
     if (screen_info->has_mesa_swap_control)
     {
-        /* MESA_swap_control knows nothing about negative intervals */
+        /* GLX_MESA_swap_control knows nothing about negative intervals */
         *interval = (*interval < 0) ? 1 : *interval;
         glXSwapIntervalMESA ((guint) *interval);
         return TRUE;
@@ -5201,10 +5168,9 @@ compositorScaleWindowPixmap (CWindow *cw, guint *width, guint *height)
     {
         /*
          * The GL renderer draws from a texture and never builds one of these,
-         * so a window it has been drawing has nothing to scale down here.
-         * Building it on demand is what keeps the window previews working
-         * whichever renderer is running, and it costs nothing until a preview
-         * is actually asked for.
+         * so there is nothing to scale down yet. Building it on demand keeps
+         * previews working with either renderer and costs nothing until one is
+         * asked for.
          */
         cw->picture = get_window_picture (cw);
         srcPicture = cw->picture;
@@ -5765,16 +5731,10 @@ setup_gl (ScreenInfo *screen_info)
     }
 
     /*
-     * Neither path is worth the GL stack where nothing can render: the GL
-     * renderer does not even start, and presenting the XRender buffer through
-     * GLX would sync to the screen through a rasterizer running on the
-     * processor, which is slower than XPresent does it for free. The first GLX
-     * call maps the driver and its compiler into us and only unloading those
-     * would give the memory back, which libGL never does, so the question is
-     * asked here rather than paid for and regretted.
-     *
-     * want_gl_renderer() asked the same thing, so this only runs where it said
-     * no for one of its other reasons.
+     * Neither path is worth the GL stack where nothing can render: the renderer
+     * would not start, and syncing through a rasterizer on the CPU is slower
+     * than XPresent does it for free. want_gl_renderer() asked the same thing,
+     * so this only runs where it said no for one of its other reasons.
      */
     if (!want_gl_render && !acceleration_is_available (screen_info))
     {
@@ -6460,13 +6420,9 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
 
             /*
              * _NET_WM_BYPASS_COMPOSITOR of 2 means the window wants compositing
-             * kept whatever happens. Anything relying on us to present without
-             * tearing, a video player for one, can say so this way.
-             *
-             * While compositing is already stopped there are no windows to ask,
-             * so the hint is read straight off the client. Without that, moving
-             * from one fullscreen window to another could never start
-             * compositing again.
+             * kept whatever happens. While compositing is stopped there are no
+             * windows to ask, so the hint is read off the client: otherwise
+             * moving between fullscreen windows could never start it again.
              */
             if (cw != NULL)
             {
