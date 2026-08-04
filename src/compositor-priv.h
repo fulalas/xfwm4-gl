@@ -97,6 +97,18 @@
 #define WIN_IS_DAMAGED(cw)              (cw->damaged)
 #define WIN_IS_REDIRECTED(cw)           (cw->redirected)
 #define WIN_IS_SHADED(cw)               (WIN_HAS_CLIENT(cw) && FLAG_TEST (cw->c->flags, CLIENT_FLAG_SHADED))
+#define WIN_HAS_TRANSLUCENT_FRAME(cw)   (WIN_HAS_FRAME(cw) && \
+                                           (cw->screen_info->params->frame_opacity < 100))
+#define WIN_IS_ON_SCREEN(cw)            ((cw->attr.x + cw->attr.width >= 1) && \
+                                           (cw->attr.y + cw->attr.height >= 1) && \
+                                           (cw->attr.x < cw->screen_info->width) && \
+                                           (cw->attr.y < cw->screen_info->height))
+
+/*
+ * Whether the magnifier smooths the scaled scene: only within this range does
+ * filtering improve it. Both renderers apply the same rule.
+ */
+#define ZOOM_SMOOTHING_WANTED(zoom)     ((zoom) > 0.25 && (zoom) < 1.0)
 
 typedef struct _CWindow CWindow;
 struct _CWindow
@@ -179,11 +191,17 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
 gint             wanted_swap_interval           (ScreenInfo *);
+guint32         *cursor_pixels_to_argb32        (XFixesCursorImage *);
 #ifdef HAVE_EPOXY
 gboolean         apply_swap_interval            (ScreenInfo *,
                                                  GLXDrawable,
                                                  gint *);
+gboolean         renderer_matches_any           (const char *,
+                                                 const char *[]);
 #endif /* HAVE_EPOXY */
+#if HAVE_NAME_WINDOW_PIXMAP
+Pixmap           ensure_name_window_pixmap      (CWindow *);
+#endif /* HAVE_NAME_WINDOW_PIXMAP */
 XserverRegion    win_extents                    (CWindow *);
 gboolean         client_area                    (CWindow *,
                                                  gint *,

@@ -228,13 +228,15 @@ struct _ScreenInfo
     vblankMode vblank_mode;
 
 #ifdef HAVE_EPOXY
-    gboolean texture_inverted;
     gboolean has_mesa_swap_control;
     gboolean has_ext_swap_control;
     gboolean has_ext_swap_control_tear;
     gboolean has_ext_arb_sync;
 
-    /* What set_swap_interval() applied, recorded for the state we advertise */
+    /*
+     * What apply_swap_interval() last applied, recorded for the state we
+     * advertise. Only one renderer presents at a time, so both record here.
+     */
     gboolean glx_swap_control;
     gint glx_swap_interval;
 

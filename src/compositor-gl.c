@@ -35,7 +35,6 @@
 #ifdef HAVE_COMPOSITOR
 
 #include <math.h>
-#include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/extensions/shape.h>
@@ -115,6 +114,7 @@ typedef struct
     GLuint fbo_texture;
     gint fbo_width;
     gint fbo_height;
+    GLenum fbo_filter;
     gboolean fbo_failed;
 
     GLuint cursor_texture;
@@ -123,8 +123,6 @@ typedef struct
     unsigned long cursor_serial;
 
     gchar *renderer;
-    gint swap_interval;
-    gboolean swap_control;
 
     /* A window turned up that this GPU cannot bind, so GL cannot draw the screen */
     gboolean give_up;
@@ -424,8 +422,7 @@ xfwmGLSetOpaqueRects (CWindow *cw, XRectangle *rects, gint nrects)
 
     if (rects != NULL && nrects > 0)
     {
-        cw->gl_opaque_rects = g_malloc (nrects * sizeof (XRectangle));
-        memcpy (cw->gl_opaque_rects, rects, nrects * sizeof (XRectangle));
+        cw->gl_opaque_rects = g_memdup2 (rects, nrects * sizeof (XRectangle));
         cw->gl_n_opaque_rects = nrects;
     }
 }
@@ -627,7 +624,6 @@ find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
 static void
 set_swap_interval_gl (ScreenInfo *screen_info)
 {
-    XfwmGLData *data = gl_data (screen_info);
     gint interval;
 
     interval = wanted_swap_interval (screen_info);
@@ -637,12 +633,13 @@ set_swap_interval_gl (ScreenInfo *screen_info)
         g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
     }
 
-    data->swap_control = apply_swap_interval (screen_info,
-                                              screen_info->glx_window,
-                                              &interval);
-    data->swap_interval = interval;
+    /* Recorded on the ScreenInfo so vsync_state() reads one place for both renderers */
+    screen_info->glx_swap_control = apply_swap_interval (screen_info,
+                                                         screen_info->glx_window,
+                                                         &interval);
+    screen_info->glx_swap_interval = interval;
 
-    if (data->swap_control)
+    if (screen_info->glx_swap_control)
     {
         g_info ("GL swap interval set to %i", interval);
     }
@@ -708,12 +705,14 @@ depth_is_usable (ScreenInfo *screen_info, gint depth)
 static gboolean
 renderer_needs_2d_target (const char *renderer)
 {
+    const char *needs_2d[] = { "virgl", NULL };
+
     if (renderer == NULL)
     {
         return FALSE;
     }
 
-    return (strcasestr (renderer, "virgl") != NULL);
+    return renderer_matches_any (renderer, needs_2d);
 }
 
 /*
@@ -1019,10 +1018,8 @@ xfwmGLInvalidateRootTexture (ScreenInfo *screen_info)
 {
     g_return_if_fail (screen_info != NULL);
 
-    if (screen_info->gl_data != NULL)
-    {
-        free_root_texture (screen_info);
-    }
+    /* free_root_texture() copes with a screen that has no GL data */
+    free_root_texture (screen_info);
 }
 
 static void
@@ -1042,6 +1039,7 @@ free_fbo (ScreenInfo *screen_info)
     }
     data->fbo_width = 0;
     data->fbo_height = 0;
+    data->fbo_filter = 0;
 }
 
 /*
@@ -1123,23 +1121,6 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
     g_free (data->renderer);
     g_free (data);
     screen_info->gl_data = NULL;
-}
-
-gboolean
-xfwmGLGetSwapInterval (ScreenInfo *screen_info, gint *interval)
-{
-    XfwmGLData *data;
-
-    g_return_val_if_fail (screen_info != NULL, FALSE);
-
-    data = gl_data (screen_info);
-    if (data == NULL || !data->swap_control)
-    {
-        return FALSE;
-    }
-    *interval = data->swap_interval;
-
-    return TRUE;
 }
 
 const gchar *
@@ -1410,6 +1391,22 @@ build_shadow_profile (ScreenInfo *screen_info)
     return TRUE;
 }
 
+/*
+ * Nothing is going to change this window's mind about its depth, so skipping
+ * it would leave a hole in the screen for good. Hand the whole screen to
+ * XRender instead, which can draw any of them.
+ */
+static void
+give_up_on_depth (XfwmGLData *data, gint depth)
+{
+    if (!data->give_up)
+    {
+        g_warning ("A window of depth %i cannot be bound as a texture, "
+                   "falling back to XRender.", depth);
+        data->give_up = TRUE;
+    }
+}
+
 static gboolean
 bind_window_texture (CWindow *cw)
 {
@@ -1419,34 +1416,15 @@ bind_window_texture (CWindow *cw)
     Display *dpy = myScreenGetXDisplay (screen_info);
     XfwmGLDepth *dc;
 
-    if (cw->name_window_pixmap == None)
+    if (ensure_name_window_pixmap (cw) == None)
     {
-        myDisplayErrorTrapPush (display_info);
-        cw->name_window_pixmap = XCompositeNameWindowPixmap (dpy, cw->id);
-        if (myDisplayErrorTrapPop (display_info) != Success)
-        {
-            cw->name_window_pixmap = None;
-        }
-        if (cw->name_window_pixmap == None)
-        {
-            return FALSE;
-        }
+        return FALSE;
     }
 
     dc = depth_config (screen_info, cw->attr.depth);
     if (dc == NULL || !dc->usable)
     {
-        /*
-         * Nothing is going to change this window's mind about its depth, so
-         * skipping it would leave a hole in the screen for good. Hand the whole
-         * screen to XRender instead, which can draw any of them.
-         */
-        if (!data->give_up)
-        {
-            g_warning ("A window of depth %i cannot be bound as a texture, "
-                       "falling back to XRender.", cw->attr.depth);
-            data->give_up = TRUE;
-        }
+        give_up_on_depth (data, cw->attr.depth);
 
         return FALSE;
     }
@@ -1473,15 +1451,10 @@ bind_window_texture (CWindow *cw)
             /*
              * The depth is one the driver said it could bind, so a refusal
              * here is the driver changing its mind and it will keep saying
-             * no. Skipping the window would leave a hole in the screen, so
-             * hand the screen to XRender the same way an unusable depth does.
+             * no. Hand the screen to XRender the same way an unusable depth
+             * does.
              */
-            if (!data->give_up)
-            {
-                g_warning ("A window of depth %i cannot be bound as a texture, "
-                           "falling back to XRender.", cw->attr.depth);
-                data->give_up = TRUE;
-            }
+            give_up_on_depth (data, cw->attr.depth);
 
             return FALSE;
         }
@@ -1602,7 +1575,8 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
 /*
  * A uniform belongs to one program, so the program and its opacity are always
  * set together. Setting one without the other writes to the wrong program and
- * GL says nothing about it.
+ * GL says nothing about it. Every draw site calls this right before drawing,
+ * so nothing relies on which program was left current.
  */
 static void
 use_program (GLuint program, GLint u_opacity, gfloat opacity)
@@ -1645,7 +1619,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 
     opacity = solid_part ? 1.0f : (gfloat) cw->opacity / (gfloat) NET_WM_OPAQUE;
 
-    if (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100))
+    if (WIN_HAS_TRANSLUCENT_FRAME(cw))
     {
         gint frame_top, frame_bottom, frame_left, frame_right;
         gint frame_width, frame_height;
@@ -1737,7 +1711,6 @@ paint_shadow_gl (CWindow *cw, cairo_region_t *clip)
                cw->shadow_width, cw->shadow_height, clip);
 
     glBindTexture (GL_TEXTURE_2D, 0);
-    glUseProgram (data->program_win);
 }
 
 /*
@@ -1945,7 +1918,6 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
             draw_quad (screen_info, GL_TEXTURE_2D,
                        0, 0, tex_width, tex_height,
                        0, 0, screen_info->width, screen_info->height, clip);
-            glUseProgram (data->program_win);
         }
         else
         {
@@ -1982,7 +1954,6 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
         draw_quad (screen_info, GL_TEXTURE_2D, 0, 0, 1, 1,
                    0, 0, screen_info->width, screen_info->height, clip);
         glBindTexture (GL_TEXTURE_2D, 0);
-        glUseProgram (data->program_win);
     }
 }
 
@@ -2002,7 +1973,7 @@ paint_cursor_gl (ScreenInfo *screen_info)
     {
         XFixesCursorImage *cursor;
         guint32 *pixels;
-        gint i, n;
+        gboolean same_size;
 
         cursor = XFixesGetCursorImage (myScreenGetXDisplay (screen_info));
         if (cursor == NULL)
@@ -2010,23 +1981,30 @@ paint_cursor_gl (ScreenInfo *screen_info)
             return;
         }
 
-        n = cursor->width * cursor->height;
-        pixels = g_new (guint32, n);
-        /* XFixes hands out longs, GL wants 32 bits */
-        for (i = 0; i < n; i++)
-        {
-            pixels[i] = (guint32) cursor->pixels[i];
-        }
+        pixels = cursor_pixels_to_argb32 (cursor);
 
+        same_size = (data->cursor_texture != 0 &&
+                     data->cursor_width == cursor->width &&
+                     data->cursor_height == cursor->height);
         if (data->cursor_texture == 0)
         {
             glGenTextures (1, &data->cursor_texture);
         }
         glBindTexture (GL_TEXTURE_2D, data->cursor_texture);
-        set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
         glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, cursor->width, cursor->height,
-                      0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        if (same_size)
+        {
+            /* An animated cursor changes image but not size, keep the storage */
+            glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
+                             cursor->width, cursor->height,
+                             GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        }
+        else
+        {
+            set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, cursor->width, cursor->height,
+                          0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        }
         g_free (pixels);
 
         data->cursor_width = cursor->width;
@@ -2039,10 +2017,11 @@ paint_cursor_gl (ScreenInfo *screen_info)
         glBindTexture (GL_TEXTURE_2D, data->cursor_texture);
     }
 
-    rect.x = 0;
-    rect.y = 0;
-    rect.width = screen_info->width;
-    rect.height = screen_info->height;
+    /* draw_quad() wants a clip, the cursor's own destination clips nothing away */
+    rect.x = screen_info->cursorLocation.x;
+    rect.y = screen_info->cursorLocation.y;
+    rect.width = screen_info->cursorLocation.width;
+    rect.height = screen_info->cursorLocation.height;
     clip = cairo_region_create_rectangle (&rect);
 
     glEnable (GL_BLEND);
@@ -2114,7 +2093,7 @@ draw_zoomed_scene (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
     gdouble zoom, x_offset, y_offset;
-    GLfloat filter;
+    GLenum filter;
 
     glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
@@ -2130,12 +2109,17 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     x_offset = XFixedToDouble (screen_info->transform.matrix[0][2]);
     y_offset = XFixedToDouble (screen_info->transform.matrix[1][2]);
 
-    filter = (zoom > 0.25 && zoom < 1.0) ? GL_LINEAR : GL_NEAREST;
+    filter = ZOOM_SMOOTHING_WANTED (zoom) ? GL_LINEAR : GL_NEAREST;
 
     glDisable (GL_BLEND);
     glBindTexture (GL_TEXTURE_2D, data->fbo_texture);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint) filter);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint) filter);
+    /* The filter only changes when the zoom crosses a threshold */
+    if (data->fbo_filter != filter)
+    {
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint) filter);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint) filter);
+        data->fbo_filter = filter;
+    }
     use_program (data->program_2d, data->u_opacity_2d, 1.0f);
 
     {
@@ -2273,7 +2257,14 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     display_info = screen_info->display_info;
     dpy = myScreenGetXDisplay (screen_info);
 
-    if (!glXMakeCurrent (dpy, screen_info->glx_window, screen_info->glx_context))
+    /*
+     * Ours is nearly always current already, and a redundant MakeCurrent is
+     * not free: the driver validates it and may flush. Both getters answer
+     * on the client side.
+     */
+    if ((glXGetCurrentContext () != screen_info->glx_context ||
+         glXGetCurrentDrawable () != screen_info->glx_window) &&
+        !glXMakeCurrent (dpy, screen_info->glx_window, screen_info->glx_context))
     {
         g_warning ("Cannot make the GL context current, GL compositing disabled.");
         return FALSE;
@@ -2349,13 +2340,9 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             cw->gl_paint_clip = NULL;
         }
 
-        if (!WIN_IS_VISIBLE(cw) || !WIN_IS_DAMAGED(cw) || !WIN_IS_REDIRECTED(cw))
-        {
-            cw->skipped = TRUE;
-            continue;
-        }
-        if ((cw->attr.x + cw->attr.width < 1) || (cw->attr.y + cw->attr.height < 1) ||
-            (cw->attr.x >= screen_info->width) || (cw->attr.y >= screen_info->height))
+        /* The same windows the XRender path paints, by the same macros */
+        if (!WIN_IS_VISIBLE(cw) || !WIN_IS_DAMAGED(cw) ||
+            !WIN_IS_REDIRECTED(cw) || !WIN_IS_ON_SCREEN(cw))
         {
             cw->skipped = TRUE;
             continue;
@@ -2378,15 +2365,25 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         if (opaque_window)
         {
             gboolean painted = TRUE;
+            cairo_rectangle_int_t bounds;
 
-            clip = cairo_region_copy (paint_region);
-            cairo_region_intersect (clip, shape);
-            if (!cairo_region_is_empty (clip))
+            /*
+             * A cheap extents test first: a window entirely outside the region
+             * left to paint contributes nothing, so the copy and intersection
+             * would only be thrown away.
+             */
+            cairo_region_get_extents (shape, &bounds);
+            if (cairo_region_contains_rectangle (paint_region, &bounds) != CAIRO_REGION_OVERLAP_OUT)
             {
-                glDisable (GL_BLEND);
-                painted = paint_window_gl (cw, TRUE, clip);
+                clip = cairo_region_copy (paint_region);
+                cairo_region_intersect (clip, shape);
+                if (!cairo_region_is_empty (clip))
+                {
+                    glDisable (GL_BLEND);
+                    painted = paint_window_gl (cw, TRUE, clip);
+                }
+                cairo_region_destroy (clip);
             }
-            cairo_region_destroy (clip);
 
             if (!painted)
             {
@@ -2404,7 +2401,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
              * of it the window actually has: taking away more than was just
              * painted leaves whatever the back buffer held.
              */
-            if (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100))
+            if (WIN_HAS_TRANSLUCENT_FRAME(cw))
             {
                 cairo_rectangle_int_t client;
 
@@ -2430,7 +2427,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
          * be thrown away unused.
          */
         if ((cw->shadow_width > 0) || !opaque_window ||
-            (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100)))
+            WIN_HAS_TRANSLUCENT_FRAME(cw))
         {
             cw->gl_paint_clip = cairo_region_copy (paint_region);
         }
@@ -2475,17 +2472,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             cairo_region_destroy (clip);
         }
 
-        if (!WIN_IS_OPAQUE(cw) ||
-            (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100)))
+        if (!WIN_IS_OPAQUE(cw) || WIN_HAS_TRANSLUCENT_FRAME(cw))
         {
-            clip = cairo_region_copy (cw->gl_paint_clip);
-            cairo_region_intersect (clip, shape);
-            if (!cairo_region_is_empty (clip))
+            /* The last use of the clip this frame, so consume it in place */
+            cairo_region_intersect (cw->gl_paint_clip, shape);
+            if (!cairo_region_is_empty (cw->gl_paint_clip))
             {
                 glEnable (GL_BLEND);
-                paint_window_gl (cw, FALSE, clip);
+                paint_window_gl (cw, FALSE, cw->gl_paint_clip);
             }
-            cairo_region_destroy (clip);
         }
 
         cairo_region_destroy (cw->gl_paint_clip);

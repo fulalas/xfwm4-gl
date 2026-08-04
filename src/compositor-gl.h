@@ -65,8 +65,6 @@ gboolean         xfwmGLRootPixmapCoversScreen   (ScreenInfo *);
 gboolean         xfwmGLDamageRootPixmap         (ScreenInfo *,
                                                  Drawable);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);
-gboolean         xfwmGLGetSwapInterval          (ScreenInfo *,
-                                                 gint *);
 void             xfwmGLUpdateWindowShadow       (CWindow *,
                                                  gdouble,
                                                  gint,

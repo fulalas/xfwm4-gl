@@ -405,35 +405,8 @@ vblank_callback (const gchar  *name,
 {
     g_return_val_if_fail (value != NULL, FALSE);
 
-    if (strcmp (value, "auto") == 0)
-    {
-        vblank_mode = VBLANK_AUTO;
-    }
-    else
-#ifdef HAVE_PRESENT_EXTENSION
-    if (strcmp (value, "xpresent") == 0)
-    {
-        vblank_mode = VBLANK_XPRESENT;
-    }
-    else
-#endif /* HAVE_PRESENT_EXTENSION */
-#ifdef HAVE_EPOXY
-    if (strcmp (value, "glx") == 0)
-    {
-        vblank_mode = VBLANK_GLX;
-    }
-    else
-    if (strcmp (value, "adaptive") == 0)
-    {
-        vblank_mode = VBLANK_ADAPTIVE;
-    }
-    else
-#endif /* HAVE_EPOXY */
-    if (strcmp (value, "off") == 0)
-    {
-        vblank_mode = VBLANK_OFF;
-    }
-    else
+    vblank_mode = compositorParseVblankMode (value);
+    if (vblank_mode == VBLANK_ERROR)
     {
         g_set_error (error, XFWM4_ERROR, 0, "Unrecognized compositor option \"%s\"", value);
         return FALSE;
