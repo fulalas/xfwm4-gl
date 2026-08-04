@@ -1223,10 +1223,11 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
  * Whether this machine looks like it can render with a GPU at all.
  *
  * The first GLX call maps the driver and its compiler into us, tens of
- * megabytes that are never given back, so where there plainly is no
- * acceleration the question is not asked. The X server and the render nodes
- * answer it for free, and a wrong yes costs nothing: the renderer check below
- * still has the last word.
+ * megabytes that are never given back, so the question is answered from cheap
+ * signs instead, and strictly on purpose: a wrong yes costs that memory
+ * forever, a wrong no only costs falling back to XRender. Setups showing one
+ * sign but not the other (containers hiding /dev/dri, drivers speaking
+ * neither DRI2 nor DRI3) are knowingly refused.
  */
 static gboolean
 acceleration_is_available (ScreenInfo *screen_info)
@@ -1261,10 +1262,9 @@ acceleration_is_available (ScreenInfo *screen_info)
     }
 
     /*
-     * The kernel makes a render node only for a card that can render, so its
-     * presence is the whole answer. Whether we may open it is not asked: under
-     * DRI3 the X server opens the card for us, so rendering works even with no
-     * rights to the node.
+     * The kernel makes a render node only for a card that can render. Whether
+     * we may open it is not asked: under DRI3 the X server opens the card for
+     * us, so rendering works even with no rights to the node.
      */
     have_node = FALSE;
     dir = g_dir_open ("/dev/dri", 0, NULL);
@@ -1283,7 +1283,7 @@ acceleration_is_available (ScreenInfo *screen_info)
 
     if (!have_node)
     {
-        g_info ("No direct rendering and no render node, staying on XRender");
+        g_info ("Direct rendering but no render node, staying on XRender");
     }
 
     return have_node;
@@ -5732,8 +5732,9 @@ setup_gl (ScreenInfo *screen_info)
     }
 
     /*
-     * The first GLX call maps the driver and its compiler into us, memory that
-     * never comes back, so neither path may touch GLX where nothing can render.
+     * Neither path may touch GLX where nothing can render: the first GLX call
+     * costs the memory of the whole GL stack (see acceleration_is_available()).
+     * The check is cheap, so asking it again beats threading the answer here.
      */
     if (!acceleration_is_available (screen_info))
     {
