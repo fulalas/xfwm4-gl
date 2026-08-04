@@ -5723,23 +5723,16 @@ setup_gl (ScreenInfo *screen_info)
     screen_info->use_gl_render = FALSE;
     screen_info->gl_data = NULL;
 
+    /*
+     * Presenting the XRender buffer through GLX asks far less of the driver
+     * than the GL renderer does and worked on machines with no render node
+     * long before the GL renderer existed, so it does not depend on the
+     * conditions want_gl_renderer() checks.
+     */
     want_gl_render = want_gl_renderer (screen_info);
 
     if (!screen_info->use_glx && !want_gl_render)
     {
-        return;
-    }
-
-    /*
-     * Neither path is worth the GL stack where nothing can render: the renderer
-     * would not start, and syncing through a rasterizer on the CPU is slower
-     * than XPresent does it for free. want_gl_renderer() asked the same thing,
-     * so this only runs where it said no for one of its other reasons.
-     */
-    if (!want_gl_render && !acceleration_is_available (screen_info))
-    {
-        screen_info->use_glx = FALSE;
-
         return;
     }
 
