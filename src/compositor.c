@@ -1248,15 +1248,16 @@ acceleration_is_available (ScreenInfo *screen_info)
     }
 
     /*
-     * Either sign is enough on its own: some drivers render through GLX without
-     * speaking DRI2 or DRI3, and a container can hide /dev/dri while the X
-     * server behind it still has a GPU.
+     * Modern X servers register DRI3 whether or not the screen can actually
+     * use it, so the extension alone proves nothing: both signs are required.
      */
     dpy = myScreenGetXDisplay (screen_info);
-    if (XQueryExtension (dpy, "DRI3", &op, &event, &error) ||
-        XQueryExtension (dpy, "DRI2", &op, &event, &error))
+    if (!XQueryExtension (dpy, "DRI3", &op, &event, &error) &&
+        !XQueryExtension (dpy, "DRI2", &op, &event, &error))
     {
-        return TRUE;
+        g_info ("The X server has no direct rendering, staying on XRender");
+
+        return FALSE;
     }
 
     /*
@@ -5723,16 +5724,21 @@ setup_gl (ScreenInfo *screen_info)
     screen_info->use_gl_render = FALSE;
     screen_info->gl_data = NULL;
 
-    /*
-     * Presenting the XRender buffer through GLX asks far less of the driver
-     * than the GL renderer does and worked on machines with no render node
-     * long before the GL renderer existed, so it does not depend on the
-     * conditions want_gl_renderer() checks.
-     */
     want_gl_render = want_gl_renderer (screen_info);
 
     if (!screen_info->use_glx && !want_gl_render)
     {
+        return;
+    }
+
+    /*
+     * The first GLX call maps the driver and its compiler into us, memory that
+     * never comes back, so neither path may touch GLX where nothing can render.
+     */
+    if (!acceleration_is_available (screen_info))
+    {
+        screen_info->use_glx = FALSE;
+
         return;
     }
 
