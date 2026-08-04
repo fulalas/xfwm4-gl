@@ -1228,13 +1228,17 @@ acceleration_is_available (ScreenInfo *screen_info)
         return FALSE;
     }
 
+    /*
+     * Either sign is enough on its own, because each covers a hole in the
+     * other: NVIDIA's own driver renders through GLX without speaking DRI2 or
+     * DRI3, and a container can hide /dev/dri while the X server behind it
+     * still has a GPU.
+     */
     dpy = myScreenGetXDisplay (screen_info);
-    if (!XQueryExtension (dpy, "DRI3", &op, &event, &error) &&
-        !XQueryExtension (dpy, "DRI2", &op, &event, &error))
+    if (XQueryExtension (dpy, "DRI3", &op, &event, &error) ||
+        XQueryExtension (dpy, "DRI2", &op, &event, &error))
     {
-        g_info ("The X server has no direct rendering, staying on XRender");
-
-        return FALSE;
+        return TRUE;
     }
 
     /*
@@ -1249,26 +1253,22 @@ acceleration_is_available (ScreenInfo *screen_info)
      */
     have_node = FALSE;
     dir = g_dir_open ("/dev/dri", 0, NULL);
-    if (dir == NULL)
+    if (dir != NULL)
     {
-        g_info ("No render node to draw with, staying on XRender");
-
-        return FALSE;
-    }
-
-    while ((name = g_dir_read_name (dir)) != NULL)
-    {
-        if (g_str_has_prefix (name, "renderD"))
+        while ((name = g_dir_read_name (dir)) != NULL)
         {
-            have_node = TRUE;
-            break;
+            if (g_str_has_prefix (name, "renderD"))
+            {
+                have_node = TRUE;
+                break;
+            }
         }
+        g_dir_close (dir);
     }
-    g_dir_close (dir);
 
     if (!have_node)
     {
-        g_info ("No render node we can use, staying on XRender");
+        g_info ("No direct rendering and no render node, staying on XRender");
     }
 
     return have_node;
@@ -1448,35 +1448,49 @@ config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
 }
 
 /*
- * Put the configs carrying none of those buffers first, keeping the order the
- * server gave them in within each group. The loop that picks a config walks the
- * list once and takes the first that fits, so this is what makes it land on a
- * plain config where there is one, and still fall back to any other where there
- * is not.
+ * The three things a GLX context needs, asked in an order that loads nothing
+ * until it has to: the screen check costs nothing, while the first GLX call
+ * pulls the whole GL stack into the process. init_glx() and pick_gl_visual()
+ * both ask through here, so they cannot disagree on what is enough. Warnings
+ * are for the caller about to use GLX, a caller merely probing stays quiet.
  */
-static void
-prefer_configs_without_extra_buffers (ScreenInfo *screen_info,
-                                      GLXFBConfig *configs, int n_configs)
+static gboolean
+glx_available (ScreenInfo *screen_info, gboolean verbose)
 {
-    int i, next = 0;
+    Display *dpy = myScreenGetXDisplay (screen_info);
+    int error_base, event_base;
+    int version;
 
-    for (i = 0; i < n_configs; i++)
+    if (!xfwm_is_default_screen (screen_info->gscr))
     {
-        GLXFBConfig plain;
-        int j;
-
-        if (!config_has_no_extra_buffers (screen_info, configs[i]))
+        if (verbose)
         {
-            continue;
+            g_warning ("GLX not enabled in multi-screen setups");
         }
-
-        plain = configs[i];
-        for (j = i; j > next; j--)
-        {
-            configs[j] = configs[j - 1];
-        }
-        configs[next++] = plain;
+        return FALSE;
     }
+
+    if (!glXQueryExtension (dpy, &error_base, &event_base))
+    {
+        if (verbose)
+        {
+            g_warning ("GLX extension missing, GLX support disabled.");
+        }
+        return FALSE;
+    }
+
+    version = epoxy_glx_version (dpy, screen_info->screen);
+    DBG ("Using GLX version %d", version);
+    if (version < 13)
+    {
+        if (verbose)
+        {
+            g_warning ("GLX version %d is too old, GLX support disabled.", version);
+        }
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -1501,7 +1515,6 @@ static Visual *
 pick_gl_visual (ScreenInfo *screen_info)
 {
     Display *dpy = myScreenGetXDisplay (screen_info);
-    int error_base, event_base;
     GLint attribs[] = {
         GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT | GLX_WINDOW_BIT,
         GLX_X_RENDERABLE,  True,
@@ -1522,20 +1535,8 @@ pick_gl_visual (ScreenInfo *screen_info)
 
     g_return_val_if_fail (screen_info != NULL, NULL);
 
-    /*
-     * The same three things init_glx() asks for, since a visual picked here is
-     * of no use to anyone if it never gets a context. The screen comes first,
-     * as it is the one question that can be answered without loading GL.
-     */
-    if (!xfwm_is_default_screen (screen_info->gscr))
-    {
-        return NULL;
-    }
-    if (!glXQueryExtension (dpy, &error_base, &event_base))
-    {
-        return NULL;
-    }
-    if (epoxy_glx_version (dpy, screen_info->screen) < 13)
+    /* A visual picked here is of no use to anyone if it never gets a context */
+    if (!glx_available (screen_info, FALSE))
     {
         return NULL;
     }
@@ -1590,9 +1591,9 @@ pick_gl_visual (ScreenInfo *screen_info)
                           (config_vi->green_mask == screen_vi->green_mask) &&
                           (config_vi->blue_mask == screen_vi->blue_mask);
             /*
-             * The visual of the screen needs none of this. Where one of its own
-             * configs will do, putting that config first is the whole of it, see
-             * prefer_configs_without_extra_buffers().
+             * The visual of the screen needs none of this. Where one of its
+             * own configs will do, the first pass of choose_glx_settings()
+             * lands on that config by itself.
              */
             if (same_format && (config_vi->visualid != screen_vi->visualid))
             {
@@ -1638,7 +1639,7 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
     GLint texture_target = 0;
     GLint texture_format = 0;
     gboolean texture_inverted = FALSE;
-    int n_configs, i;
+    int n_configs, i, pass;
     int value, status;
     GLXFBConfig *configs, fb_config;
     XVisualInfo *visual_info;
@@ -1669,8 +1670,6 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
         return FALSE;
     }
 
-    prefer_configs_without_extra_buffers (screen_info, configs, n_configs);
-
     fb_match = FALSE;
     /*
      * The config has to go with the visual of the window it will be used on,
@@ -1680,120 +1679,89 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
     xvisual_id = XVisualIDFromVisual ((screen_info->gl_visual != NULL)
                                       ? screen_info->gl_visual
                                       : screen_info->visual);
-    for (i = 0; i < n_configs; i++)
+    /*
+     * The first pass only takes a config carrying none of the buffers we
+     * never use, the second takes any that fits: that is what lands on a
+     * plain config where there is one and still works where there is none,
+     * the same two passes pick_gl_visual() walks.
+     */
+    for (pass = 0; (pass < 2) && !fb_match; pass++)
     {
-        visual_info = glXGetVisualFromFBConfig (myScreenGetXDisplay (screen_info),
-                                                configs[i]);
-        if (!visual_info)
+        for (i = 0; i < n_configs; i++)
         {
-            DBG ("%i/%i: no visual info, skipped", i + 1, n_configs);
-            continue;
-        }
+            if ((pass == 0) &&
+                !config_has_no_extra_buffers (screen_info, configs[i]))
+            {
+                continue;
+            }
 
-        if (visual_info->visualid != xvisual_id)
-        {
-            DBG ("%i/%i: xvisual id 0x%lx != 0x%lx, skipped", i + 1, n_configs, visual_info->visualid, xvisual_id);
+            visual_info = glXGetVisualFromFBConfig (myScreenGetXDisplay (screen_info),
+                                                    configs[i]);
+            if (!visual_info)
+            {
+                DBG ("%i/%i: no visual info, skipped", i + 1, n_configs);
+                continue;
+            }
+
+            if (visual_info->visualid != xvisual_id)
+            {
+                DBG ("%i/%i: xvisual id 0x%lx != 0x%lx, skipped", i + 1, n_configs, visual_info->visualid, xvisual_id);
+                XFree (visual_info);
+                continue;
+            }
             XFree (visual_info);
-            continue;
-        }
-        XFree (visual_info);
 
-        if (!need_tfp)
-        {
-            /* Nothing below is about drawing into a window */
+            if (need_tfp)
+            {
+                /*
+                 * Whether a pixmap can be bound at all is asked the same way
+                 * pick_gl_visual() asks it, so the two cannot disagree. Which
+                 * target and format to bind with is read off the accepted
+                 * config below.
+                 */
+                if (!config_can_bind_pixmaps (screen_info, configs[i]))
+                {
+                    DBG ("%i/%i: cannot bind pixmaps as textures, skipped", i + 1, n_configs);
+                    continue;
+                }
+
+                status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
+                                               configs[i],
+                                               GLX_BIND_TO_TEXTURE_TARGETS_EXT,
+                                               &value);
+                if (status == Success && (value & GLX_TEXTURE_RECTANGLE_BIT_EXT))
+                {
+                    DBG ("Using texture GL_TEXTURE_RECTANGLE_ARB target GLX_TEXTURE_RECTANGLE_EXT");
+                    texture_type = GL_TEXTURE_RECTANGLE_ARB;
+                    texture_target = GLX_TEXTURE_RECTANGLE_EXT;
+                }
+                else
+                {
+                    DBG ("Using texture GL_TEXTURE_2D target GLX_TEXTURE_2D_EXT");
+                    texture_type = GL_TEXTURE_2D;
+                    texture_target = GLX_TEXTURE_2D_EXT;
+                }
+
+                status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
+                                               configs[i],
+                                               GLX_BIND_TO_TEXTURE_RGBA_EXT,
+                                               &value);
+                if (status == Success && value == True)
+                {
+                    DBG ("Using texture format GLX_TEXTURE_FORMAT_RGBA_EXT");
+                    texture_format = GLX_TEXTURE_FORMAT_RGBA_EXT;
+                }
+                else
+                {
+                    DBG ("Using texture format GLX_TEXTURE_FORMAT_RGB_EXT");
+                    texture_format = GLX_TEXTURE_FORMAT_RGB_EXT;
+                }
+            }
+
             fb_config = configs[i];
             fb_match = TRUE;
             break;
         }
-
-        status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                       configs[i],
-                                       GLX_DRAWABLE_TYPE, &value);
-
-        if (status != Success || !(value & GLX_PIXMAP_BIT))
-        {
-            DBG ("%i/%i: No GLX_PIXMAP_BIT, skipped", i + 1, n_configs);
-            continue;
-        }
-
-        status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                       configs[i],
-                                       GLX_BIND_TO_TEXTURE_TARGETS_EXT,
-                                       &value);
-        if (status != Success)
-        {
-            DBG ("%i/%i: No GLX_BIND_TO_TEXTURE_TARGETS_EXT, skipped", i + 1, n_configs);
-            continue;
-        }
-
-        if (value & GLX_TEXTURE_RECTANGLE_BIT_EXT)
-        {
-            DBG ("Using texture GL_TEXTURE_RECTANGLE_ARB target GLX_TEXTURE_RECTANGLE_EXT");
-            texture_type = GL_TEXTURE_RECTANGLE_ARB;
-            texture_target = GLX_TEXTURE_RECTANGLE_EXT;
-        }
-        else if (value & GLX_TEXTURE_2D_BIT_EXT)
-        {
-            DBG ("Using texture GL_TEXTURE_2D target GLX_TEXTURE_2D_EXT");
-            texture_type = GL_TEXTURE_2D;
-            texture_target = GLX_TEXTURE_2D_EXT;
-        }
-        else
-        {
-            DBG ("%i/%i: No GLX_TEXTURE_*_BIT_EXT, skipped", i + 1, n_configs);
-            continue;
-        }
-
-        status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                       configs[i],
-                                       GLX_RED_SIZE,
-                                       &value);
-        if (status == Success && value > 8)
-        {
-            DBG ("%i/%i: RGB10 config, skipped", i + 1, n_configs);
-            continue;
-        }
-
-        status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                       configs[i],
-                                       GLX_BIND_TO_TEXTURE_RGBA_EXT,
-                                       &value);
-        if (status == Success && value == TRUE)
-        {
-            DBG ("Using texture format GLX_TEXTURE_FORMAT_RGBA_EXT");
-            texture_format = GLX_TEXTURE_FORMAT_RGBA_EXT;
-        }
-        else
-        {
-            status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                           configs[i],
-                                           GLX_BIND_TO_TEXTURE_RGB_EXT,
-                                           &value);
-            if (status == Success && value == TRUE)
-            {
-                DBG ("Using texture format GLX_TEXTURE_FORMAT_RGB_EXT");
-                texture_format = GLX_TEXTURE_FORMAT_RGB_EXT;
-            }
-            else
-            {
-                DBG ("%i/%i: No GLX_BIND_TO_TEXTURE_RGB/RGBA_EXT, skipped", i + 1, n_configs);
-                continue;
-            }
-        }
-#if 0
-        status = glXGetFBConfigAttrib (myScreenGetXDisplay (screen_info),
-                                       configs[i],
-                                       GLX_Y_INVERTED_EXT,
-                                       &value);
-        texture_inverted = (status == Success && value == True);
-        if (texture_inverted)
-        {
-            DBG ("Using texture attribute GLX_Y_INVERTED_EXT");
-        }
-#endif
-        fb_config = configs[i];
-        fb_match = TRUE;
-        break;
     }
     XFree(configs);
 
@@ -1831,6 +1799,13 @@ free_glx_data (ScreenInfo *screen_info)
     display_info = screen_info->display_info;
     myDisplayErrorTrapPush (display_info);
 
+    /*
+     * The fence lives in the context and dies with it below. Deleting it by
+     * hand would be a GL call with no current context on the paths that come
+     * through here detached, and epoxy ends the process over those.
+     */
+    screen_info->gl_sync = 0;
+
     glXMakeCurrent (myScreenGetXDisplay (screen_info), None, NULL);
 
     if (screen_info->glx_context)
@@ -1844,17 +1819,20 @@ free_glx_data (ScreenInfo *screen_info)
         glXDestroyWindow (myScreenGetXDisplay (screen_info), screen_info->glx_window);
         screen_info->glx_window = None;
     }
-
-    if (screen_info->has_ext_arb_sync && screen_info->gl_sync)
-    {
-#if defined (glDeleteSync)
-        glDeleteSync (screen_info->gl_sync);
-#else
-#warning glDeleteSync() not supported by libepoxy, please update your version of libepoxy
-#endif
-        screen_info->gl_sync = 0;
-    }
     myDisplayErrorTrapPopIgnored (display_info);
+}
+
+/*
+ * How the GL renderer dies, wherever that happens: what it built goes first,
+ * then the GLX data under it, then the flag saying it draws. Every path that
+ * turns it off comes through here, so none of them can forget a piece.
+ */
+static void
+shutdown_gl_render (ScreenInfo *screen_info)
+{
+    xfwmGLScreenFinish (screen_info);
+    free_glx_data (screen_info);
+    screen_info->use_gl_render = FALSE;
 }
 
 /*
@@ -1911,29 +1889,11 @@ attach_glx_window (ScreenInfo *screen_info)
 static gboolean
 init_glx (ScreenInfo *screen_info, gboolean need_tfp)
 {
-    int error_base, event_base;
-    int version;
-
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
 
-    if (!xfwm_is_default_screen (screen_info->gscr))
+    if (!glx_available (screen_info, TRUE))
     {
-        g_warning ("GLX not enabled in multi-screen setups");
-        return FALSE;
-    }
-
-    if (!glXQueryExtension (myScreenGetXDisplay (screen_info), &error_base, &event_base))
-    {
-        g_warning ("GLX extension missing, GLX support disabled.");
-        return FALSE;
-    }
-
-    version = epoxy_glx_version (myScreenGetXDisplay (screen_info), screen_info->screen);
-    DBG ("Using GLX version %d", version);
-    if (version < 13)
-    {
-        g_warning ("GLX version %d is too old, GLX support disabled.", version);
         return FALSE;
     }
 
@@ -2162,18 +2122,24 @@ wanted_swap_interval (ScreenInfo *screen_info)
     }
 }
 
-static void
-set_swap_interval (ScreenInfo *screen_info, gushort buffer)
+/*
+ * Apply the interval on whichever swap control the driver offers, preferring
+ * the EXT one as the only one that understands adaptive sync. Hands back the
+ * interval as it was really set, the MESA clamp included, and whether any
+ * control took it. Both renderers apply and advertise through this, so the
+ * same vblank setting cannot mean one thing in one of them and another in the
+ * other.
+ */
+gboolean
+apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
+                     gint *interval)
 {
-    gint interval = wanted_swap_interval (screen_info);
-
 #if defined (glXSwapIntervalEXT)
     if (screen_info->has_ext_swap_control)
     {
-        DBG ("Setting swap interval %i using GLX_EXT_swap_control", interval);
         glXSwapIntervalEXT (myScreenGetXDisplay (screen_info),
-                            screen_info->glx_drawable[buffer], interval);
-        return;
+                            drawable, *interval);
+        return TRUE;
     }
 #else
 #warning glXSwapIntervalEXT() not supported by libepoxy, please update your version of libepoxy
@@ -2183,15 +2149,38 @@ set_swap_interval (ScreenInfo *screen_info, gushort buffer)
     if (screen_info->has_mesa_swap_control)
     {
         /* MESA_swap_control knows nothing about negative intervals */
-        DBG ("Setting swap interval using GLX_MESA_swap_control");
-        glXSwapIntervalMESA ((guint) ((interval < 0) ? 1 : interval));
-        return;
+        *interval = (*interval < 0) ? 1 : *interval;
+        glXSwapIntervalMESA ((guint) *interval);
+        return TRUE;
     }
 #else
 #warning glXSwapIntervalMESA() not supported by libepoxy, please update your version of libepoxy
 #endif
 
-    DBG ("No swap control available");
+    (void) drawable;
+
+    return FALSE;
+}
+
+static void
+set_swap_interval (ScreenInfo *screen_info, gushort buffer)
+{
+    gint interval = wanted_swap_interval (screen_info);
+
+    /* Recorded so vsync_state() reports what really happened */
+    screen_info->glx_swap_control =
+        apply_swap_interval (screen_info, screen_info->glx_drawable[buffer],
+                             &interval);
+    screen_info->glx_swap_interval = interval;
+
+    if (screen_info->glx_swap_control)
+    {
+        DBG ("Swap interval set to %i", interval);
+    }
+    else
+    {
+        DBG ("No swap control available");
+    }
 }
 
 static void
@@ -2661,12 +2650,21 @@ get_window_picture (CWindow *cw)
     display_info = screen_info->display_info;
 
 #if HAVE_NAME_WINDOW_PIXMAP
-    myDisplayErrorTrapPush (display_info);
     if ((display_info->have_name_window_pixmap) && (cw->name_window_pixmap == None))
     {
+        myDisplayErrorTrapPush (display_info);
         cw->name_window_pixmap = XCompositeNameWindowPixmap (display_info->dpy, cw->id);
+        /*
+         * The XID was picked on our side before the request failed, so it
+         * names nothing: keeping it would poison every later user, see
+         * bind_window_texture() in compositor-gl.c.
+         */
+        if (myDisplayErrorTrapPop (display_info) != Success)
+        {
+            cw->name_window_pixmap = None;
+        }
     }
-    if ((myDisplayErrorTrapPop (display_info) == Success) && (cw->name_window_pixmap != None))
+    if (cw->name_window_pixmap != None)
     {
         draw = cw->name_window_pixmap;
     }
@@ -2981,25 +2979,17 @@ vsync_state (ScreenInfo *screen_info)
 
     if (screen_info->use_glx)
     {
-        /* The XRender path presents through GLX, see set_swap_interval() */
-        interval = wanted_swap_interval (screen_info);
-
-        if (screen_info->has_ext_swap_control)
+        /* What set_swap_interval() recorded when it last applied the mode */
+        if (!screen_info->glx_swap_control)
         {
-            if (interval < 0)
-            {
-                return "adaptive";
-            }
-
-            return (interval > 0) ? "on" : "off";
+            return "off";
         }
-        if (screen_info->has_mesa_swap_control)
+        if (screen_info->glx_swap_interval < 0)
         {
-            /* No adaptive interval there, it ends up syncing every frame */
-            return (interval != 0) ? "on" : "off";
+            return "adaptive";
         }
 
-        return "off";
+        return (screen_info->glx_swap_interval > 0) ? "on" : "off";
     }
 #endif /* HAVE_EPOXY */
 
@@ -3095,7 +3085,6 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         }
         /* The GL backend gave up, fall back to XRender for good */
         g_warning ("GL compositing failed, falling back to XRender.");
-        screen_info->use_gl_render = FALSE;
 
         /*
          * Everything below lets go of drawables the driver may already have
@@ -3123,8 +3112,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
             }
         }
 
-        xfwmGLScreenFinish (screen_info);
-        free_glx_data (screen_info);
+        shutdown_gl_render (screen_info);
         myDisplayErrorTrapPopIgnored (display_info);
         /* This path lets go of more than either start up failure does */
         release_unused_heap ();
@@ -4654,10 +4642,29 @@ compositorHandleDamage (DisplayInfo *display_info, XDamageNotifyEvent *ev)
             screen_info = (ScreenInfo *) list->data;
             if (xfwmGLDamageRootPixmap (screen_info, ev->drawable))
             {
+                XserverRegion parts;
+
                 myDisplayErrorTrapPush (display_info);
-                XDamageSubtract (display_info->dpy, ev->damage, None, None);
+                parts = XFixesCreateRegion (display_info->dpy, NULL, 0);
+                XDamageSubtract (display_info->dpy, ev->damage, None, parts);
                 myDisplayErrorTrapPopIgnored (display_info);
-                damage_screen (screen_info);
+
+                if (xfwmGLRootPixmapCoversScreen (screen_info))
+                {
+                    /*
+                     * One copy of the pixmap covers the screen, so its
+                     * coordinates are screen coordinates and only the area
+                     * that changed has to be drawn again.
+                     */
+                    /* parts region will be destroyed by add_damage () */
+                    add_damage (screen_info, parts);
+                }
+                else
+                {
+                    /* A smaller background is tiled, one dirty spot is many */
+                    XFixesDestroyRegion (display_info->dpy, parts);
+                    damage_screen (screen_info);
+                }
 
                 return;
             }
@@ -4786,6 +4793,11 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
 
         if (is_on_compositor (cw))
         {
+            /*
+             * A deleted property has to fall back to the default, and the
+             * reader leaves the value alone when there is nothing to read.
+             */
+            cw->bypass_compositor = 0;
             getBypassCompositor (display_info, ev->window, &cw->bypass_compositor);
         }
 
@@ -5688,9 +5700,7 @@ resume_gl (ScreenInfo *screen_info)
     if (!screen_info->params->use_gl_compositing)
     {
         /* Turned off while we were away */
-        xfwmGLScreenFinish (screen_info);
-        free_glx_data (screen_info);
-        screen_info->use_gl_render = FALSE;
+        shutdown_gl_render (screen_info);
 
         return FALSE;
     }
@@ -5698,9 +5708,7 @@ resume_gl (ScreenInfo *screen_info)
     screen_info->use_n_buffers = 1;
     if (!attach_glx_window (screen_info))
     {
-        xfwmGLScreenFinish (screen_info);
-        free_glx_data (screen_info);
-        screen_info->use_gl_render = FALSE;
+        shutdown_gl_render (screen_info);
 
         return FALSE;
     }
@@ -6107,9 +6115,7 @@ release_retained_gl (ScreenInfo *screen_info)
     }
 
     TRACE ("dropping the GL renderer held over a suspend");
-    xfwmGLScreenFinish (screen_info);
-    screen_info->use_gl_render = FALSE;
-    free_glx_data (screen_info);
+    shutdown_gl_render (screen_info);
 #else
     (void) screen_info;
 #endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
@@ -6171,9 +6177,7 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
     }
     else if (screen_info->use_gl_render)
     {
-        xfwmGLScreenFinish (screen_info);
-        screen_info->use_gl_render = FALSE;
-        free_glx_data (screen_info);
+        shutdown_gl_render (screen_info);
     }
 
     if (screen_info->use_glx)

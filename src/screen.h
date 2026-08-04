@@ -234,6 +234,10 @@ struct _ScreenInfo
     gboolean has_ext_swap_control_tear;
     gboolean has_ext_arb_sync;
 
+    /* What set_swap_interval() applied, recorded for the state we advertise */
+    gboolean glx_swap_control;
+    gint glx_swap_interval;
+
     GLuint rootTexture;
     GLenum texture_format;
     GLenum texture_target;

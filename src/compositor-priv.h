@@ -179,6 +179,11 @@ void             shadow_size                    (ScreenInfo *,
                                                  gint *);
 Pixmap           root_background_pixmap         (ScreenInfo *);
 gint             wanted_swap_interval           (ScreenInfo *);
+#ifdef HAVE_EPOXY
+gboolean         apply_swap_interval            (ScreenInfo *,
+                                                 GLXDrawable,
+                                                 gint *);
+#endif /* HAVE_EPOXY */
 XserverRegion    win_extents                    (CWindow *);
 gboolean         client_area                    (CWindow *,
                                                  gint *,

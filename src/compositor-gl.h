@@ -61,6 +61,7 @@ void             xfwmGLSetOpaqueRects           (CWindow *,
                                                  gint);
 void             xfwmGLFreeWindowShadow         (CWindow *);
 void             xfwmGLInvalidateRootTexture    (ScreenInfo *);
+gboolean         xfwmGLRootPixmapCoversScreen   (ScreenInfo *);
 gboolean         xfwmGLDamageRootPixmap         (ScreenInfo *,
                                                  Drawable);
 const gchar     *xfwmGLGetRendererName          (ScreenInfo *);

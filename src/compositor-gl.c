@@ -78,10 +78,8 @@ typedef struct
     GLuint program_win;
     GLuint program_2d;
     GLuint program_shadow_profile;
-    GLint u_tex_win;
     GLint u_opacity_win;
     GLint u_opacity_2d;
-    GLint u_prof_tex;
     GLint u_prof_size;
     GLint u_prof_ramp;
     GLint u_prof_opacity;
@@ -322,21 +320,25 @@ window_opaque_region (CWindow *cw)
      * client area starts. Taking the origin from there rather than from the
      * client keeps this cache, the bounding shape and the drawing itself on
      * the same coordinates while a move is still on its way to the X server.
+     * A frameless window starts inside its own border, and its rectangle is
+     * kept whole for the clamp below.
      */
-    if (!window_client_area (cw, &client))
+    if (window_client_area (cw, &client))
     {
-        client.x = cw->attr.x + cw->attr.border_width;
-        client.y = cw->attr.y + cw->attr.border_width;
+        dx = client.x;
+        dy = client.y;
     }
-    dx = client.x;
-    dy = client.y;
+    else
+    {
+        dx = cw->attr.x + cw->attr.border_width;
+        dy = cw->attr.y + cw->attr.border_width;
+    }
 
     cw->gl_opaque = region_from_rects (cw->gl_opaque_rects,
                                        cw->gl_n_opaque_rects, dx, dy);
 
     /* Never claim more than the window covers */
     cairo_region_intersect (cw->gl_opaque, window_shape (cw));
-    window_client_area (cw, &client);
     cairo_region_intersect_rectangle (cw->gl_opaque, &client);
 
     return cw->gl_opaque;
@@ -443,6 +445,19 @@ static XfwmGLData *
 gl_data (ScreenInfo *screen_info)
 {
     return (XfwmGLData *) screen_info->gl_data;
+}
+
+/*
+ * Whether GL calls would land in this screen's context. Any context being
+ * current is not good enough: with a context of another screen current,
+ * deleting a name would free someone else's object and leak ours, and GL
+ * would say nothing about it.
+ */
+static gboolean
+gl_context_is_current (ScreenInfo *screen_info)
+{
+    return (screen_info->glx_context != None) &&
+           (glXGetCurrentContext () == screen_info->glx_context);
 }
 
 static GLuint
@@ -613,10 +628,8 @@ static void
 set_swap_interval_gl (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
-    Display *dpy = myScreenGetXDisplay (screen_info);
     gint interval;
 
-    data->swap_control = FALSE;
     interval = wanted_swap_interval (screen_info);
 
     if ((screen_info->vblank_mode == VBLANK_ADAPTIVE) && (interval >= 0))
@@ -624,32 +637,19 @@ set_swap_interval_gl (ScreenInfo *screen_info)
         g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
     }
 
-#if defined (glXSwapIntervalEXT)
-    if (screen_info->has_ext_swap_control)
+    data->swap_control = apply_swap_interval (screen_info,
+                                              screen_info->glx_window,
+                                              &interval);
+    data->swap_interval = interval;
+
+    if (data->swap_control)
     {
-        glXSwapIntervalEXT (dpy, screen_info->glx_window, interval);
         g_info ("GL swap interval set to %i", interval);
-        data->swap_interval = interval;
-        data->swap_control = TRUE;
-
-        return;
     }
-#endif
-#if defined (glXSwapIntervalMESA)
-    if (screen_info->has_mesa_swap_control)
+    else
     {
-        /* MESA_swap_control knows nothing about negative intervals */
-        interval = (interval < 0) ? 1 : interval;
-        glXSwapIntervalMESA ((guint) interval);
-        g_info ("GL swap interval set to %i", interval);
-        data->swap_interval = interval;
-        data->swap_control = TRUE;
-
-        return;
+        g_info ("No swap control available, frames are not synced to the screen");
     }
-#endif
-
-    g_info ("No swap control available, frames are not synced to the screen");
 }
 
 /*
@@ -853,10 +853,9 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
      * to check for separately.
      */
 
-    data->u_tex_win = glGetUniformLocation (data->program_win, "tex");
     data->u_opacity_win = glGetUniformLocation (data->program_win, "opacity");
     glUseProgram (data->program_win);
-    glUniform1i (data->u_tex_win, 0);
+    glUniform1i (glGetUniformLocation (data->program_win, "tex"), 0);
 
     /*
      * Textures we upload ourselves are always plain 2D: the shadows, the
@@ -886,12 +885,11 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     data->program_shadow_profile = link_program (fragment_shadow_profile);
     if (data->program_shadow_profile != 0)
     {
-        data->u_prof_tex = glGetUniformLocation (data->program_shadow_profile, "prof");
         data->u_prof_size = glGetUniformLocation (data->program_shadow_profile, "size");
         data->u_prof_ramp = glGetUniformLocation (data->program_shadow_profile, "ramp");
         data->u_prof_opacity = glGetUniformLocation (data->program_shadow_profile, "opacity");
         glUseProgram (data->program_shadow_profile);
-        glUniform1i (data->u_prof_tex, 0);
+        glUniform1i (glGetUniformLocation (data->program_shadow_profile, "prof"), 0);
     }
 
     data->renderer = g_strdup ((const gchar *) glGetString (GL_RENDERER));
@@ -952,7 +950,7 @@ free_root_texture (ScreenInfo *screen_info)
     if (data->root_glx_pixmap != None)
     {
         myDisplayErrorTrapPush (display_info);
-        if (glXGetCurrentContext () != NULL)
+        if (gl_context_is_current (screen_info))
         {
             glXReleaseTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT);
         }
@@ -960,7 +958,7 @@ free_root_texture (ScreenInfo *screen_info)
         myDisplayErrorTrapPopIgnored (display_info);
         data->root_glx_pixmap = None;
     }
-    if (data->root_texture != 0 && glXGetCurrentContext () != NULL)
+    if (data->root_texture != 0 && gl_context_is_current (screen_info))
     {
         glDeleteTextures (1, &data->root_texture);
     }
@@ -994,6 +992,26 @@ xfwmGLDamageRootPixmap (ScreenInfo *screen_info, Drawable drawable)
     data->root_dirty = TRUE;
 
     return TRUE;
+}
+
+/*
+ * Whether damage on the background pixmap can be taken as screen damage as it
+ * is: only when one copy of the pixmap covers the screen do its coordinates
+ * mean the same as screen coordinates. A smaller background is tiled, so one
+ * dirty spot on it shows in many places.
+ */
+gboolean
+xfwmGLRootPixmapCoversScreen (ScreenInfo *screen_info)
+{
+    XfwmGLData *data;
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+
+    data = gl_data (screen_info);
+
+    return (data != NULL) &&
+           (data->root_width >= screen_info->width) &&
+           (data->root_height >= screen_info->height);
 }
 
 void
@@ -1067,7 +1085,7 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
      */
     free_root_texture (screen_info);
 
-    if (glXGetCurrentContext () != NULL)
+    if (gl_context_is_current (screen_info))
     {
         free_fbo (screen_info);
         free_cursor_texture (screen_info);
@@ -1157,8 +1175,11 @@ xfwmGLScreenReattached (ScreenInfo *screen_info)
     data->full_repaint = TRUE;
     /*
      * The screen size or the desktop background may have changed while we were
-     * away, so the background is bound again on the next frame.
+     * away, so the background is bound again on the next frame. A size change
+     * never reached xfwmGLScreenSizeChanged() while we were suspended, so a
+     * frame buffer that was too big for the driver may fit the screen now.
      */
+    data->fbo_failed = FALSE;
     free_root_texture (screen_info);
     set_swap_interval_gl (screen_info);
 }
@@ -1169,7 +1190,7 @@ xfwmGLScreenSizeChanged (ScreenInfo *screen_info)
     g_return_if_fail (screen_info != NULL);
 
     /* Nothing to drop while suspended, the drawable is gone anyway */
-    if (screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
+    if (screen_info->gl_data == NULL || !gl_context_is_current (screen_info))
     {
         return;
     }
@@ -1202,7 +1223,7 @@ xfwmGLFreeWindowData (CWindow *cw)
      */
     if (cw->gl_pixmap != None)
     {
-        if (cw->gl_texture_bound && glXGetCurrentContext () != NULL)
+        if (cw->gl_texture_bound && gl_context_is_current (screen_info))
         {
             glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
         }
@@ -1210,7 +1231,7 @@ xfwmGLFreeWindowData (CWindow *cw)
         glXDestroyPixmap (dpy, cw->gl_pixmap);
         cw->gl_pixmap = None;
     }
-    if (cw->gl_texture != 0 && glXGetCurrentContext () != NULL)
+    if (cw->gl_texture != 0 && gl_context_is_current (screen_info))
     {
         glDeleteTextures (1, &cw->gl_texture);
         cw->gl_texture = 0;
@@ -1222,7 +1243,8 @@ xfwmGLFreeWindowShadow (CWindow *cw)
 {
     g_return_if_fail (cw != NULL);
 
-    if (cw->screen_info->gl_data == NULL || glXGetCurrentContext () == NULL)
+    if (cw->screen_info->gl_data == NULL ||
+        !gl_context_is_current (cw->screen_info))
     {
         return;
     }
@@ -1251,7 +1273,7 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     data = gl_data (screen_info);
     g_return_if_fail (data != NULL);
     g_return_if_fail (screen_info->gaussianMap != NULL);
-    if (glXGetCurrentContext () == NULL)
+    if (!gl_context_is_current (screen_info))
     {
         return;
     }
@@ -1590,12 +1612,6 @@ use_program (GLuint program, GLint u_opacity, gfloat opacity)
 }
 
 static void
-set_win_opacity (XfwmGLData *data, gfloat opacity)
-{
-    glUniform1f (data->u_opacity_win, opacity);
-}
-
-static void
 draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
                   gint width, gint height, cairo_region_t *clip)
 {
@@ -1619,6 +1635,7 @@ static gboolean
 paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 {
     ScreenInfo *screen_info = cw->screen_info;
+    XfwmGLData *data = gl_data (screen_info);
     gfloat opacity;
 
     if (!bind_window_texture (cw))
@@ -1643,8 +1660,8 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         /* The frame is only painted in the blended pass, never as a solid */
         if (!solid_part)
         {
-            set_win_opacity (gl_data (screen_info),
-                             opacity * (gfloat) screen_info->params->frame_opacity / 100.0f);
+            use_program (data->program_win, data->u_opacity_win,
+                         opacity * (gfloat) screen_info->params->frame_opacity / 100.0f);
 
             /* Top border, the title bar */
             draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y,
@@ -1666,7 +1683,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
                               clip);
         }
 
-        set_win_opacity (gl_data (screen_info), opacity);
+        use_program (data->program_win, data->u_opacity_win, opacity);
         draw_window_part (cw, frame_left, frame_top,
                           cw->attr.x + frame_left, cw->attr.y + frame_top,
                           frame_width - frame_left - frame_right,
@@ -1678,7 +1695,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         gint width, height;
 
         get_window_pixmap_size (cw, &width, &height);
-        set_win_opacity (gl_data (screen_info), opacity);
+        use_program (data->program_win, data->u_opacity_win, opacity);
         draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y, width, height,
                           clip);
     }
@@ -1935,7 +1952,7 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
             cairo_rectangle_int_t area;
             gint x, y, first_x, first_y;
 
-            set_win_opacity (data, 1.0f);
+            use_program (data->program_win, data->u_opacity_win, 1.0f);
             /*
              * The background covers the screen, or the driver cannot repeat it
              * and it has to be laid down one tile at a time. Usually that is
@@ -2264,20 +2281,31 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     myDisplayErrorTrapPush (display_info);
 
-    frame_damage = fetch_damage (dpy, damage);
+    /*
+     * Without buffer age the history is never replayed and the whole screen
+     * is painted anyway, see get_paint_region(), so the damage does not have
+     * to cross the wire at all.
+     */
+    frame_damage = data->has_buffer_age ? fetch_damage (dpy, damage) : NULL;
     paint_region = get_paint_region (screen_info, frame_damage);
 
     if (cairo_region_is_empty (paint_region))
     {
         /* Nothing reaches the screen, so nothing is recorded either */
         cairo_region_destroy (paint_region);
-        cairo_region_destroy (frame_damage);
+        if (frame_damage != NULL)
+        {
+            cairo_region_destroy (frame_damage);
+        }
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
 
-    record_damage (screen_info, frame_damage);
+    if (frame_damage != NULL)
+    {
+        record_damage (screen_info, frame_damage);
+    }
     data->full_repaint = FALSE;
 
     zoomed = screen_info->zoomed;
@@ -2397,9 +2425,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
          * after the window has claimed the area it just drew solid, so the
          * blended pass does not draw over it again, but before the region the
          * window merely declares opaque is taken out: the window itself still
-         * has to be drawn there. Same order as the XRender path.
+         * has to be drawn there. Same order as the XRender path. Only windows
+         * that pass has any work on keep a copy, for the rest it would only
+         * be thrown away unused.
          */
-        cw->gl_paint_clip = cairo_region_copy (paint_region);
+        if ((cw->shadow_width > 0) || !opaque_window ||
+            (WIN_HAS_FRAME(cw) && (screen_info->params->frame_opacity < 100)))
+        {
+            cw->gl_paint_clip = cairo_region_copy (paint_region);
+        }
 
         if (!opaque_window && (cw->opacity == NET_WM_OPAQUE) && !WIN_IS_SHADED(cw))
         {
@@ -2425,7 +2459,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         cairo_region_t *shape;
 
         cw = (CWindow *) list->data;
-        /* The first pass leaves a clip behind only for the windows it drew */
+        /* The first pass leaves a clip behind only where this pass has work */
         if (cw->gl_paint_clip == NULL)
         {
             continue;
