@@ -2266,7 +2266,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     Display *dpy;
     cairo_region_t *frame_damage;
     cairo_region_t *paint_region;
-    cairo_region_t *painted_region;
     cairo_region_t *clip;
     GList *list;
     CWindow *cw;
@@ -2306,30 +2305,19 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
      */
     frame_damage = data->has_buffer_age ? fetch_damage (dpy, damage) : NULL;
     paint_region = get_paint_region (screen_info, frame_damage);
-    if (frame_damage != NULL)
-    {
-        cairo_region_destroy (frame_damage);
-        frame_damage = NULL;
-    }
 
     if (cairo_region_is_empty (paint_region))
     {
         /* Nothing reaches the screen, so nothing is recorded either */
         cairo_region_destroy (paint_region);
+        if (frame_damage != NULL)
+        {
+            cairo_region_destroy (frame_damage);
+        }
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
-
-    /*
-     * What the history has to hold is the area this frame really paints, not
-     * the area the X server called damaged: a full repaint covers the whole
-     * screen while the damage that triggered it is a corner of it, and a later
-     * frame replaying that entry would leave the rest of the screen stale.
-     * Handed over just before the swap, so a frame that never reaches the
-     * screen does not advance the history at all.
-     */
-    painted_region = data->has_buffer_age ? cairo_region_copy (paint_region) : NULL;
 
     data->full_repaint = FALSE;
     data->retry_paint = FALSE;
@@ -2558,9 +2546,9 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         }
         /* None of this frame was shown, so the next one owes the whole screen */
         data->full_repaint = TRUE;
-        if (painted_region != NULL)
+        if (frame_damage != NULL)
         {
-            cairo_region_destroy (painted_region);
+            cairo_region_destroy (frame_damage);
         }
         cairo_region_destroy (paint_region);
         myDisplayErrorTrapPopIgnored (display_info);
@@ -2569,10 +2557,16 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     }
     data->bind_failures = 0;
 
-    /* This frame is going to the screen, so it is the one the history records */
-    if (painted_region != NULL)
+    /*
+     * The history holds what the scene changed each frame, and only frames
+     * that reach the screen advance it. What was painted is not that: a
+     * repaint mostly redraws pixels exactly as they were, and a history that
+     * recorded it would replay ever growing regions until every frame painted
+     * the whole screen for the rest of the session.
+     */
+    if (frame_damage != NULL)
     {
-        record_damage (screen_info, painted_region);
+        record_damage (screen_info, frame_damage);
     }
 
     glXSwapBuffers (dpy, screen_info->glx_window);
