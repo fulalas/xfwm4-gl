@@ -75,12 +75,6 @@ select the Compositor tab:
 The OpenGL path is skipped, quietly and without breaking your session, if:
 
 * `libepoxy` was missing when it was built
-* the machine does not look like it can render with a graphics card, which is
-  checked before OpenGL is loaded at all: `LIBGL_ALWAYS_SOFTWARE` is set in the
-  environment, the X server offers neither DRI3 nor DRI2, or there is no render
-  node under `/dev/dri`. Loading the driver costs tens of megabytes that are
-  never given back, so a machine showing one sign but not the other, a container
-  hiding `/dev/dri` for instance, is turned away on purpose
 * the driver reports a software renderer such as `llvmpipe` or `swrast`
 * the driver is older than OpenGL 2.0, is missing frame buffer objects, or
   cannot hand windows over to OpenGL as textures
