@@ -58,6 +58,12 @@
 /* Well past the handful of depths an X server can advertise, so it cannot fill */
 #define GL_MAX_DEPTHS           32
 #define GL_MAX_ROOT_TILES       256
+/*
+ * A pixmap the driver refused once may well bind on the next frame, a refusal
+ * for want of video memory being the one that goes away. After this many frames
+ * in a row it is not going to, and XRender takes the screen over.
+ */
+#define GL_MAX_BIND_RETRIES     3
 
 /*
  * Binding a pixmap as a texture needs a frame buffer config matching the depth
@@ -126,6 +132,13 @@ typedef struct
 
     /* A window turned up that this GPU cannot bind, so GL cannot draw the screen */
     gboolean give_up;
+    /*
+     * A window pixmap could not be bound this frame, so the frame has a hole in
+     * it and is dropped rather than shown. Counted so that a refusal that never
+     * goes away does not drop every frame from here on.
+     */
+    gboolean retry_paint;
+    guint bind_failures;
 } XfwmGLData;
 
 static const gchar *vertex_source =
@@ -1441,12 +1454,13 @@ bind_window_texture (CWindow *cw)
         if (cw->gl_pixmap == None)
         {
             /*
-             * The depth is one the driver said it could bind, so a refusal
-             * here is the driver changing its mind and it will keep saying
-             * no. Hand the screen to XRender the same way an unusable depth
-             * does.
+             * The depth is one the driver said it could bind, so this is not a
+             * window of a kind we cannot draw but a refusal of this one pixmap,
+             * for want of video memory for instance. Those go away, so the
+             * frame is dropped and painted again rather than handing the screen
+             * to XRender for the rest of the session. See xfwmGLPaintAll().
              */
-            give_up_on_depth (data, cw->attr.depth);
+            data->retry_paint = TRUE;
 
             return FALSE;
         }
@@ -2221,6 +2235,29 @@ record_damage (ScreenInfo *screen_info, cairo_region_t *damage)
     data->damage_index = (data->damage_index + 1) % GL_DAMAGE_HISTORY;
 }
 
+/*
+ * Whether the last frame was dropped because a window could not be bound. The
+ * dropped frame took that repaint's damage with it, so the compositor has to be
+ * told to ask for another one or nothing would ever paint the screen again.
+ * Answering clears it.
+ */
+gboolean
+xfwmGLTakeRetryPaint (ScreenInfo *screen_info)
+{
+    XfwmGLData *data;
+
+    g_return_val_if_fail (screen_info != NULL, FALSE);
+
+    data = gl_data (screen_info);
+    if (data == NULL || !data->retry_paint)
+    {
+        return FALSE;
+    }
+    data->retry_paint = FALSE;
+
+    return TRUE;
+}
+
 gboolean
 xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 {
@@ -2229,6 +2266,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     Display *dpy;
     cairo_region_t *frame_damage;
     cairo_region_t *paint_region;
+    cairo_region_t *painted_region;
     cairo_region_t *clip;
     GList *list;
     CWindow *cw;
@@ -2268,25 +2306,33 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
      */
     frame_damage = data->has_buffer_age ? fetch_damage (dpy, damage) : NULL;
     paint_region = get_paint_region (screen_info, frame_damage);
+    if (frame_damage != NULL)
+    {
+        cairo_region_destroy (frame_damage);
+        frame_damage = NULL;
+    }
 
     if (cairo_region_is_empty (paint_region))
     {
         /* Nothing reaches the screen, so nothing is recorded either */
         cairo_region_destroy (paint_region);
-        if (frame_damage != NULL)
-        {
-            cairo_region_destroy (frame_damage);
-        }
         myDisplayErrorTrapPopIgnored (display_info);
 
         return TRUE;
     }
 
-    if (frame_damage != NULL)
-    {
-        record_damage (screen_info, frame_damage);
-    }
+    /*
+     * What the history has to hold is the area this frame really paints, not
+     * the area the X server called damaged: a full repaint covers the whole
+     * screen while the damage that triggered it is a corner of it, and a later
+     * frame replaying that entry would leave the rest of the screen stale.
+     * Handed over just before the swap, so a frame that never reaches the
+     * screen does not advance the history at all.
+     */
+    painted_region = data->has_buffer_age ? cairo_region_copy (paint_region) : NULL;
+
     data->full_repaint = FALSE;
+    data->retry_paint = FALSE;
 
     zoomed = screen_info->zoomed;
     if (zoomed && !bind_zoom_fbo (screen_info))
@@ -2493,17 +2539,40 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     glBindTexture (data->tex_type, 0);
 
     /*
-     * A window turned up whose colour depth this GPU cannot bind. Skipping it
-     * would leave a hole in the screen for the rest of the session, so hand the
-     * whole screen back to XRender, which can draw it. The frame that has the
-     * hole in it must not reach the screen first.
+     * A window could not be bound, so the screen has a hole where it should be
+     * and this frame must not reach the screen. A colour depth this GPU cannot
+     * bind would leave that hole there for the rest of the session, so the
+     * screen goes back to XRender, which can draw any of them. A pixmap the
+     * driver merely refused this once only costs the frame: the whole screen is
+     * painted again, by which time it may have the memory it just refused us.
      */
-    if (data->give_up)
+    if (data->give_up || data->retry_paint)
     {
+        if (data->retry_paint && !data->give_up &&
+            (++data->bind_failures > GL_MAX_BIND_RETRIES))
+        {
+            g_warning ("A window pixmap could not be bound as a texture in %i "
+                       "frames in a row, falling back to XRender.",
+                       GL_MAX_BIND_RETRIES + 1);
+            data->give_up = TRUE;
+        }
+        /* None of this frame was shown, so the next one owes the whole screen */
+        data->full_repaint = TRUE;
+        if (painted_region != NULL)
+        {
+            cairo_region_destroy (painted_region);
+        }
         cairo_region_destroy (paint_region);
         myDisplayErrorTrapPopIgnored (display_info);
 
-        return FALSE;
+        return !data->give_up;
+    }
+    data->bind_failures = 0;
+
+    /* This frame is going to the screen, so it is the one the history records */
+    if (painted_region != NULL)
+    {
+        record_damage (screen_info, painted_region);
     }
 
     glXSwapBuffers (dpy, screen_info->glx_window);

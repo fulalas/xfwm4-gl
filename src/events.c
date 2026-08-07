@@ -1474,8 +1474,19 @@ handleLeaveNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
             {
                 if (MYWINDOW_XWINDOW(c->buttons[b]) == event->meta.window)
                 {
+                    int frame_state = frameGetState (c);
+                    int drawn_before = clientGetButtonState (c, b, frame_state);
+
                     c->button_status[b] = BUTTON_STATE_NORMAL;
-                    need_redraw = TRUE;
+                    /*
+                     * The same rule handleEnterNotify() follows: the hover is
+                     * always recorded, and only a change in what the button is
+                     * drawn with is worth a redraw.
+                     */
+                    if (clientGetButtonState (c, b, frame_state) != drawn_before)
+                    {
+                        need_redraw = TRUE;
+                    }
                 }
             }
         }

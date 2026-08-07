@@ -2212,6 +2212,8 @@ create_glx_drawable (ScreenInfo *screen_info, gushort buffer)
            screen_info->glx_drawable[buffer], buffer);
 }
 
+static void set_render_backend_property (ScreenInfo *screen_info);
+
 static void
 bind_glx_texture (ScreenInfo *screen_info, gushort buffer)
 {
@@ -2227,6 +2229,12 @@ bind_glx_texture (ScreenInfo *screen_info, gushort buffer)
     {
         create_glx_drawable (screen_info, buffer);
         set_swap_interval (screen_info, buffer);
+        /*
+         * The drawable only exists once there is a frame to present, which is
+         * long after the compositor started and said what it was using. Now
+         * that a swap interval has really been applied, say it again.
+         */
+        set_render_backend_property (screen_info);
     }
     TRACE ("(re)Binding GLX pixmap 0x%lx to texture 0x%x",
            screen_info->glx_drawable[buffer], screen_info->rootTexture);
@@ -3429,6 +3437,8 @@ remove_timeouts (ScreenInfo *screen_info)
     }
 }
 
+static void damage_screen (ScreenInfo *screen_info);
+
 static gboolean
 repair_screen (ScreenInfo *screen_info)
 {
@@ -3520,6 +3530,19 @@ repair_screen (ScreenInfo *screen_info)
             XFixesDestroyRegion (display_info->dpy, screen_info->allDamage);
         }
         screen_info->allDamage = None;
+
+#ifdef HAVE_EPOXY
+        /*
+         * The GL renderer dropped that frame because a window could not be
+         * bound, and the damage it was painting went with it. Ask for the whole
+         * screen again, or nothing would bring us back here. Only after
+         * allDamage is cleared above, otherwise this is thrown away with it.
+         */
+        if (screen_info->use_gl_render && xfwmGLTakeRetryPaint (screen_info))
+        {
+            damage_screen (screen_info);
+        }
+#endif /* HAVE_EPOXY */
     }
 
     return FALSE;
@@ -5934,7 +5957,13 @@ compositorManageScreen (ScreenInfo *screen_info)
                                                        0, 0, screen_info->width, screen_info->height, 0, screen_info->depth,
                                                        InputOutput, visual, valuemask, &attributes);
 #ifdef HAVE_EPOXY
-            if (myDisplayErrorTrapPop (display_info) != Success)
+            /*
+             * Only a visual of our own can be refused. Where none was picked
+             * the call above asked for the screen's, so there is nothing left
+             * to fall back to and nothing to say about it.
+             */
+            if ((myDisplayErrorTrapPop (display_info) != Success) &&
+                (screen_info->gl_visual != NULL))
             {
                 /*
                  * The server would not have the visual we picked. Nothing is
@@ -6026,12 +6055,20 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->zoom_timeout_id = 0;
     screen_info->damages_pending = FALSE;
     screen_info->current_buffer = 0;
-    memset(screen_info->transform.matrix, 0, 9);
+    memset(screen_info->transform.matrix, 0, sizeof (screen_info->transform.matrix));
     screen_info->transform.matrix[0][0] = 1 << 16;
     screen_info->transform.matrix[1][1] = 1 << 16;
     screen_info->transform.matrix[2][2] = 1 << 16;
     screen_info->zoomBuffer = None;
     screen_info->use_n_buffers = 1;
+#ifdef HAVE_EPOXY
+    /*
+     * Nothing has applied a swap interval on this run yet, and what the last
+     * one applied says nothing about this one. See vsync_state ().
+     */
+    screen_info->glx_swap_control = FALSE;
+    screen_info->glx_swap_interval = 0;
+#endif /* HAVE_EPOXY */
     for (buffer = 0; buffer < N_BUFFERS; buffer++)
     {
         screen_info->rootPixmap[buffer] = None;

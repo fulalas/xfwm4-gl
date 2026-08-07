@@ -49,6 +49,12 @@ void             xfwmGLScreenFinish             (ScreenInfo *);
 gboolean         xfwmGLPaintAll                 (ScreenInfo *,
                                                  XserverRegion);
 
+/*
+ * Whether that frame was dropped for a window that could not be bound, and so
+ * has to be painted again. Answering clears it.
+ */
+gboolean         xfwmGLTakeRetryPaint           (ScreenInfo *);
+
 void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
