@@ -1427,6 +1427,38 @@ give_up_on_depth (XfwmGLData *data, gint depth)
     }
 }
 
+/*
+ * Binding the image is what makes the X server hand out the storage behind the
+ * pixmap, and the drawing that fills it can still be queued on the GPU when the
+ * bind returns. Nothing on the GL side waits for that, so the first frame of a
+ * new binding samples storage the server has not finished with, and the window
+ * comes out black whatever the pixmap holds.
+ *
+ * Reading one pixel back is a round trip the server can only answer once that
+ * drawing has really landed, which is the ordering that is missing. XSync() will
+ * not do: it waits for the requests to be processed, and processing one only
+ * queues the work behind it.
+ *
+ * Measured on radeonsi, 60 resizes each: nothing here leaves 1 to 5 black
+ * frames, XSync() 4 to 8, glXWaitX() 8 to 13, reading the pixmap before the bind
+ * 7 to 20, and reading it after the bind none in 480. So it is not the delay of
+ * the round trip that fixes it, and it has to come after the bind.
+ */
+static void
+wait_for_pixmap (DisplayInfo *display_info, Pixmap pixmap)
+{
+    XImage *image;
+
+    myDisplayErrorTrapPush (display_info);
+    image = XGetImage (display_info->dpy, pixmap,
+                       0, 0, 1, 1, AllPlanes, ZPixmap);
+    if (image != NULL)
+    {
+        XDestroyImage (image);
+    }
+    myDisplayErrorTrapPopIgnored (display_info);
+}
+
 static gboolean
 bind_window_texture (CWindow *cw)
 {
@@ -1435,6 +1467,7 @@ bind_window_texture (CWindow *cw)
     DisplayInfo *display_info = screen_info->display_info;
     Display *dpy = myScreenGetXDisplay (screen_info);
     XfwmGLDepth *dc;
+    gboolean new_pixmap = FALSE;
 
     if (ensure_name_window_pixmap (cw) == None)
     {
@@ -1479,6 +1512,7 @@ bind_window_texture (CWindow *cw)
 
             return FALSE;
         }
+        new_pixmap = TRUE;
     }
 
     if (cw->gl_texture == 0)
@@ -1509,6 +1543,18 @@ bind_window_texture (CWindow *cw)
         glXBindTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT, NULL);
         cw->gl_texture_bound = TRUE;
         cw->gl_content_dirty = FALSE;
+
+        /*
+         * Only the first bind of a GLX pixmap needs it: the storage is handed
+         * out once, and every later bind of the same one gets what the server
+         * has already finished with. A window is given a new pixmap on every
+         * resize, so this is once a frame while one is being resized, and never
+         * for a window that is only moving or redrawing.
+         */
+        if (new_pixmap)
+        {
+            wait_for_pixmap (display_info, cw->name_window_pixmap);
+        }
     }
 
     return TRUE;
@@ -1894,6 +1940,8 @@ bind_root_texture (ScreenInfo *screen_info)
         glTexParameteri (data->root_tex_type, GL_TEXTURE_WRAP_T, GL_REPEAT);
     }
     glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
+    /* The background is handed out the same way a window is, see the note there */
+    wait_for_pixmap (display_info, pixmap);
 
     /* Watch for a desktop that repaints in place, see xfwmGLDamageRootPixmap() */
     data->root_pixmap = pixmap;
