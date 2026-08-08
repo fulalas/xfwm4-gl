@@ -954,9 +954,12 @@ free_root_texture (ScreenInfo *screen_info)
     if (data->root_glx_pixmap != None)
     {
         myDisplayErrorTrapPush (display_info);
-        if (gl_context_is_current (screen_info))
+        if ((data->root_texture != 0) && gl_context_is_current (screen_info))
         {
+            /* Releasing acts on the bound texture, see xfwmGLFreeWindowData() */
+            glBindTexture (data->root_tex_type, data->root_texture);
             glXReleaseTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT);
+            glBindTexture (data->root_tex_type, 0);
         }
         glXDestroyPixmap (dpy, data->root_glx_pixmap);
         myDisplayErrorTrapPopIgnored (display_info);
@@ -1209,9 +1212,21 @@ xfwmGLFreeWindowData (CWindow *cw)
      */
     if (cw->gl_pixmap != None)
     {
-        if (cw->gl_texture_bound && gl_context_is_current (screen_info))
+        if (cw->gl_texture_bound && (cw->gl_texture != 0) &&
+            gl_context_is_current (screen_info))
         {
+            /*
+             * Releasing acts on whatever texture is bound to the target at the
+             * time, the call names a drawable but not a texture, so this
+             * window's texture has to be made current first. The paint loop
+             * leaves nothing bound, so without this the release lands on
+             * texture zero and does nothing, and the GLX pixmap below is
+             * destroyed with its image still bound to a texture, which the
+             * extension leaves undefined.
+             */
+            glBindTexture (gl_data (screen_info)->tex_type, cw->gl_texture);
             glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
+            glBindTexture (gl_data (screen_info)->tex_type, 0);
         }
         cw->gl_texture_bound = FALSE;
         glXDestroyPixmap (dpy, cw->gl_pixmap);
