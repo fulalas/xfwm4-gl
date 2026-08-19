@@ -260,6 +260,13 @@ struct _ScreenInfo
 
     /* GL compositing backend, see compositor-gl.c */
     gboolean use_gl_render;
+    /* setup_gl() decided the EGL backend; the renderer must not decide again */
+    gboolean use_egl_backend;
+    /* Decided when the screen is managed, cleared when EGL failed to start */
+    gboolean gl_prefer_egl;
+    /* XFWM4_PAINT_STATS, counted per screen */
+    guint paint_stats_painted;
+    gint64 paint_stats_since;
     gboolean gl_render_failed;
     gpointer gl_data;
 #ifdef HAVE_XSYNC

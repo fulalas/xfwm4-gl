@@ -1,119 +1,131 @@
 # xfwm4-gl
 
-xfwm4-gl is a compositor forked from Xfce
-[xfwm4](https://gitlab.xfce.org/xfce/xfwm4), adding support for OpenGL
-compositing. The original way, XRender, is still available as a fallback.
+`xfwm4-gl` is a fork of Xfce [xfwm4](https://gitlab.xfce.org/xfce/xfwm4) that
+adds OpenGL compositing. XRender, the original way, stays as a fallback.
 
-It also adds an option to switch the compositor off automatically while a
-fullscreen application has focus, which improves performance and addresses one
-of the weakest points of `xfwm4`, as seen in the latest
-[Phoronix desktop benchmark](https://www.phoronix.com/review/cachyos-desktops-july-2026/2).
+There is also a new option, on by default, that turns compositing off while a
+fullscreen application has focus. It is worth about 3% more frames for
+applications that do not ask for that themselves.
+
+Compared to XRender it uses **about a third less power** for the same work and
+provides **about 10% more frames per second** to applications. The gap grows
+with load, up to **25%** with eight windows drawing flat out.
+
+| Driver | Renderer | FPS | CPU (ms/s) | CPU (W) | GPU (W) |
+| --- | --- | --- | --- | --- | --- |
+| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 (CPU+GPU) | |
+| | XRender | 161.6 | 11.2 | 21.0 (CPU+GPU) | |
+| | OpenGL | 174.2 | 13.2 | 20.2 (CPU+GPU) | |
+| NVIDIA proprietary | no compositor | 166.3 | - | 4.0 | 37.2 |
+| | XRender | 160.9 | 17.5 | 5.8 | 43.0 |
+| | OpenGL | 158.6 | 16.2 | 4.7 | 43.2 |
+| NVIDIA Mesa (zink) | no compositor | 149.6 | - | 6.8 | N/A |
+| | XRender | 149.1 | 23.5 | 14.8 | N/A |
+| | OpenGL | 149.1 | 22.5 | 14.8 | N/A |
+
+FPS is measured in a windowed benchmark running as fast as it can; CPU and
+power are measured while the same benchmark is locked at 60 fps.
 
 ## Why this exists
 
-A compositor has to take the picture of every window and put those pictures
-together into the screen. `xfwm4` does that with XRender, an old drawing
-interface of the X server, and that choice shapes the code: the screen is built
-in an off-screen image first, and that image is then copied to the screen, so
-every frame is drawn twice. On top of that, the X server is asked what area a
-window covers, once for every window on every frame, and each answer has to be
-waited for.
+A compositor takes the picture of every window and combines them into the
+screen. `xfwm4` does that with XRender, an old drawing interface of the X
+server: the screen is built in an off-screen image and then copied out, so
+every frame is drawn twice, and the X server is asked once per window per
+frame what changed.
 
-With `xfwm4-gl`, windows are handed to the graphics card as textures and drawn
-straight to the screen instead.
-
-Four things come out of that:
+`xfwm4-gl` hands the windows to the graphics card as textures and draws them
+straight to the screen. That means:
 
 * One less copy of the whole screen per frame.
-* Only the parts of the screen that changed are redrawn.
-* The X server is asked once per frame for the area that changed, instead of
-  once for every window on every frame.
-* Window shadows are drawn by the graphics card instead of the CPU. Very small
-  windows, such as tooltips, are the exception.
+* Only the parts that changed are redrawn.
+* The X server is asked once per frame, not once per window.
+* Window shadows are drawn by the graphics card instead of the CPU.
 
-Adaptive vsync can now be picked, rather than only happening when the driver
-supports it, and it works with both renderers. See [Settings](#settings).
+Adaptive vsync can also be picked now, with either renderer. See
+[Settings](#settings).
 
 ## Usage
 
-All files respect the same names and paths as the original, so once `xfwm4-gl`
-is installed the session should load it automatically.
+All files keep the same names and paths as the original, so once installed the
+session loads it automatically.
 
-It is also possible to try it without installing, by replacing the window
-manager that is already running:
+To try it without installing, replace the running window manager:
 
     ./path_to_new_build/src/xfwm4 --replace
 
 ## Features
 
-OpenGL compositing is on by default, and if the driver cannot do it, XRender is
+OpenGL compositing is on by default; if the driver cannot do it, XRender is
 used instead.
 
-To check which renderer is currently in use, open Window Manager Tweaks and
-select the Compositor tab:
+OpenGL talks to the driver through EGL by default, because it was the cheapest
+on the processor on every driver tested. `XFWM4_GL_BACKEND=glx` switches to
+GLX, and if EGL cannot start, GLX takes over on its own.
+
+Only the parts of the screen that changed are painted, then the whole buffer
+is swapped, which the display hardware does for free. `XFWM4_GL_PRESENT` set
+to `copy` or `fbo` picks other ways of getting the frame on screen; they are
+for drivers that behave differently, not for everyday use.
+
+To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
 
 <img src="https://github.com/user-attachments/assets/65d1a24a-5ed6-4682-97f4-a0bc43e528cb" />
 
 * **Use OpenGL for compositing (default on)** — enables the OpenGL renderer;
-  XRender is used instead if it cannot start.
-* **Suspend compositing for focused fullscreen windows (default on)** —
-  temporarily disables compositing while a fullscreen application has focus.
-  This is especially useful for heavy applications such as games. While
-  compositing is off, avoiding tearing is up to the application: if it uses
-  OpenGL or Vulkan this should not be a problem, otherwise it may tear. An
-  application can also ask never to be bypassed, and then compositing is left
-  running for it, which is what `mpv --x11-bypass-compositor=never` does.
-* **Display fullscreen overlay windows directly (default on)** — also present
-  in the original `xfwm4`, and here it only gained a tooltip. It covers
-  fullscreen windows that bypass the window manager without saying anything
-  about compositing, which in practice means quite old games and players. An
-  application that explicitly asks to bypass the compositor is let through
-  whether this option is on or off.
+  XRender is used if it cannot start.
+* **Suspend compositing for focused fullscreen windows (default on)** — turns
+  compositing off while a fullscreen application has focus. Useful for games.
+  While it is off, avoiding tearing is up to the application: fine for OpenGL
+  and Vulkan, others may tear. An application can ask never to be bypassed,
+  which is what `mpv --x11-bypass-compositor=never` does.
+* **Display fullscreen overlay windows directly (default on)** — same as the
+  original `xfwm4`; it only gained a tooltip. It covers quite old games and
+  players that bypass the window manager without saying anything.
 
 ## When it falls back to XRender
 
-The OpenGL path is skipped, quietly and without breaking your session, if:
+The OpenGL path is skipped, quietly and without breaking the session, if:
 
-* `libepoxy` was missing when it was built
-* the driver reports a software renderer such as `llvmpipe` or `swrast`
-* the driver is older than OpenGL 2.0, is missing frame buffer objects, or
-  cannot hand windows over to OpenGL as textures
-* the graphics context is lost while running, after a driver reset for instance
+* `libepoxy` was missing at build time
+* the driver is a software renderer such as `llvmpipe` or `swrast`
+* the driver is older than OpenGL 2.0, has no frame buffer objects, or cannot
+  hand windows over as textures
+* the graphics context is lost while running, after a driver reset for
+  instance
 * a colour depth the driver cannot hand over
 
 ## Settings
 
-`/general/use_gl_compositing` turns the OpenGL renderer on and off. Changing it
-restarts the compositor, so it takes effect immediately.
+`/general/use_gl_compositing` turns the OpenGL renderer on and off. It takes
+effect immediately.
 
-`/general/suspend_compositing_fullscreen` turns off compositing while a
+`/general/suspend_compositing_fullscreen` turns compositing off while a
 fullscreen window has focus.
 
-`/general/vblank_mode`, or `--vblank` on the command line, is read at startup
+`/general/vblank_mode`, or `--vblank` on the command line, read at startup
 only:
 
 | value | description |
 | --- | --- |
 | `auto` | (default) sync every frame to the screen |
-| `adaptive` | (new) dynamically toggles vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (requires `GLX_EXT_swap_control_tear`, otherwise behaves like `auto`) |
-| `off` | no sync at all, fastest, tears |
+| `adaptive` | (new) turns vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (needs `GLX_EXT_swap_control_tear`, otherwise same as `auto`) |
+| `off` | no sync, fastest, tears |
 
-Two more values exist: `glx` and `xpresent`, but when using OpenGL renderer
-both behave like `auto`. They differ only once the compositor has fallen back
-to XRender.
+Two more values exist, `glx` and `xpresent`, but with the OpenGL renderer both
+behave like `auto`. They only differ after falling back to XRender.
 
 ## Requirements
 
-No extra dependency was added for building. `xfwm4` already builds against
-`libepoxy` for vsync, and `xfwm4-gl` uses it for the OpenGL renderer as well.
-Because it is optional upstream, nothing complains when it is missing, so
-check that the configure summary says `Epoxy support: yes`.
+No new build dependency. `xfwm4` already builds against `libepoxy` for vsync
+and `xfwm4-gl` uses it for the OpenGL renderer too. It is optional upstream,
+so check that the configure summary says `Epoxy support: yes`.
 
-At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and
-`GLX_EXT_texture_from_pixmap`. Every driver of the last 15 years or so has
-all three.
+At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and the
+ability to hand windows over as textures. Every driver of the last 15 years or
+so has all three.
 
-Both VirtualBox and QEMU work as long as they have 3D acceleration turned on.
+VirtualBox and QEMU work as long as 3D acceleration is on.
 
 ## License
 

@@ -55,6 +55,14 @@ gboolean         xfwmGLPaintAll                 (ScreenInfo *,
  */
 gboolean         xfwmGLTakeRetryPaint           (ScreenInfo *);
 
+/*
+ * The repaint loop found the fence of the last frame still unsignalled and
+ * gave up this turn. Counted for XFWM4_GL_PROFILE, which reports how many of
+ * those turns each painted frame costs.
+ */
+void             xfwmGLNoteFenceWait            (ScreenInfo *);
+
+void             xfwmGLScreenDetached           (ScreenInfo *);
 void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);

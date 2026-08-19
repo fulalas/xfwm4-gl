@@ -155,7 +155,18 @@ struct _CWindow
 #ifdef HAVE_EPOXY
     /* GL backend per window data, see compositor-gl.c */
     GLXPixmap gl_pixmap;
+    /* The EGL backend's counterpart of gl_pixmap, an EGLImageKHR */
+    gpointer egl_image;
     GLuint gl_texture;
+    /*
+     * The real size of name_window_pixmap, measured when it was named. During
+     * a resize the window's attributes run ahead of its pixmap, and a texture
+     * drawn at the attributes' size stretches old content into new geometry:
+     * the window visibly wobbles. Drawing at the pixmap's own size makes a
+     * stale frame merely lag instead.
+     */
+    gint gl_pixmap_width;
+    gint gl_pixmap_height;
     GLuint gl_shadow_texture;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
