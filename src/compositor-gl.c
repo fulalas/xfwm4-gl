@@ -87,16 +87,35 @@ typedef struct
  * damage into a texture that is guaranteed to survive, then copies only the
  * damage out of it, so it saves on both sides. FBO is the normal GLX choice
  * when the driver has the copy operation; SWAP remains the safe fallback.
+ *
+ * SCENE is FBO's way of drawing with SWAP's way of presenting, for drivers
+ * with no copy operation, the EGL backend among them. The scene is kept in a
+ * texture and only what changed is composited into it; the buffer that is
+ * about to be swapped in is a few frames old, so what it is missing is blitted
+ * out of that texture, which is far less work than compositing it again.
  */
 typedef enum
 {
     GL_PRESENT_SWAP,
     GL_PRESENT_COPY,
-    GL_PRESENT_FBO
+    GL_PRESENT_FBO,
+    GL_PRESENT_SCENE
 } XfwmGLPresentMode;
 
 /* More rectangles than this are presented as their bounding box instead */
 #define GL_MAX_PRESENT_RECTS    32
+
+/*
+ * Making an image out of a pixmap is allowed to throw the pixmap's content
+ * away unless it is asked to keep it: the default of EGL_IMAGE_PRESERVED_KHR
+ * is false. Without this a window comes up holding nothing until it draws
+ * itself again, which is exactly the black first frame wait_for_pixmap() was
+ * written for.
+ */
+static const EGLint preserved_image[] = {
+    EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+    EGL_NONE
+};
 
 /* Timer queries in flight for XFWM4_GL_PROFILE, enough to never wait on one */
 #define GL_PROF_QUERIES         4
@@ -179,6 +198,16 @@ typedef struct
     gboolean stats;
     guint stat_frames;
     gdouble stat_pixels;
+    /* What actually changed, against what had to be painted for it */
+    gdouble stat_damage_pixels;
+    gdouble stat_paint_pixels;
+    /*
+     * The frames the buffer age was read for. Not the same as the frames that
+     * reached the screen: a frame can be dropped after the age was read, and
+     * dividing the age numbers by the presented frames made percentages that
+     * could pass 100.
+     */
+    gdouble prof_age_frames;
     gint64 stat_since;
 
     /*
@@ -314,6 +343,14 @@ static const gchar *fragment_shadow_profile =
  * every frame is the most expensive thing a compositor can do. The shape of a
  * window only changes when the window does, so it is worked out once and kept.
  */
+/*
+ * What a window's texture really covers on the screen. It is the pixmap, not
+ * the window: during a resize the pixmap can still be the old, smaller one,
+ * and everything drawn from it is drawn at that size. See window_shape().
+ */
+static void
+window_drawn_box (CWindow *cw, cairo_rectangle_int_t *r);
+
 /* The whole window as the X server sees it, border included */
 static void
 get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
@@ -334,6 +371,18 @@ get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
     }
     *width = cw->attr.width + 2 * cw->attr.border_width;
     *height = cw->attr.height + 2 * cw->attr.border_width;
+}
+
+static void
+window_drawn_box (CWindow *cw, cairo_rectangle_int_t *r)
+{
+    gint width, height;
+
+    get_window_pixmap_size (cw, &width, &height);
+    r->x = cw->attr.x;
+    r->y = cw->attr.y;
+    r->width = width;
+    r->height = height;
 }
 
 static cairo_region_t *
@@ -784,8 +833,14 @@ set_swap_interval_gl (ScreenInfo *screen_info)
 
     if (data != NULL && screen_info->use_egl_backend)
     {
-        /* EGL knows no adaptive interval, a late frame waits like any other */
-        interval = MAX (interval, 0);
+        /*
+         * EGL knows no adaptive interval, so a late frame waits like any
+         * other: that is an interval of one. Zero would be no sync at all.
+         */
+        if (interval < 0)
+        {
+            interval = 1;
+        }
         screen_info->glx_swap_control =
             eglSwapInterval (data->egl_display, interval);
         screen_info->glx_swap_interval = interval;
@@ -962,8 +1017,15 @@ static guint egl_display_users = 0;
 static void
 egl_release_surface (XfwmGLData *data)
 {
-    eglMakeCurrent (data->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                    EGL_NO_CONTEXT);
+    /*
+     * Only if it is ours. Every screen of the display shares the EGLDisplay,
+     * so unbinding blind would take another screen's context off the thread.
+     */
+    if (eglGetCurrentContext () == data->egl_context)
+    {
+        eglMakeCurrent (data->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                        EGL_NO_CONTEXT);
+    }
     if (data->egl_surface != EGL_NO_SURFACE)
     {
         eglDestroySurface (data->egl_display, data->egl_surface);
@@ -1185,12 +1247,20 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     {
         egl_screen_init (screen_info);
 
-        /* setup_gl() made no GLX context in this mode, so EGL or nothing */
-        if (data->egl_context == EGL_NO_CONTEXT &&
-            screen_info->glx_context == None)
+        if (data->egl_context == EGL_NO_CONTEXT)
         {
-            xfwmGLScreenFinish (screen_info);
-            return FALSE;
+            /* setup_gl() made no GLX context in this mode, so EGL or nothing */
+            if (screen_info->glx_context == None)
+            {
+                xfwmGLScreenFinish (screen_info);
+                return FALSE;
+            }
+            /*
+             * There is a GLX context to fall back on, so carry on with it -
+             * but not while still claiming to be on EGL, or every EGL call
+             * below would be made against a display that was never opened.
+             */
+            screen_info->use_egl_backend = FALSE;
         }
     }
 
@@ -1336,7 +1406,25 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
      * XFWM4_GL_PRESENT for drivers that behave differently.
      */
     data->present_mode = GL_PRESENT_SWAP;
-    if (!screen_info->use_egl_backend)
+    /*
+     * The scene buffer presents by swapping, so it needs nothing the swap mode
+     * does not have and works on both backends. It is not the default: on
+     * radeonsi it composites less and costs more. Measured against swapping on
+     * the same work, whole benchmark, two runs each: 13.14 W against 13.13 W,
+     * 3.23 s of processor time against 3.00 s, 168.9 fps left to the
+     * application against 174.6, and 96 MB more video memory for the screen
+     * sized texture. During a resize it composites 98 Mpix a second where
+     * swapping composites 115, so the overdraw the buffer age causes is real -
+     * it is just only 17%, and blitting the stale region out of the scene
+     * costs more than compositing it again. Kept for drivers where partial
+     * repaint is dearer than that, which is what the mode exists to price.
+     */
+    if (g_strcmp0 (g_getenv ("XFWM4_GL_PRESENT"), "scene") == 0)
+    {
+        data->present_mode = GL_PRESENT_SCENE;
+        g_info ("GL presentation mode: scene buffer");
+    }
+    else if (!screen_info->use_egl_backend)
     {
         const gchar *mode = g_getenv ("XFWM4_GL_PRESENT");
         gboolean has_copy_sub_buffer = !no_ext &&
@@ -2014,6 +2102,13 @@ give_up_on_depth (XfwmGLData *data, gint depth)
  * frames, XSync() 4 to 8, glXWaitX() 8 to 13, reading the pixmap before the bind
  * 7 to 20, and reading it after the bind none in 480. So it is not the delay of
  * the round trip that fixes it, and it has to come after the bind.
+ *
+ * Asking the image to preserve the pixmap's content, which it now does, is a
+ * different thing and does not replace this: with the attribute in place and
+ * this taken out, 240 resizes leave no black frames at all but ten of them
+ * show a band of old content along the edge the resize just exposed. The
+ * attribute says what the image starts out holding; only the round trip says
+ * the server has finished drawing it.
  */
 static void
 wait_for_pixmap (DisplayInfo *display_info, Pixmap pixmap)
@@ -2053,7 +2148,7 @@ bind_window_texture (CWindow *cw)
                 eglCreateImageKHR (data->egl_display, EGL_NO_CONTEXT,
                                    EGL_NATIVE_PIXMAP_KHR,
                                    (EGLClientBuffer) (guintptr)
-                                   cw->name_window_pixmap, NULL);
+                                   cw->name_window_pixmap, preserved_image);
             if (cw->egl_image == NULL)
             {
                 /* Refusals go away, depths do not: treat it as the former */
@@ -2318,10 +2413,31 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
     if (WIN_HAS_TRANSLUCENT_FRAME(cw))
     {
         gint frame_top, frame_bottom, frame_left, frame_right;
-        gint frame_width, frame_height;
+        gint frame_width, frame_height, pixmap_width, pixmap_height;
 
+        /*
+         * The pixmap's size, not the window's: while a window is being
+         * resized its attributes are a step ahead of the pixmap behind it,
+         * and drawing the frame at the new width from the old pixmap samples
+         * past its edge - which paints a band of whatever happens to be
+         * there down the right side of the window, the full height of it.
+         * The area the new pixmap has not covered yet is left alone and
+         * painted on the next frame, which is what the XRender path does.
+         */
+        get_window_pixmap_size (cw, &pixmap_width, &pixmap_height);
+        /* That size counts the border twice over, these do not */
+        pixmap_width -= 2 * cw->attr.border_width;
+        pixmap_height -= 2 * cw->attr.border_width;
         frame_width = cw->attr.width;
         frame_height = cw->attr.height;
+        if (frame_width > pixmap_width)
+        {
+            frame_width = pixmap_width;
+        }
+        if (frame_height > pixmap_height)
+        {
+            frame_height = pixmap_height;
+        }
         frame_top = frameTop (cw->c);
         frame_bottom = frameBottom (cw->c);
         frame_left = frameLeft (cw->c);
@@ -2563,7 +2679,8 @@ bind_root_texture (ScreenInfo *screen_info)
         data->root_egl_image =
             eglCreateImageKHR (data->egl_display, EGL_NO_CONTEXT,
                                EGL_NATIVE_PIXMAP_KHR,
-                               (EGLClientBuffer) (guintptr) pixmap, NULL);
+                               (EGLClientBuffer) (guintptr) pixmap,
+                               preserved_image);
         if (data->root_egl_image == NULL)
         {
             data->root_missing = TRUE;
@@ -2935,7 +3052,8 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
      * In copy mode the age stays at zero, a copy leaves the back buffer
      * undefined, so the query is not even asked and the whole screen paints.
      */
-    if (data->present_mode == GL_PRESENT_SWAP &&
+    if (((data->present_mode == GL_PRESENT_SWAP) ||
+         (data->present_mode == GL_PRESENT_SCENE)) &&
         data->has_buffer_age && !data->full_repaint)
     {
         if (screen_info->use_egl_backend)
@@ -2955,6 +3073,7 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
 
     if (data->profile)
     {
+        data->prof_age_frames += 1.0;
         if (age > data->prof_age_max)
         {
             data->prof_age_max = age;
@@ -3244,8 +3363,11 @@ stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
     {
         gdouble s = (t - data->stat_since) / 1e6;
 
-        g_message ("paints %.1f/s, %.1f Mpix/s presented",
-                   data->stat_frames / s, data->stat_pixels / s / 1e6);
+        g_message ("paints %.1f/s, %.1f Mpix/s presented, "
+                   "%.1f Mpix/s painted for %.1f Mpix/s damaged",
+                   data->stat_frames / s, data->stat_pixels / s / 1e6,
+                   data->stat_paint_pixels / s / 1e6,
+                   data->stat_damage_pixels / s / 1e6);
         if (data->profile && data->stat_frames > 0)
         {
             gdouble n = data->stat_frames;
@@ -3270,6 +3392,8 @@ stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
                        data->prof_fence_waits / n);
             {
                 GString *h = g_string_new ("  age histogram:");
+                gdouble an = (data->prof_age_frames > 0.0)
+                             ? data->prof_age_frames : n;
                 guint k;
 
                 for (k = 0; k < GL_PROF_AGE_BUCKETS; k++)
@@ -3278,7 +3402,7 @@ stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
                     {
                         g_string_append_printf (h, "  %u%s:%.0f%%", k,
                                                 (k == GL_PROF_AGE_BUCKETS - 1) ? "+" : "",
-                                                data->prof_age_hist[k] / n * 100.0);
+                                                data->prof_age_hist[k] / an * 100.0);
                     }
                     data->prof_age_hist[k] = 0.0;
                 }
@@ -3288,9 +3412,13 @@ stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
             g_message ("  buffer age: %.1f%% of paints older than the "
                        "%d frame history and so repainted whole, "
                        "%.1f%% owed everything anyway, deepest age %u",
-                       data->prof_age_over / n * 100.0,
+                       data->prof_age_over /
+                       ((data->prof_age_frames > 0.0) ? data->prof_age_frames : n)
+                       * 100.0,
                        GL_DAMAGE_HISTORY,
-                       data->prof_full_repaint / n * 100.0,
+                       data->prof_full_repaint /
+                       ((data->prof_age_frames > 0.0) ? data->prof_age_frames : n)
+                       * 100.0,
                        data->prof_age_max);
             if (data->prof_gpu_frames > 0.0)
             {
@@ -3309,10 +3437,12 @@ stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
                 data->prof_windows = data->prof_shadows =
                 data->prof_bind = data->prof_binds =
                 data->prof_fence_waits = data->prof_age_over =
-                data->prof_full_repaint = 0.0;
+                data->prof_age_frames = data->prof_full_repaint = 0.0;
         }
         data->stat_frames = 0;
         data->stat_pixels = 0.0;
+        data->stat_damage_pixels = 0.0;
+        data->stat_paint_pixels = 0.0;
         data->stat_since = t;
     }
 }
@@ -3412,6 +3542,21 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     {
         present_region = cairo_region_copy (paint_region);
     }
+    else if (data->present_mode == GL_PRESENT_SCENE)
+    {
+        /*
+         * Two different regions here, and that is the whole point of this
+         * mode. The buffer about to be swapped in is a few frames old, so it
+         * is owed everything that changed since, which is what the paint
+         * region worked out from the buffer age: that much has to be blitted
+         * into it out of the scene. The scene itself only ever loses the
+         * pixels that changed this frame, so that is all that is composited.
+         */
+        present_region = paint_region;
+        paint_region = (!data->full_repaint && frame_damage != NULL)
+                       ? cairo_region_copy (frame_damage)
+                       : screen_region (screen_info);
+    }
     else if (data->present_mode == GL_PRESENT_COPY)
     {
         if (data->full_repaint)
@@ -3428,12 +3573,36 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     data->full_repaint = FALSE;
     data->retry_paint = FALSE;
 
+    if (data->stats)
+    {
+        gint i;
+
+        for (i = 0; frame_damage != NULL &&
+                    i < cairo_region_num_rectangles (frame_damage); i++)
+        {
+            cairo_rectangle_int_t r;
+
+            cairo_region_get_rectangle (frame_damage, i, &r);
+            data->stat_damage_pixels += (gdouble) r.width * r.height;
+        }
+        for (i = 0; i < cairo_region_num_rectangles (paint_region); i++)
+        {
+            cairo_rectangle_int_t r;
+
+            cairo_region_get_rectangle (paint_region, i, &r);
+            data->stat_paint_pixels += (gdouble) r.width * r.height;
+        }
+    }
+
+
     zoomed = screen_info->zoomed;
-    if ((zoomed || (data->present_mode == GL_PRESENT_FBO)) &&
+    if ((zoomed || (data->present_mode == GL_PRESENT_FBO) ||
+         (data->present_mode == GL_PRESENT_SCENE)) &&
         !bind_zoom_fbo (screen_info))
     {
         zoomed = FALSE;
-        if ((data->present_mode == GL_PRESENT_FBO))
+        if ((data->present_mode == GL_PRESENT_FBO) ||
+            (data->present_mode == GL_PRESENT_SCENE))
         {
             /*
              * No frame buffer object, no experiment: back to swapping for the
@@ -3463,7 +3632,8 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
          * own buffer the same way. The FBO experiment keeps the scene in that
          * texture, so there it stays.
          */
-        if (data->fbo != 0 && !(data->present_mode == GL_PRESENT_FBO))
+        if (data->fbo != 0 && (data->present_mode != GL_PRESENT_FBO) &&
+            (data->present_mode != GL_PRESENT_SCENE))
         {
             free_fbo (screen_info);
         }
@@ -3527,6 +3697,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         cairo_region_t *shape;
+        cairo_region_t *lagging = NULL;
         gboolean opaque_window;
 
         cw = (CWindow *) list->data;
@@ -3560,6 +3731,30 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         shape = window_shape (cw);
         opaque_window = WIN_IS_OPAQUE(cw);
 
+        /*
+         * A window whose pixmap has not caught up with its size covers less
+         * than its shape says. Claiming the shape would take the difference
+         * out of the region with nothing having drawn it, and the strip along
+         * the growing edge would keep whatever the back buffer held - which,
+         * with the buffer age, is a frame or three old. Cut the shape down to
+         * what the texture reaches and let the background or the window below
+         * have the rest.
+         */
+        {
+            cairo_rectangle_int_t drawn, ext;
+
+            window_drawn_box (cw, &drawn);
+            cairo_region_get_extents (shape, &ext);
+            if (ext.x < drawn.x || ext.y < drawn.y ||
+                ext.x + ext.width > drawn.x + drawn.width ||
+                ext.y + ext.height > drawn.y + drawn.height)
+            {
+                lagging = cairo_region_copy (shape);
+                cairo_region_intersect_rectangle (lagging, &drawn);
+                shape = lagging;
+            }
+        }
+
         if (opaque_window)
         {
             gboolean painted = TRUE;
@@ -3590,6 +3785,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
                  * must not hide what is below it either.
                  */
                 cw->skipped = TRUE;
+                if (lagging != NULL)
+                {
+                    cairo_region_destroy (lagging);
+                }
                 continue;
             }
 
@@ -3680,10 +3879,21 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
             if (opaque != NULL)
             {
-                cairo_region_subtract (paint_region, opaque);
+                cairo_region_t *reached = cairo_region_copy (opaque);
+                cairo_rectangle_int_t drawn;
+
+                /* The same again: only what the texture reaches is covered */
+                window_drawn_box (cw, &drawn);
+                cairo_region_intersect_rectangle (reached, &drawn);
+                cairo_region_subtract (paint_region, reached);
+                cairo_region_destroy (reached);
             }
         }
 
+        if (lagging != NULL)
+        {
+            cairo_region_destroy (lagging);
+        }
         cw->skipped = FALSE;
     }
 
@@ -3827,6 +4037,54 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             glXSwapBuffers (dpy, screen_info->glx_window);
         }
     }
+    else if (data->present_mode == GL_PRESENT_SCENE)
+    {
+        /*
+         * The scene is in the texture and the back buffer is stale, so what
+         * the back buffer is missing is blitted out of the scene before the
+         * swap. The magnifier has already drawn the whole back buffer from
+         * the same texture, so then there is nothing to blit.
+         */
+        if (!zoomed)
+        {
+            cairo_rectangle_int_t r;
+            gint i, nrects;
+
+            glBindFramebuffer (GL_READ_FRAMEBUFFER, data->fbo);
+            glBindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
+
+            nrects = cairo_region_num_rectangles (present_region);
+            if (nrects > GL_MAX_PRESENT_RECTS)
+            {
+                cairo_region_get_extents (present_region, &r);
+                cairo_region_destroy (present_region);
+                present_region = cairo_region_create_rectangle (&r);
+                nrects = 1;
+            }
+
+            for (i = 0; i < nrects; i++)
+            {
+                gint gl_y;
+
+                cairo_region_get_rectangle (present_region, i, &r);
+                /* The blit counts y from the bottom left */
+                gl_y = screen_info->height - r.y - r.height;
+                glBlitFramebuffer (r.x, gl_y, r.x + r.width, gl_y + r.height,
+                                   r.x, gl_y, r.x + r.width, gl_y + r.height,
+                                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            }
+            glBindFramebuffer (GL_FRAMEBUFFER, 0);
+        }
+
+        if (screen_info->use_egl_backend)
+        {
+            egl_swap (screen_info, frame_damage, was_full_repaint || zoomed);
+        }
+        else
+        {
+            glXSwapBuffers (dpy, screen_info->glx_window);
+        }
+    }
     else
     {
         cairo_rectangle_int_t r;
@@ -3885,7 +4143,8 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
      * the whole screen for the rest of the session. Recording takes the
      * region over, so it has to come after the present above read it.
      */
-    if (frame_damage != NULL && data->present_mode == GL_PRESENT_SWAP)
+    if (frame_damage != NULL && ((data->present_mode == GL_PRESENT_SWAP) ||
+                                 (data->present_mode == GL_PRESENT_SCENE)))
     {
         record_damage (screen_info, frame_damage);
     }
