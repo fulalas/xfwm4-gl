@@ -344,12 +344,13 @@ static const gchar *fragment_shadow_profile =
  * window only changes when the window does, so it is worked out once and kept.
  */
 /*
- * What a window's texture really covers on the screen. It is the pixmap, not
- * the window: during a resize the pixmap can still be the old, smaller one,
- * and everything drawn from it is drawn at that size. See window_shape().
+ * How big a window is drawn this frame, and where that reaches on the screen.
+ * Normally the window's own size; during a resize the pixmap behind it can
+ * still be the old one, and nothing can be drawn from pixels that do not
+ * exist yet. See window_painted_size().
  */
 static void
-window_drawn_box (CWindow *cw, cairo_rectangle_int_t *r);
+window_painted_size (CWindow *cw, gint *width, gint *height);
 
 /* The whole window as the X server sees it, border included */
 static void
@@ -373,16 +374,33 @@ get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
     *height = cw->attr.height + 2 * cw->attr.border_width;
 }
 
+/*
+ * A window is drawn at its own size, or at the size of the pixmap behind it,
+ * whichever is smaller. During a resize the pixmap is a step behind, and the
+ * strip the window has just gained is in neither of them: not in the pixmap,
+ * which is still the old size, and not anywhere else either, because the
+ * client has not drawn it and the window manager has not drawn its border
+ * into it. Nothing can paint pixels that do not exist.
+ *
+ * What is left is the choice of what shows there for that one frame, and the
+ * strip is deliberately left holding what the screen already had: the same
+ * window, its border and all, one step of the resize ago. The two
+ * alternatives are worse. Stretching the edge of the pixmap into the strip
+ * smears the border across the client's own area - a band down the side of
+ * the window, which is what it looked like before. Painting the desktop there
+ * takes the border away for that frame, and a window resized without its
+ * bottom and right edges is what a person notices.
+ */
 static void
-window_drawn_box (CWindow *cw, cairo_rectangle_int_t *r)
+window_painted_size (CWindow *cw, gint *width, gint *height)
 {
-    gint width, height;
+    gint pixmap_width, pixmap_height;
+    gint border = 2 * cw->attr.border_width;
 
-    get_window_pixmap_size (cw, &width, &height);
-    r->x = cw->attr.x;
-    r->y = cw->attr.y;
-    r->width = width;
-    r->height = height;
+    get_window_pixmap_size (cw, &pixmap_width, &pixmap_height);
+
+    *width = MIN (cw->attr.width + border, pixmap_width);
+    *height = MIN (cw->attr.height + border, pixmap_height);
 }
 
 static cairo_region_t *
@@ -2416,28 +2434,16 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         gint frame_width, frame_height, pixmap_width, pixmap_height;
 
         /*
-         * The pixmap's size, not the window's: while a window is being
-         * resized its attributes are a step ahead of the pixmap behind it,
-         * and drawing the frame at the new width from the old pixmap samples
-         * past its edge - which paints a band of whatever happens to be
-         * there down the right side of the window, the full height of it.
-         * The area the new pixmap has not covered yet is left alone and
-         * painted on the next frame, which is what the XRender path does.
+         * The size the window is really drawn at, which during a resize is
+         * not the size its attributes claim: the frame quads would sample
+         * far past the edge of a pixmap that is still the old one, and paint
+         * a band of stretched title bar down the side of the window the full
+         * height of it. See window_painted_size().
          */
-        get_window_pixmap_size (cw, &pixmap_width, &pixmap_height);
+        window_painted_size (cw, &pixmap_width, &pixmap_height);
         /* That size counts the border twice over, these do not */
-        pixmap_width -= 2 * cw->attr.border_width;
-        pixmap_height -= 2 * cw->attr.border_width;
-        frame_width = cw->attr.width;
-        frame_height = cw->attr.height;
-        if (frame_width > pixmap_width)
-        {
-            frame_width = pixmap_width;
-        }
-        if (frame_height > pixmap_height)
-        {
-            frame_height = pixmap_height;
-        }
+        frame_width = pixmap_width - 2 * cw->attr.border_width;
+        frame_height = pixmap_height - 2 * cw->attr.border_width;
         frame_top = frameTop (cw->c);
         frame_bottom = frameBottom (cw->c);
         frame_left = frameLeft (cw->c);
@@ -2480,7 +2486,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
     {
         gint width, height;
 
-        get_window_pixmap_size (cw, &width, &height);
+        window_painted_size (cw, &width, &height);
         use_program (data->program_win, data->u_opacity_win, opacity);
         draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y, width, height,
                           clip);
@@ -3697,7 +3703,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         cairo_region_t *shape;
-        cairo_region_t *lagging = NULL;
         gboolean opaque_window;
 
         cw = (CWindow *) list->data;
@@ -3731,29 +3736,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         shape = window_shape (cw);
         opaque_window = WIN_IS_OPAQUE(cw);
 
-        /*
-         * A window whose pixmap has not caught up with its size covers less
-         * than its shape says. Claiming the shape would take the difference
-         * out of the region with nothing having drawn it, and the strip along
-         * the growing edge would keep whatever the back buffer held - which,
-         * with the buffer age, is a frame or three old. Cut the shape down to
-         * what the texture reaches and let the background or the window below
-         * have the rest.
-         */
-        {
-            cairo_rectangle_int_t drawn, ext;
 
-            window_drawn_box (cw, &drawn);
-            cairo_region_get_extents (shape, &ext);
-            if (ext.x < drawn.x || ext.y < drawn.y ||
-                ext.x + ext.width > drawn.x + drawn.width ||
-                ext.y + ext.height > drawn.y + drawn.height)
-            {
-                lagging = cairo_region_copy (shape);
-                cairo_region_intersect_rectangle (lagging, &drawn);
-                shape = lagging;
-            }
-        }
 
         if (opaque_window)
         {
@@ -3785,10 +3768,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
                  * must not hide what is below it either.
                  */
                 cw->skipped = TRUE;
-                if (lagging != NULL)
-                {
-                    cairo_region_destroy (lagging);
-                }
                 continue;
             }
 
@@ -3879,21 +3858,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
             if (opaque != NULL)
             {
-                cairo_region_t *reached = cairo_region_copy (opaque);
-                cairo_rectangle_int_t drawn;
-
-                /* The same again: only what the texture reaches is covered */
-                window_drawn_box (cw, &drawn);
-                cairo_region_intersect_rectangle (reached, &drawn);
-                cairo_region_subtract (paint_region, reached);
-                cairo_region_destroy (reached);
+                cairo_region_subtract (paint_region, opaque);
             }
         }
 
-        if (lagging != NULL)
-        {
-            cairo_region_destroy (lagging);
-        }
         cw->skipped = FALSE;
     }
 
