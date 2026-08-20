@@ -6049,8 +6049,11 @@ compositorManageScreen (ScreenInfo *screen_info)
             XserverRegion region;
             XSetWindowAttributes attributes;
 
-            XMapRaised (display_info->dpy, screen_info->overlay);
-
+            /*
+             * Not mapped yet. This window covers the screen and nothing below
+             * it reaches the eye once it is up, so it goes up at the end,
+             * when there is a renderer able to paint it. See further down.
+             */
             region = XFixesCreateRegion (display_info->dpy, NULL, 0);
             XFixesSetWindowShapeRegion (display_info->dpy, screen_info->overlay,
                                         ShapeBounding, 0, 0, 0);
@@ -6139,9 +6142,6 @@ compositorManageScreen (ScreenInfo *screen_info)
     }
 #endif /* HAVE_OVERLAYS */
     DBG ("Window used for output: 0x%lx (%s)", screen_info->output, display_info->have_overlays ? "overlay" : "root");
-
-    XCompositeRedirectSubwindows (display_info->dpy, screen_info->xroot, CompositeRedirectManual);
-    screen_info->compositor_active = TRUE;
 
     /*
      * The format of the window we draw into, which is laid out like the screen
@@ -6245,6 +6245,25 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_EPOXY */
 
     setup_presentation (screen_info);
+
+    /*
+     * The point of no return, and it is here on purpose. From the redirect on,
+     * the screen shows what this compositor paints and nothing else; and the
+     * overlay above covers the screen whether anything paints it or not. Doing
+     * either of them before the renderer exists means the desktop is blank for
+     * as long as the graphics stack takes to start - and stays blank, with no
+     * way back, if it fails or hangs in there. Everything above this line
+     * leaves the session as it was.
+     */
+#if HAVE_OVERLAYS
+    if (display_info->have_overlays && screen_info->overlay != None)
+    {
+        XMapRaised (display_info->dpy, screen_info->overlay);
+    }
+#endif /* HAVE_OVERLAYS */
+    XCompositeRedirectSubwindows (display_info->dpy, screen_info->xroot,
+                                  CompositeRedirectManual);
+    screen_info->compositor_active = TRUE;
 
     /* The renderer and the presentation are both settled by now */
     set_render_backend_property (screen_info);
