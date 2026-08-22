@@ -115,6 +115,19 @@ only:
 Two more values exist, `glx` and `xpresent`, but with the OpenGL renderer both
 behave like `auto`. They only differ after falling back to XRender.
 
+## Other changes to xfwm4
+
+Small fixes outside the OpenGL renderer, in the window manager itself:
+
+* a window keeps its border while it is resized, instead of losing an edge for
+  a moment on every step
+* a window that is resized and moved at the same time, by dragging a corner,
+  no longer appears to jump and come back
+* a shrinking window leaves no stale strip behind along the edge it gave up
+* the buttons in the title bar light up under the pointer on a window that is
+  not focused, and are redrawn only when they really change
+* `--vblank` on the command line, and the `adaptive` value that goes with it
+
 ## Requirements
 
 No new build dependency. `xfwm4` already builds against `libepoxy` for vsync
