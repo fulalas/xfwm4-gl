@@ -648,6 +648,8 @@ clientConfigureWindows (Client *c, unsigned long mask, unsigned short flags)
     XWindowChanges change_values;
     DisplayInfo *display_info;
     ScreenInfo *screen_info;
+    gboolean growing, redraw;
+    gint pass;
 
     screen_info = c->screen_info;
     display_info = screen_info->display_info;
@@ -655,35 +657,83 @@ clientConfigureWindows (Client *c, unsigned long mask, unsigned short flags)
     change_mask_frame = mask & (CWX | CWY | CWWidth | CWHeight);
     change_mask_client = mask & (CWWidth | CWHeight);
 
-    if ((mask & (CWWidth | CWHeight)) || (flags & CFG_FORCE_REDRAW))
-    {
-        frameDraw (c, (flags & CFG_FORCE_REDRAW));
-    }
-
     if (flags & CFG_FORCE_REDRAW)
     {
         change_mask_client |= (CWX | CWY);
     }
 
-    myDisplayErrorTrapPush (display_info);
-    if (change_mask_frame & (CWX | CWY | CWWidth | CWHeight))
+    redraw = ((mask & (CWWidth | CWHeight)) || (flags & CFG_FORCE_REDRAW));
+    growing = (c->width > c->applied_geometry.width) ||
+              (c->height > c->applied_geometry.height);
+
+    /*
+     * The border and the title are windows of their own, living inside the
+     * frame, and drawing the frame puts them where the new size wants them.
+     * That cannot be done before the frame itself moves and resizes: the new
+     * places are measured from a frame edge that is not there yet, so the
+     * border either lands outside the frame and is clipped away, or lands at
+     * the right offset from the wrong origin and is seen to jump. It is done
+     * after the geometry below, and the strip it is a moment late for is
+     * covered by the frame's own background, which carries the border's own
+     * pattern. See frameDrawWin().
+     */
+
+    /*
+     * The frame and the client inside it are two windows and take two
+     * requests, so between them the screen holds one of the two sizes with the
+     * other still to come. Which one goes first decides whether that shows.
+     *
+     * The one that is about to be the bigger goes first, so that the strip
+     * they disagree over is always covered by something that belongs there.
+     * Growing, the client leads: its extra pixels are clipped by the frame
+     * that has not grown yet, and when the frame does grow, the client is
+     * already filling it. Shrinking, the frame leads: it closes over the
+     * client's extra pixels, which the client then gives up. The border can
+     * never be lost either way, because the decoration is stacked above the
+     * client - see clientFrame().
+     */
+    /*
+     * The frame keeps the border's tile as its background, so the strip it
+     * gains for the one moment before the border window is moved into it looks
+     * like the border rather than like whatever was on the screen. It has to
+     * be in place before the frame changes size. See frameSetBackground().
+     */
+    if (redraw)
     {
-        change_values.x = frameX (c);
-        change_values.y = frameY (c);
-        change_values.width = frameWidth (c);
-        change_values.height = frameHeight (c);
-        XConfigureWindow (display_info->dpy, c->frame, change_mask_frame, &change_values);
+        frameSetBackground (c);
     }
 
-    if (change_mask_client & (CWX | CWY | CWWidth | CWHeight))
+    myDisplayErrorTrapPush (display_info);
+    for (pass = 0; pass < 2; pass++)
     {
-        change_values.x = frameLeft (c);
-        change_values.y = frameTop (c);
-        change_values.width = c->width;
-        change_values.height = c->height;
-        XConfigureWindow (display_info->dpy, c->window, change_mask_client, &change_values);
+        if ((pass == 0) == growing)
+        {
+            if (change_mask_client & (CWX | CWY | CWWidth | CWHeight))
+            {
+                change_values.x = frameLeft (c);
+                change_values.y = frameTop (c);
+                change_values.width = c->width;
+                change_values.height = c->height;
+                XConfigureWindow (display_info->dpy, c->window,
+                                  change_mask_client, &change_values);
+            }
+        }
+        else if (change_mask_frame & (CWX | CWY | CWWidth | CWHeight))
+        {
+            change_values.x = frameX (c);
+            change_values.y = frameY (c);
+            change_values.width = frameWidth (c);
+            change_values.height = frameHeight (c);
+            XConfigureWindow (display_info->dpy, c->frame,
+                              change_mask_frame, &change_values);
+        }
     }
     myDisplayErrorTrapPopIgnored (display_info);
+
+    if (redraw)
+    {
+        frameDraw (c, (flags & CFG_FORCE_REDRAW));
+    }
 }
 
 void
@@ -1884,7 +1934,17 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     valuemask = CWEventMask|CWBitGravity|CWWinGravity;
     attributes.event_mask = (FRAME_EVENT_MASK | POINTER_EVENT_MASK);
     attributes.win_gravity = StaticGravity;
-    attributes.bit_gravity = StaticGravity;
+    /*
+     * The frame's own pixels stay with the frame, not with the screen. The two
+     * are the same thing whenever the frame only changes size, and they differ
+     * when a step moves it as well - dragging the top left corner does that
+     * every frame. Static gravity then leaves the pixels where they were on
+     * the screen while the frame has moved off them, so everything the frame
+     * holds, border and bottom edge included, is seen displaced by that step
+     * until each piece has repainted itself. That is a whole window jumping
+     * back and forth for a frame at a time, all through such a resize.
+     */
+    attributes.bit_gravity = NorthWestGravity;
 
 #ifdef HAVE_RENDER
     if ((attr.depth == 32) && (display_info->have_render))
@@ -1984,6 +2044,16 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
         &c->sides[SIDE_TOP], NoEventMask,
         myDisplayGetCursorResize(screen_info->display_info, CORNER_COUNT + SIDE_TOP));
 
+    /*
+     * The pieces along the right and bottom edges are pinned to those edges,
+     * so a resize of the frame takes them with it. See xfwmWindowSetGravity().
+     */
+    xfwmWindowSetGravity (&c->sides[SIDE_RIGHT], NorthEastGravity);
+    xfwmWindowSetGravity (&c->sides[SIDE_BOTTOM], SouthWestGravity);
+    xfwmWindowSetGravity (&c->corners[CORNER_TOP_RIGHT], NorthEastGravity);
+    xfwmWindowSetGravity (&c->corners[CORNER_BOTTOM_LEFT], SouthWestGravity);
+    xfwmWindowSetGravity (&c->corners[CORNER_BOTTOM_RIGHT], SouthEastGravity);
+
     for (i = 0; i < BUTTON_COUNT; i++)
     {
         xfwmWindowCreate (screen_info, c->visual, c->depth, c->frame,
@@ -1994,6 +2064,35 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     /* Put the window on top to avoid XShape, that speeds up hw accelerated
        GL apps dramatically */
     XRaiseWindow (display_info->dpy, c->window);
+
+    /*
+     * ...and then the decoration above it again, keeping the order the pieces
+     * were created in. A resize takes two requests, the frame's and the
+     * client's, and for the moment between them one of the two is the wrong
+     * size. With the client on top, a client that is briefly too big paints
+     * over the border and the border is gone for that frame; with the border
+     * on top, whichever of the two is briefly wrong is hidden behind the piece
+     * that is already where it belongs, and nothing is seen at all. The
+     * pieces only ever cover the border and the title, never the client's own
+     * area, so nothing changes once the resize has settled.
+     */
+    for (i = 0; i < SIDE_COUNT; i++)
+    {
+        if (i != SIDE_TOP)
+        {
+            xfwmWindowRaise (&c->sides[i]);
+        }
+    }
+    for (i = 0; i < CORNER_COUNT; i++)
+    {
+        xfwmWindowRaise (&c->corners[i]);
+    }
+    xfwmWindowRaise (&c->title);
+    xfwmWindowRaise (&c->sides[SIDE_TOP]);
+    for (i = 0; i < BUTTON_COUNT; i++)
+    {
+        xfwmWindowRaise (&c->buttons[i]);
+    }
 
     TRACE ("now calling configure for the new window \"%s\" (0x%lx)", c->name, c->window);
     clientReconfigure (c, CFG_NOTIFY | CFG_FORCE_REDRAW);

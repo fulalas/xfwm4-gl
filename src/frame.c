@@ -764,6 +764,45 @@ frameGetState (Client * c)
     return INACTIVE;
 }
 
+/*
+ * The frame's own background, under everything the frame holds. It is only
+ * ever seen in the strip a resize has just given the frame, in the moment
+ * before the border window that covers that strip is moved into it: with no
+ * background the strip keeps whatever the screen had there, which reads as the
+ * border blinking out on every step of a resize. Wearing the border's own tile
+ * it looks like the border that is about to arrive. Set before the frame
+ * changes size, see clientConfigureWindows().
+ */
+void
+frameSetBackground (Client * c)
+{
+    ScreenInfo *screen_info;
+    DisplayInfo *display_info;
+    xfwmPixmap *tile;
+    gint state;
+
+    g_return_if_fail (c != NULL);
+
+    screen_info = c->screen_info;
+    display_info = screen_info->display_info;
+
+    if (!CLIENT_HAS_FRAME (c) || (c->depth != screen_info->depth))
+    {
+        return;
+    }
+
+    state = frameGetState (c);
+    tile = &screen_info->sides[SIDE_RIGHT][state];
+    if (xfwmPixmapNone (tile))
+    {
+        return;
+    }
+
+    myDisplayErrorTrapPush (display_info);
+    XSetWindowBackgroundPixmap (display_info->dpy, c->frame, tile->pixmap);
+    myDisplayErrorTrapPopIgnored (display_info);
+}
+
 static void
 frameDrawWin (Client * c)
 {

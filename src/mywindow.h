@@ -85,6 +85,9 @@ void                     xfwmWindowShow                         (xfwmWindow *,
 void                     xfwmWindowHide                         (xfwmWindow *);
 gboolean                 xfwmWindowVisible                      (xfwmWindow *);
 gboolean                 xfwmWindowDeleted                      (xfwmWindow *);
+void                     xfwmWindowRaise                 (xfwmWindow *);
+void                     xfwmWindowSetGravity            (xfwmWindow *,
+                                                          gint);
 void                     xfwmWindowSetBG                        (xfwmWindow *,
                                                                  xfwmPixmap *);
 

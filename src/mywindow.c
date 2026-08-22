@@ -153,6 +153,38 @@ xfwmWindowDelete (xfwmWindow * win)
     win->map = FALSE;
 }
 
+/* Put one piece of the frame above whatever else the frame holds */
+void
+xfwmWindowRaise (xfwmWindow * win)
+{
+    if (win->window == None)
+    {
+        return;
+    }
+
+    XRaiseWindow (myScreenGetXDisplay (win->screen_info), win->window);
+}
+
+/*
+ * Pin a piece of the frame to an edge of it, so the server carries the piece
+ * along in the same operation that resizes the frame instead of the piece
+ * waiting to be moved by the next frame drawing, a request later.
+ */
+void
+xfwmWindowSetGravity (xfwmWindow * win, gint gravity)
+{
+    XSetWindowAttributes attributes;
+
+    if (win->window == None)
+    {
+        return;
+    }
+
+    attributes.win_gravity = gravity;
+    XChangeWindowAttributes (myScreenGetXDisplay (win->screen_info),
+                             win->window, CWWinGravity, &attributes);
+}
+
 void
 xfwmWindowShow (xfwmWindow * win, int x, int y, int width, int height,
     gboolean refresh)

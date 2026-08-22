@@ -62,6 +62,7 @@ void                     frameSetShapeInput                     (Client *);
 void                     frameClearQueueDraw                    (Client *);
 void                     frameQueueDraw                         (Client *,
                                                                  gboolean);
+void                     frameSetBackground              (Client *);
 void                     frameDraw                              (Client *,
                                                                  gboolean);
 

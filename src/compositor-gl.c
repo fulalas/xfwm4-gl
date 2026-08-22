@@ -343,15 +343,6 @@ static const gchar *fragment_shadow_profile =
  * every frame is the most expensive thing a compositor can do. The shape of a
  * window only changes when the window does, so it is worked out once and kept.
  */
-/*
- * How big a window is drawn this frame, and where that reaches on the screen.
- * Normally the window's own size; during a resize the pixmap behind it can
- * still be the old one, and nothing can be drawn from pixels that do not
- * exist yet. See window_painted_size().
- */
-static void
-window_painted_size (CWindow *cw, gint *width, gint *height);
-
 /* The whole window as the X server sees it, border included */
 static void
 get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
@@ -466,6 +457,8 @@ window_shape (CWindow *cw)
 
         if (rects != NULL || answered)
         {
+            cairo_rectangle_int_t drawn;
+
             cw->gl_shape = region_from_rects (rects, nrects,
                                               cw->attr.x + cw->attr.border_width,
                                               cw->attr.y + cw->attr.border_width);
@@ -473,6 +466,11 @@ window_shape (CWindow *cw)
             {
                 XFree (rects);
             }
+            /* No further than the window is drawn, see below */
+            drawn.x = cw->attr.x;
+            drawn.y = cw->attr.y;
+            window_painted_size (cw, &drawn.width, &drawn.height);
+            cairo_region_intersect_rectangle (cw->gl_shape, &drawn);
 
             return cw->gl_shape;
         }
@@ -481,9 +479,19 @@ window_shape (CWindow *cw)
     {
         cairo_rectangle_int_t r;
 
+        /*
+         * What the window covers is what it is drawn at, which is not always
+         * what it measures: during a resize the pixmap behind it can still be
+         * the old one and the drawing stops where the pixmap does. This region
+         * is also what the window claims out of the area left to paint, and a
+         * claim wider than the drawing leaves the difference to whatever the
+         * back buffer held - with the buffer age, a frame or three old. It
+         * shows while a window shrinks, where the pixmap is the larger of the
+         * two. See window_painted_size().
+         */
         r.x = cw->attr.x;
         r.y = cw->attr.y;
-        get_window_pixmap_size (cw, &r.width, &r.height);
+        window_painted_size (cw, &r.width, &r.height);
         cw->gl_shape = cairo_region_create_rectangle (&r);
     }
 
