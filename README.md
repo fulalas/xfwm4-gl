@@ -157,7 +157,8 @@ At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and the
 ability to hand windows over as textures. Every driver of the last 15 years or
 so has all three.
 
-VirtualBox and QEMU work as long as 3D acceleration is on.
+VirtualBox and QEMU can use the OpenGL renderer as long as they have their
+3D acceleration on.
 
 ## License
 
