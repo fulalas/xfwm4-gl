@@ -133,6 +133,8 @@ What you can see:
   and video get the screen to themselves
 * the whole screen is drawn once when compositing starts, so nothing stale is
   left on it, and switching compositing off no longer risks a crash
+* a hover image for buttons on windows that are not focused, a new
+  `inactive-prelight` state
 
 What you can set:
 
@@ -144,13 +146,6 @@ What you can set:
 * which renderer and which vsync mode are in use are published as
   `_XFWM4_RENDER_BACKEND` and `_XFWM4_VSYNC` on the root window, so any tool
   can read them
-
-What you can theme:
-
-* a hover image for buttons on windows that are not focused, a new
-  `inactive-prelight` state
-
-The version says `4.20.0-gl1`, so it is clear which build is running.
 
 ## Requirements
 
