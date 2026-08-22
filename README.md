@@ -117,7 +117,10 @@ behave like `auto`. They only differ after falling back to XRender.
 
 ## Other changes to xfwm4
 
-Small fixes outside the OpenGL renderer, in the window manager itself:
+Everything this fork changes outside the OpenGL renderer, compared with
+[xfwm4](https://gitlab.xfce.org/xfce/xfwm4/) 4.20.0.
+
+What you can see:
 
 * a window keeps its border while it is resized, instead of losing an edge for
   a moment on every step
@@ -126,7 +129,19 @@ Small fixes outside the OpenGL renderer, in the window manager itself:
 * a shrinking window leaves no stale strip behind along the edge it gave up
 * the buttons in the title bar light up under the pointer on a window that is
   not focused, and are redrawn only when they really change
-* `--vblank` on the command line, and the `adaptive` value that goes with it
+* compositing switches itself off while a fullscreen window has focus, so games
+  and video get the screen to themselves
+
+What you can set:
+
+* two new boxes in Window Manager Tweaks, under Compositor: one turns the
+  OpenGL renderer on and off, one turns off the fullscreen behaviour above.
+  The dialog also says which renderer is running right now
+* `--vblank` on the command line, and its new `adaptive` value
+* both new settings are on by default
+
+The version says `4.20.0-gl1`, so it is clear which build is running. A few
+fixes from xfwm4's own repository that came after 4.20.0 are included as well.
 
 ## Requirements
 
