@@ -131,6 +131,8 @@ What you can see:
   not focused, and are redrawn only when they really change
 * compositing switches itself off while a fullscreen window has focus, so games
   and video get the screen to themselves
+* the whole screen is drawn once when compositing starts, so nothing stale is
+  left on it, and switching compositing off no longer risks a crash
 
 What you can set:
 
@@ -139,17 +141,16 @@ What you can set:
   The dialog also says which renderer is running right now
 * `--vblank` on the command line, and its new `adaptive` value
 * both new settings are on by default
+* which renderer and which vsync mode are in use are published as
+  `_XFWM4_RENDER_BACKEND` and `_XFWM4_VSYNC` on the root window, so any tool
+  can read them
 
-For theme and tool authors:
+What you can theme:
 
-* themes can ship a hover image for buttons on unfocused windows, a new
+* a hover image for buttons on windows that are not focused, a new
   `inactive-prelight` state
-* the window manager publishes which renderer and which vsync mode it is using,
-  as `_XFWM4_RENDER_BACKEND` and `_XFWM4_VSYNC` on the root window, and updates
-  them as they change
 
-The version says `4.20.0-gl1`, so it is clear which build is running. A few
-fixes from xfwm4's own repository that came after 4.20.0 are included as well.
+The version says `4.20.0-gl1`, so it is clear which build is running.
 
 ## Requirements
 
