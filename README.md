@@ -140,6 +140,14 @@ What you can set:
 * `--vblank` on the command line, and its new `adaptive` value
 * both new settings are on by default
 
+For theme and tool authors:
+
+* themes can ship a hover image for buttons on unfocused windows, a new
+  `inactive-prelight` state
+* the window manager publishes which renderer and which vsync mode it is using,
+  as `_XFWM4_RENDER_BACKEND` and `_XFWM4_VSYNC` on the root window, and updates
+  them as they change
+
 The version says `4.20.0-gl1`, so it is clear which build is running. A few
 fixes from xfwm4's own repository that came after 4.20.0 are included as well.
 
