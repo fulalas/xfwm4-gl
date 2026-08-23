@@ -13,9 +13,9 @@ with load, up to **25%** with eight windows drawing flat out.
 
 | Driver | Renderer | FPS | CPU (ms/s) | CPU (W) | GPU (W) |
 | --- | --- | --- | --- | --- | --- |
-| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 (CPU+GPU) |
-| | XRender | 161.6 | 11.2 | 21.0 (CPU+GPU) |
-| | OpenGL | 174.2 | 13.2 | 20.2 (CPU+GPU) |
+| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 | included |
+| | XRender | 161.6 | 11.2 | 21.0 | included |
+| | OpenGL | 174.2 | 13.2 | 20.2 | included |
 | NVIDIA proprietary | no compositor | 166.3 | - | 4.0 | 37.2 |
 | | XRender | 160.9 | 17.5 | 5.8 | 43.0 |
 | | OpenGL | 158.6 | 16.2 | 4.7 | 43.2 |
@@ -24,7 +24,9 @@ with load, up to **25%** with eight windows drawing flat out.
 | | OpenGL | 149.1 | 22.5 | 14.8 | N/A |
 
 FPS is measured in a windowed benchmark running as fast as it can; CPU and
-power are measured while the same benchmark is locked at 60 fps.
+power are measured while the same benchmark is locked at 60 fps. The AMD
+machine has the graphics inside the processor, so its one power figure covers
+both.
 
 ## Features
 
