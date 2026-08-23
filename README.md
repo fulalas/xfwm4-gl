@@ -27,7 +27,9 @@ with load, up to **25%** with eight windows drawing flat out.
 FPS is measured in a windowed benchmark running as fast as it can; CPU and
 power are measured while the same benchmark is locked at 60 fps. The AMD
 machine has the graphics inside the processor, so its one power figure covers
-both.
+both. The numbers come from [wmbench](https://github.com/fulalas/wmbench),
+which measures any window manager, so they can be reproduced or compared with
+another desktop.
 
 ## Features
 
