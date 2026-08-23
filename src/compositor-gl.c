@@ -2242,16 +2242,20 @@ bind_window_texture (CWindow *cw)
     }
 
     /*
-     * The two backends need very different amounts of work here. An EGL image
-     * shares the pixmap's storage, so what the window draws is visible through
-     * the texture without doing anything: the image only has to be targeted
-     * when the pixmap itself is new. The ordering against the server that the
-     * shared storage does not give is one eglWaitNative() per frame, in
-     * xfwmGLPaintAll(). A GLX texture only guarantees fresh content across a
-     * release and re-bind, so that pair runs whenever the window has actually
-     * drawn something, which is what repair_win() records; a window repainted
-     * merely because a neighbour changed still holds what it held at the last
-     * bind.
+     * Both backends have to say when the window has drawn, and both say it the
+     * same way: whenever repair_win() marked the content dirty. An EGL image
+     * does share the pixmap's storage, but sharing storage is not the same as
+     * sharing what the GPU has already read out of it: once the server writes
+     * to the pixmap the texture built on that image holds undefined pixels
+     * until the image is targeted again, and drivers really do keep the old
+     * ones, in tile sized blocks, which is what the report of stale toolbar
+     * highlights on Mesa was. Targeting again is cheap and only happens for
+     * windows that drew. The ordering against the server that the shared
+     * storage does not give is one eglWaitNative() per frame, in
+     * xfwmGLPaintAll(). A GLX texture guarantees fresh content only across a
+     * release and re-bind, so that pair runs on the same condition. A window
+     * repainted merely because a neighbour changed does neither, and keeps
+     * what it held at the last bind.
      */
     if (!cw->gl_texture_bound || cw->gl_content_dirty)
     {
@@ -2259,10 +2263,7 @@ bind_window_texture (CWindow *cw)
 
         if (screen_info->use_egl_backend)
         {
-            if (!cw->gl_texture_bound)
-            {
-                glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, cw->egl_image);
-            }
+            glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, cw->egl_image);
         }
         else
         {
@@ -2282,11 +2283,11 @@ bind_window_texture (CWindow *cw)
         }
 
         /*
-         * Only the first bind of a GLX pixmap needs it: the storage is handed
-         * out once, and every later bind of the same one gets what the server
-         * has already finished with. A window is given a new pixmap on every
-         * resize, so this is once a frame while one is being resized, and never
-         * for a window that is only moving or redrawing.
+         * Only the first bind of a pixmap needs it, on either backend: the
+         * storage is handed out once, and every later bind of the same one gets
+         * what the server has already finished with. A window is given a new
+         * pixmap on every resize, so this is once a frame while one is being
+         * resized, and never for a window that is only moving or redrawing.
          */
         if (new_pixmap && data->wait_new_pixmap)
         {
