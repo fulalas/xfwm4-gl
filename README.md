@@ -11,17 +11,18 @@ Compared to XRender it uses **about a third less power** for the same work and
 provides **about 10% more frames per second** to applications. The gap grows
 with load, up to **25%** with eight windows drawing flat out.
 
-| Driver | Renderer | FPS | CPU (ms/s) | CPU (W) | GPU (W) |
-| --- | --- | --- | --- | --- | --- |
-| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 | included |
-| | XRender | 161.6 | 11.2 | 21.0 | included |
-| | OpenGL | 174.2 | 13.2 | 20.2 | included |
-| NVIDIA proprietary | no compositor | 166.3 | - | 4.0 | 37.2 |
-| | XRender | 160.9 | 17.5 | 5.8 | 43.0 |
-| | OpenGL | 158.6 | 16.2 | 4.7 | 43.2 |
-| NVIDIA Mesa (zink) | no compositor | 149.6 | - | 6.8 | N/A |
-| | XRender | 149.1 | 23.5 | 14.8 | N/A |
-| | OpenGL | 149.1 | 22.5 | 14.8 | N/A |
+<table>
+<tr><th>Driver</th><th>Renderer</th><th>FPS</th><th>CPU (ms/s)</th><th>CPU (W)</th><th>GPU (W)</th></tr>
+<tr><td rowspan="3">AMD (Mesa radeonsi)</td><td>no compositor</td><td>180.5</td><td>-</td><td colspan="2" align="center">18.9</td></tr>
+<tr><td>XRender</td><td>161.6</td><td>11.2</td><td colspan="2" align="center">21.0</td></tr>
+<tr><td>OpenGL</td><td>174.2</td><td>13.2</td><td colspan="2" align="center">20.2</td></tr>
+<tr><td rowspan="3">NVIDIA proprietary</td><td>no compositor</td><td>166.3</td><td>-</td><td>4.0</td><td>37.2</td></tr>
+<tr><td>XRender</td><td>160.9</td><td>17.5</td><td>5.8</td><td>43.0</td></tr>
+<tr><td>OpenGL</td><td>158.6</td><td>16.2</td><td>4.7</td><td>43.2</td></tr>
+<tr><td rowspan="3">NVIDIA Mesa (zink)</td><td>no compositor</td><td>149.6</td><td>-</td><td>6.8</td><td>N/A</td></tr>
+<tr><td>XRender</td><td>149.1</td><td>23.5</td><td>14.8</td><td>N/A</td></tr>
+<tr><td>OpenGL</td><td>149.1</td><td>22.5</td><td>14.8</td><td>N/A</td></tr>
+</table>
 
 FPS is measured in a windowed benchmark running as fast as it can; CPU and
 power are measured while the same benchmark is locked at 60 fps. The AMD
