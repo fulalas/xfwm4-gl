@@ -49,7 +49,7 @@ moment costs no extra lag. See [Settings](#settings).
 
 To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
 
-<img src="https://github.com/user-attachments/assets/65d1a24a-5ed6-4682-97f4-a0bc43e528cb" />
+<img src="https://github.com/user-attachments/assets/1f2c71c2-1027-4006-b626-6dea17beae0f" />
 
 * **Use OpenGL for compositing (default on)** — enables the OpenGL renderer;
   XRender is used if it cannot start.
