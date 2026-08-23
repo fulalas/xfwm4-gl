@@ -48,6 +48,7 @@
 gboolean                 clientCreateXSyncAlarm                 (Client *);
 void                     clientDestroyXSyncAlarm                (Client *);
 gboolean                 clientGetXSyncCounter                  (Client *);
+void                     clientXSyncEnable                      (Client *);
 void                     clientXSyncClearTimeout                (Client *);
 void                     clientXSyncRequest                     (Client *);
 void                     clientXSyncUpdateValue                 (Client *,

@@ -1288,7 +1288,7 @@ clientWindowType (Client * c)
             {
                 TRACE ("invalid transient 0x%lx specified for dialog window 0x%lx (%s)",
                        c->transient_for, c->window, c->name);
-                c->transient_for = c->screen_info->xroot;
+                clientSetTransientFor (c, c->screen_info->xroot);
             }
             else
             {
@@ -1313,7 +1313,7 @@ clientWindowType (Client * c)
             {
                 TRACE ("invalid transient 0x%lx specified for utility window 0x%lx (%s)",
                        c->transient_for, c->window, c->name);
-                c->transient_for = c->screen_info->xroot;
+                clientSetTransientFor (c, c->screen_info->xroot);
             }
         }
         else if (c->type_atom == display_info->atoms[NET_WM_WINDOW_TYPE_SPLASH])
@@ -1333,7 +1333,7 @@ clientWindowType (Client * c)
              */
             if ((c->transient_for == None) || (!clientGetTransient (c)))
             {
-                c->transient_for = c->screen_info->xroot;
+                clientSetTransientFor (c, c->screen_info->xroot);
             }
         }
         else if (c->type_atom == display_info->atoms[NET_WM_WINDOW_TYPE_NOTIFICATION])

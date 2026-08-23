@@ -212,6 +212,7 @@ myDisplayInit (GdkDisplay *gdisplay)
     display->session = NULL;
     display->quit = FALSE;
     display->reload = FALSE;
+    display->window_table = g_hash_table_new (g_direct_hash, g_direct_equal);
 
     /* Initialize internal atoms */
     if (!myDisplayInitAtoms (display))
@@ -379,6 +380,12 @@ myDisplayClose (DisplayInfo *display)
     g_slist_free (display->clients);
     display->clients = NULL;
 
+    if (display->window_table)
+    {
+        g_hash_table_destroy (display->window_table);
+        display->window_table = NULL;
+    }
+
     g_slist_free (display->screens);
     display->screens = NULL;
 
@@ -532,6 +539,8 @@ myDisplayAddClient (DisplayInfo *display, Client *c)
     g_return_if_fail (display != NULL);
 
     display->clients = g_slist_append (display->clients, c);
+    g_hash_table_insert (display->window_table, (gpointer) c->window, c);
+    g_hash_table_insert (display->window_table, (gpointer) c->frame, c);
 }
 
 void
@@ -541,19 +550,40 @@ myDisplayRemoveClient (DisplayInfo *display, Client *c)
     g_return_if_fail (display != NULL);
 
     display->clients = g_slist_remove (display->clients, c);
+    g_hash_table_remove (display->window_table, (gpointer) c->window);
+    g_hash_table_remove (display->window_table, (gpointer) c->frame);
 }
 
 Client *
 myDisplayGetClientFromWindow (DisplayInfo *display, Window w, unsigned short mode)
 {
     GSList *list;
+    Client *c;
 
     g_return_val_if_fail (w != None, NULL);
     g_return_val_if_fail (display != NULL, NULL);
 
+    if (mode & (SEARCH_WINDOW | SEARCH_FRAME))
+    {
+        c = g_hash_table_lookup (display->window_table, (gpointer) w);
+        if (c && clientGetFromWindow (c, w, mode))
+        {
+            return (c);
+        }
+        /* The table holds every client and frame window, so not finding it
+           there is the answer, unless we are also looking for something
+           else: buttons and the user time window are not in the table.
+         */
+        if (!(mode & ~(SEARCH_WINDOW | SEARCH_FRAME)))
+        {
+            TRACE ("no client found");
+            return NULL;
+        }
+    }
+
     for (list = display->clients; list; list = g_slist_next (list))
     {
-        Client *c = (Client *) list->data;
+        c = (Client *) list->data;
         if (clientGetFromWindow (c, w, mode))
         {
             return (c);

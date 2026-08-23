@@ -1686,6 +1686,7 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     gboolean shaped;
     gchar *wm_name;
     unsigned long valuemask;
+    Window transient_for;
     int i;
 
     g_return_val_if_fail (w != None, NULL);
@@ -1741,7 +1742,8 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     c->name = clientCreateTitleName (c, wm_name, c->hostname);
     g_free (wm_name);
 
-    getTransientFor (display_info, screen_info->xroot, c->window, &c->transient_for);
+    getTransientFor (display_info, screen_info->xroot, c->window, &transient_for);
+    clientSetTransientFor (c, transient_for);
     XChangeSaveSet(display_info->dpy, c->window, SetModeInsert);
 
     /* Initialize structure */

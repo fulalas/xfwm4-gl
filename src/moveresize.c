@@ -1797,6 +1797,15 @@ clientResize (Client * c, int handle, XfwmEventButton *event)
     FLAG_UNSET (c->xfwm_flags, XFWM_FLAG_SAVED_POS);
 
     FLAG_SET (c->xfwm_flags, XFWM_FLAG_MOVING_RESIZING);
+
+#ifdef HAVE_XSYNC
+    /* A client dropped for being slow last time starts this resize with
+       another chance, so one slow frame does not cost it its resize sync
+       for as long as it lives
+     */
+    clientXSyncEnable (c);
+#endif /* HAVE_XSYNC */
+
     TRACE ("entering resize loop");
     eventFilterPush (display_info->xfilter, clientResizeEventFilter, &passdata);
     gtk_main ();
@@ -1807,6 +1816,14 @@ clientResize (Client * c, int handle, XfwmEventButton *event)
         goto resize_cleanup;
     }
     FLAG_UNSET (c->xfwm_flags, XFWM_FLAG_MOVING_RESIZING);
+
+#ifdef HAVE_XSYNC
+    /* The resize is over, so there is no frame left to wait for. Dropping
+       the timeout here keeps a client that simply had nothing more to draw
+       from being reported late and losing its resize sync for good.
+     */
+    clientXSyncClearTimeout (c);
+#endif /* HAVE_XSYNC */
 
     if (passdata.grab && screen_info->params->box_resize)
     {

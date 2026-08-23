@@ -131,6 +131,20 @@ Fixes:
 * title bar buttons are redrawn only when they really change
 * the whole screen is drawn once when compositing starts, so nothing stale is
   left on it, and switching compositing off no longer risks a crash
+* resizing a window no longer stops dead for half a second the first time.
+  xfwm4 was asking programs to report their drawing in a way it never answered,
+  so they waited for a reply that never came
+* it now waits a tenth of a second, not half a second, for a program to draw
+  while you resize it, and a program that is slow once keeps smooth resizing
+  afterwards instead of losing it for good
+
+Faster:
+
+* a window and its dialogs are remembered as a family instead of being worked
+  out by going through every window on screen. That happened on every focus,
+  raise, restack, map, unmap and workspace change
+* finding the window an event belongs to is a direct lookup now, not a walk
+  through the whole list
 
 ## Requirements
 

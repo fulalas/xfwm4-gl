@@ -306,6 +306,7 @@ struct _DisplayInfo
     XfwmDevices *devices;
     GSList *screens;
     GSList *clients;
+    GHashTable *window_table; /* client and frame window -> Client */
 
     gboolean have_shape;
     gboolean have_render;

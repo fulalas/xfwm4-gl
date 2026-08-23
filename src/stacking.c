@@ -587,6 +587,7 @@ clientAddToList (Client * c)
     screen_info->windows = g_list_append (screen_info->windows, c);
     screen_info->windows_stack = g_list_append (screen_info->windows_stack, c);
 
+    clientAttachTransients (c);
     clientSetNetClientList (screen_info, display_info->atoms[NET_CLIENT_LIST], screen_info->windows);
 
     FLAG_SET (c->xfwm_flags, XFWM_FLAG_MANAGED);
@@ -606,6 +607,7 @@ clientRemoveFromList (Client * c)
     screen_info = c->screen_info;
     display_info = screen_info->display_info;
     myDisplayRemoveClient (display_info, c);
+    clientDetachTransients (c);
 
     g_assert (screen_info->client_count > 0);
     screen_info->client_count--;

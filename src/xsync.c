@@ -140,17 +140,22 @@ clientGetXSyncCounter (Client * c)
         switch (nitems)
         {
             case 0:
+                c->xsync_counter = None;
                 FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
                 FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
                 break;
-            case 1:
+            default:
+                /*
+                 * Toolkits publish a second counter for the frame protocol,
+                 * where the client draws when told to and we answer each
+                 * frame with _NET_WM_FRAME_DRAWN. We do not send that, and a
+                 * client waiting for it never moves its counter, so we would
+                 * stall the resize until the timeout gives up on it. Use the
+                 * first counter and the plain handshake, which is answered as
+                 * soon as the client has drawn.
+                 */
                 c->xsync_counter = (XSyncCounter) data[0];
                 FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
-                FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
-                break;
-            default:
-                c->xsync_counter = (XSyncCounter) data[1];
-                FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
                 FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
                 break;
         }
@@ -162,6 +167,20 @@ clientGetXSyncCounter (Client * c)
     }
 
     return FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+}
+
+/* Let a client that was dropped for being slow sync again */
+void
+clientXSyncEnable (Client * c)
+{
+    g_return_if_fail (c != NULL);
+
+    TRACE ("client \"%s\" (0x%lx)", c->name, c->window);
+
+    if ((c->xsync_counter != None) && (c->xsync_alarm != None))
+    {
+        FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+    }
 }
 
 void
@@ -189,10 +208,16 @@ clientXSyncTimeout (gpointer data)
     c = (Client *) data;
     if (c)
     {
-        g_warning ("XSync timeout for client \"%s\" (0x%lx)", c->name, c->window);
+        /* A client too slow to draw one frame is not an error worth
+           reporting, we just carry on resizing without it
+         */
+        DBG ("client \"%s\" (0x%lx) did not draw in time, dropping its resize sync",
+             c->name, c->window);
         clientXSyncClearTimeout (c);
 
-        /* Disable XSync for this client */
+        /* Stop waiting for this client until it is resized again, see
+           clientXSyncEnable()
+         */
         FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
     }
     return FALSE;

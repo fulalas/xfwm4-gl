@@ -615,17 +615,15 @@ Client *
 myScreenGetClientFromWindow (ScreenInfo *screen_info, Window w, unsigned short mode)
 {
     Client *c;
-    guint i;
 
     g_return_val_if_fail (w != None, NULL);
     TRACE ("looking for (0x%lx)", w);
 
-    for (c = screen_info->clients, i = 0; i < screen_info->client_count; c = c->next, i++)
+    /* The display looks it up, we only keep it if it is ours */
+    c = myDisplayGetClientFromWindow (screen_info->display_info, w, mode);
+    if ((c != NULL) && (c->screen_info == screen_info))
     {
-        if (clientGetFromWindow (c, w, mode))
-        {
-            return (c);
-        }
+        return (c);
     }
     TRACE ("no client found");
 

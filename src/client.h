@@ -98,7 +98,13 @@
 #endif
 
 #ifndef CLIENT_XSYNC_TIMEOUT
-#define CLIENT_XSYNC_TIMEOUT            500  /* ms */
+/*
+ * How long a resize waits for the client to draw the frame it was asked
+ * for. Past this we stop waiting for it, so it has to stay short enough
+ * that a slow client cannot make the drag feel stuck: 100ms is already
+ * six frames at 60Hz.
+ */
+#define CLIENT_XSYNC_TIMEOUT            100  /* ms */
 #endif
 
 #ifndef CLIENT_BLINK_TIMEOUT
@@ -300,6 +306,8 @@ struct _Client
     XClassHint class;
     Client *next;
     Client *prev;
+    Client *parent;                  /* client this one is transient for */
+    unsigned long transient_stamp;   /* used to walk the transient tree */
     PropMwmHints *mwm_hints;
     netWindowType type;
     gint x;

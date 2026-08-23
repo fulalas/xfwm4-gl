@@ -1744,11 +1744,11 @@ handlePropertyNotify (DisplayInfo *display_info, XPropertyEvent * ev)
             Window w;
 
             TRACE ("client \"%s\" (0x%lx) has received a WM_TRANSIENT_FOR notify", c->name, c->window);
-            c->transient_for = None;
+            clientSetTransientFor (c, None);
             getTransientFor (display_info, c->screen_info->xroot, c->window, &w);
             if (clientCheckTransientWindow (c, w))
             {
-                c->transient_for = w;
+                clientSetTransientFor (c, w);
             }
             /* Recompute window type as it may have changed */
             clientWindowType (c);

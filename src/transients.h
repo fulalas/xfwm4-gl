@@ -30,6 +30,10 @@
 #include <glib.h>
 #include "client.h"
 
+void                     clientSetTransientFor                  (Client *,
+                                                                 Window);
+void                     clientAttachTransients                 (Client *);
+void                     clientDetachTransients                 (Client *);
 Client                  *clientGetTransient                     (Client *);
 gboolean                 clientIsDirectTransient                (Client *);
 gboolean                 clientIsTransientForGroup              (Client *);
@@ -55,7 +59,6 @@ gboolean                 clientTransientOrModalHasAncestor      (Client *,
                                                                  guint);
 Client                  *clientGetModalFor                      (Client *);
 Client                  *clientGetTransientFor                  (Client *);
-GList                   *clientListTransient                    (Client *);
 GList                   *clientListTransientOrModal             (Client *);
 gboolean                 clientCheckTransientWindow             (Client *,
                                                                  Window);
