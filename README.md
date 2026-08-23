@@ -137,9 +137,6 @@ Fixes:
 * it now waits a tenth of a second, not half a second, for a program to draw
   while you resize it, and a program that is slow once keeps smooth resizing
   afterwards instead of losing it for good
-
-Faster:
-
 * a window and its dialogs are remembered as a family instead of being worked
   out by going through every window on screen. That happened on every focus,
   raise, restack, map, unmap and workspace change
