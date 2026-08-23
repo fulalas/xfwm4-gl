@@ -13,9 +13,9 @@ with load, up to **25%** with eight windows drawing flat out.
 
 | Driver | Renderer | FPS | CPU (ms/s) | CPU (W) | GPU (W) |
 | --- | --- | --- | --- | --- | --- |
-| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 (CPU+GPU) | |
-| | XRender | 161.6 | 11.2 | 21.0 (CPU+GPU) | |
-| | OpenGL | 174.2 | 13.2 | 20.2 (CPU+GPU) | |
+| AMD (Mesa radeonsi) | no compositor | 180.5 | - | 18.9 (CPU+GPU) |
+| | XRender | 161.6 | 11.2 | 21.0 (CPU+GPU) |
+| | OpenGL | 174.2 | 13.2 | 20.2 (CPU+GPU) |
 | NVIDIA proprietary | no compositor | 166.3 | - | 4.0 | 37.2 |
 | | XRender | 160.9 | 17.5 | 5.8 | 43.0 |
 | | OpenGL | 158.6 | 16.2 | 4.7 | 43.2 |
