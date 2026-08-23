@@ -26,15 +26,6 @@ with load, up to **25%** with eight windows drawing flat out.
 FPS is measured in a windowed benchmark running as fast as it can; CPU and
 power are measured while the same benchmark is locked at 60 fps.
 
-## Usage
-
-All files keep the same names and paths as the original, so once installed the
-session loads it automatically.
-
-To try it without installing, replace the running window manager:
-
-    ./path_to_new_build/src/xfwm4 --replace
-
 ## Features
 
 OpenGL compositing is on by default; if the driver cannot do it, XRender is
@@ -68,17 +59,14 @@ To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
   original `xfwm4`; it only gained a tooltip. It covers quite old games and
   players that bypass the window manager without saying anything.
 
-## When it falls back to XRender
+## Usage
 
-The OpenGL path is skipped, quietly and without breaking the session, if:
+All files keep the same names and paths as the original, so once installed the
+session loads it automatically.
 
-* `libepoxy` was missing at build time
-* the driver is a software renderer such as `llvmpipe` or `swrast`
-* the driver is older than OpenGL 2.0, has no frame buffer objects, or cannot
-  hand windows over as textures
-* the graphics context is lost while running, after a driver reset for
-  instance
-* a colour depth the driver cannot hand over
+To try it without installing, replace the running window manager:
+
+    ./path_to_new_build/src/xfwm4 --replace
 
 ## Settings
 
@@ -99,6 +87,18 @@ only:
 
 Two more values exist, `glx` and `xpresent`, but with the OpenGL renderer both
 behave like `auto`. They only differ after falling back to XRender.
+
+## When it falls back to XRender
+
+The OpenGL path is skipped, quietly and without breaking the session, if:
+
+* `libepoxy` was missing at build time
+* the driver is a software renderer such as `llvmpipe` or `swrast`
+* the driver is older than OpenGL 2.0, has no frame buffer objects, or cannot
+  hand windows over as textures
+* the graphics context is lost while running, after a driver reset for
+  instance
+* a colour depth the driver cannot hand over
 
 ## Other changes to xfwm4
 
