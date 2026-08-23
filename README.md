@@ -26,25 +26,6 @@ with load, up to **25%** with eight windows drawing flat out.
 FPS is measured in a windowed benchmark running as fast as it can; CPU and
 power are measured while the same benchmark is locked at 60 fps.
 
-## Why this exists
-
-A compositor takes the picture of every window and combines them into the
-screen. `xfwm4` does that with XRender, an old drawing interface of the X
-server: the screen is built in an off-screen image and then copied out, so
-every frame is drawn twice, and the X server is asked once per window per
-frame what changed.
-
-`xfwm4-gl` hands the windows to the graphics card as textures and draws them
-straight to the screen. That means:
-
-* One less copy of the whole screen per frame.
-* Only the parts that changed are redrawn.
-* The X server is asked once per frame, not once per window.
-* Window shadows are drawn by the graphics card instead of the CPU.
-
-Adaptive vsync can also be picked now, with either renderer. See
-[Settings](#settings).
-
 ## Usage
 
 All files keep the same names and paths as the original, so once installed the
@@ -67,6 +48,10 @@ Only the parts of the screen that changed are painted, then the whole buffer
 is swapped, which the display hardware does for free. `XFWM4_GL_PRESENT` set
 to `copy` or `fbo` picks other ways of getting the frame on screen; they are
 for drivers that behave differently, not for everyday use.
+
+Adaptive vsync can be picked now, with either renderer: frames wait for the
+screen while they can keep up, and stop waiting when they cannot, so a slow
+moment costs no extra lag. See [Settings](#settings).
 
 To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
 
