@@ -221,16 +221,27 @@ update_render_backend_label (GtkWidget *label)
     intern_backend_atoms (dpy);
 
     /*
-     * The window manager puts what it settled on on the root window. Only the
-     * renderer is shown, not the card: xfce4-about already reports the
-     * hardware, and it knows how to enumerate it properly.
+     * The window manager puts what it settled on on the root window: which
+     * renderer, and how it talks to the driver. Not the card - xfce4-about
+     * already reports the hardware and knows how to enumerate it properly.
      */
     backend = read_root_string (dpy, root, render_backend_atom);
     vsync = read_root_string (dpy, root, vsync_atom);
 
     if (backend != NULL)
     {
-        renderer = g_str_has_prefix (backend, "opengl") ? _("OpenGL") : _("XRender");
+        if (!strcmp (backend, "opengl egl"))
+        {
+            renderer = _("OpenGL EGL");
+        }
+        else if (!strcmp (backend, "opengl glx"))
+        {
+            renderer = _("OpenGL GLX");
+        }
+        else
+        {
+            renderer = _("XRender");
+        }
     }
 
     if (vsync != NULL)
@@ -251,11 +262,11 @@ update_render_backend_label (GtkWidget *label)
 
     if (renderer != NULL && sync != NULL)
     {
-        text = g_strdup_printf (_("(currently using: %s, %s)"), renderer, sync);
+        text = g_strdup_printf (_("(currently: %s, %s)"), renderer, sync);
     }
     else if (renderer != NULL)
     {
-        text = g_strdup_printf (_("(currently using: %s)"), renderer);
+        text = g_strdup_printf (_("(currently: %s)"), renderer);
     }
     else
     {

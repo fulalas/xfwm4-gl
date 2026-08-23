@@ -3093,7 +3093,13 @@ set_render_backend_property (ScreenInfo *screen_info)
 
     if (renderer != NULL)
     {
-        value = g_strdup_printf ("opengl %s", renderer);
+        /*
+         * Which way OpenGL is talking to the driver, not which card it found:
+         * the card is in xfce4-about, and a tool reading this wants to know
+         * what the compositor is doing.
+         */
+        value = g_strdup_printf ("opengl %s",
+                                 screen_info->use_egl_backend ? "egl" : "glx");
     }
     else
     {
