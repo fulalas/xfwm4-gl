@@ -120,32 +120,29 @@ behave like `auto`. They only differ after falling back to XRender.
 Everything this fork changes outside the OpenGL renderer, compared with
 [xfwm4](https://gitlab.xfce.org/xfce/xfwm4/) 4.20.0.
 
-What you can see:
+New features:
+
+* two new boxes in Window Manager Tweaks, under Compositor: one turns the
+  OpenGL renderer on and off, one turns off the fullscreen behaviour above.
+  The dialog also says which renderer is running
+* compositing switches itself off while a fullscreen window has focus, so games
+  and video get the screen to themselves
+* `--vblank` parameter now supports the `adaptive` value
+* buttons in the title bar can light up under the pointer on a window that is
+  not focused, from a new `inactive-prelight` image in the theme
+* any tool can read the current renderer and vsync mode by running
+  `xprop -root _XFWM4_RENDER_BACKEND _XFWM4_VSYNC`
+
+Fixes:
 
 * a window keeps its border while it is resized, instead of losing an edge for
   a moment on every step
 * a window that is resized and moved at the same time, by dragging a corner,
   no longer appears to jump and come back
 * a shrinking window leaves no stale strip behind along the edge it gave up
-* the buttons in the title bar light up under the pointer on a window that is
-  not focused, and are redrawn only when they really change
-* compositing switches itself off while a fullscreen window has focus, so games
-  and video get the screen to themselves
+* title bar buttons are redrawn only when they really change
 * the whole screen is drawn once when compositing starts, so nothing stale is
   left on it, and switching compositing off no longer risks a crash
-* a hover image for buttons on windows that are not focused, a new
-  `inactive-prelight` state
-
-What you can set:
-
-* two new boxes in Window Manager Tweaks, under Compositor: one turns the
-  OpenGL renderer on and off, one turns off the fullscreen behaviour above.
-  The dialog also says which renderer is running right now
-* `--vblank` on the command line, and its new `adaptive` value
-* both new settings are on by default
-* which renderer and which vsync mode are in use are published as
-  `_XFWM4_RENDER_BACKEND` and `_XFWM4_VSYNC` on the root window, so any tool
-  can read them
 
 ## Requirements
 
