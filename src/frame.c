@@ -771,7 +771,8 @@ frameGetState (Client * c)
  * background the strip keeps whatever the screen had there, which reads as the
  * border blinking out on every step of a resize. Wearing the border's own tile
  * it looks like the border that is about to arrive. Set before the frame
- * changes size, see clientConfigureWindows().
+ * changes size, see clientConfigureWindows(), and dropped again as soon as the
+ * border windows are back in place, see frameClearBackground().
  */
 void
 frameSetBackground (Client * c)
@@ -1168,6 +1169,18 @@ frameDrawWin (Client * c)
         }
         frameSetShape (c, 0, NULL, 0);
     }
+
+    /*
+     * Take the tile away again. A background stays with the window until it is
+     * changed, and the server paints it over every area the frame is given -
+     * including the whole of the frame the first time it is mapped, which is
+     * the client's area too, before the client has drawn anything there. That
+     * showed the border's pattern striped across the whole of a window that was
+     * still opening, for as long as the application took to paint, so the
+     * busier the machine the longer it stayed. The tile is only wanted for the
+     * one resize step it was set for, and that step has now drawn.
+     */
+    XSetWindowBackgroundPixmap (display_info->dpy, c->frame, None);
 
     myDisplayErrorTrapPopIgnored (display_info);
 }
