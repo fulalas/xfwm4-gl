@@ -348,6 +348,8 @@ struct _Client
     guint icon_timeout_id;
     /* Timout for asynchronous frame update */
     guint frame_timeout_id;
+    /* The frame is wearing the border tile, see frameSetBackground() */
+    gboolean frame_background;
     /* Timout to manage blinking decorations for urgent windows */
     guint blink_timeout_id;
     /* Timout for asynchronous icon update */

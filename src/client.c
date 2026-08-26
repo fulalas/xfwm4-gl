@@ -2063,20 +2063,16 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     }
     clientUpdateIconPix (c);
 
-    /* Put the window on top to avoid XShape, that speeds up hw accelerated
-       GL apps dramatically */
-    XRaiseWindow (display_info->dpy, c->window);
-
     /*
-     * ...and then the decoration above it again, keeping the order the pieces
-     * were created in. A resize takes two requests, the frame's and the
-     * client's, and for the moment between them one of the two is the wrong
-     * size. With the client on top, a client that is briefly too big paints
-     * over the border and the border is gone for that frame; with the border
-     * on top, whichever of the two is briefly wrong is hidden behind the piece
-     * that is already where it belongs, and nothing is seen at all. The
-     * pieces only ever cover the border and the title, never the client's own
-     * area, so nothing changes once the resize has settled.
+     * The decoration above the window, keeping the order the pieces were
+     * created in. A resize takes two requests, the frame's and the client's,
+     * and for the moment between them one of the two is the wrong size. With
+     * the client on top, a client that is briefly too big paints over the
+     * border and the border is gone for that frame; with the border on top,
+     * whichever of the two is briefly wrong is hidden behind the piece that is
+     * already where it belongs, and nothing is seen at all. The pieces only
+     * ever cover the border and the title, never the client's own area, so
+     * nothing changes once the resize has settled.
      */
     for (i = 0; i < SIDE_COUNT; i++)
     {

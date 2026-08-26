@@ -772,7 +772,13 @@ frameGetState (Client * c)
  * border blinking out on every step of a resize. Wearing the border's own tile
  * it looks like the border that is about to arrive. Set before the frame
  * changes size, see clientConfigureWindows(), and dropped again as soon as the
- * border windows are back in place, see frameClearBackground().
+ * border windows are back in place, at the end of frameDrawWin().
+ *
+ * A window of a depth the screen does not share, an ARGB one on a screen that
+ * is not, keeps no background: a background pixmap has to be of the window's
+ * own depth, and the theme's tiles are all of the screen's. Those windows still
+ * blink on a resize step, which is the price of not carrying a second copy of
+ * every tile.
  */
 void
 frameSetBackground (Client * c)
@@ -792,8 +798,17 @@ frameSetBackground (Client * c)
         return;
     }
 
+    /*
+     * The stretch tile first, the way frameDecorationRight() picks the width
+     * the border is going to have. A theme that ships only the stretch variant
+     * would otherwise get no background at all, and go on blinking.
+     */
     state = frameGetState (c);
-    tile = &screen_info->sides[SIDE_RIGHT][state];
+    tile = &screen_info->sides_stretch[SIDE_RIGHT][state];
+    if (xfwmPixmapNone (tile))
+    {
+        tile = &screen_info->sides[SIDE_RIGHT][state];
+    }
     if (xfwmPixmapNone (tile))
     {
         return;
@@ -802,6 +817,8 @@ frameSetBackground (Client * c)
     myDisplayErrorTrapPush (display_info);
     XSetWindowBackgroundPixmap (display_info->dpy, c->frame, tile->pixmap);
     myDisplayErrorTrapPopIgnored (display_info);
+
+    c->frame_background = TRUE;
 }
 
 static void
@@ -1178,9 +1195,15 @@ frameDrawWin (Client * c)
      * showed the border's pattern striped across the whole of a window that was
      * still opening, for as long as the application took to paint, so the
      * busier the machine the longer it stayed. The tile is only wanted for the
-     * one resize step it was set for, and that step has now drawn.
+     * one resize step it was set for, and that step has now drawn. Most of the
+     * draws that come through here are a focus or a title change that never set
+     * it, so the flag keeps the request on the resize path.
      */
-    XSetWindowBackgroundPixmap (display_info->dpy, c->frame, None);
+    if (c->frame_background)
+    {
+        XSetWindowBackgroundPixmap (display_info->dpy, c->frame, None);
+        c->frame_background = FALSE;
+    }
 
     myDisplayErrorTrapPopIgnored (display_info);
 }
