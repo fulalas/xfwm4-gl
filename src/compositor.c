@@ -4380,7 +4380,7 @@ restack_win (CWindow *cw, Window above)
 
     if (next)
     {
-        CWindow *ncw = (CWindow *) next;
+        CWindow *ncw = (CWindow *) next->data;
         previous_above = ncw->id;
     }
 
