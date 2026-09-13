@@ -3868,6 +3868,28 @@ damage_screen (ScreenInfo *screen_info)
     add_damage (screen_info, region);
 }
 
+/*
+ * A window is not painted until it is marked damaged, and one just added is
+ * not. On a resume the windows rebuilt are already drawn, and the damage
+ * saying so went out while there was no compositor to take it. A window that
+ * sits still would keep what was under it until something made it draw.
+ */
+static void
+mark_all_windows_damaged (ScreenInfo *screen_info)
+{
+    GList *list;
+
+    for (list = screen_info->cwindows; list; list = g_list_next (list))
+    {
+        CWindow *cw = (CWindow *) list->data;
+
+        if (WIN_IS_VISIBLE(cw) && WIN_IS_REDIRECTED(cw))
+        {
+            cw->damaged = TRUE;
+        }
+    }
+}
+
 static void
 damage_win (CWindow *cw)
 {
@@ -6561,6 +6583,7 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
     {
         compositorManageScreen (screen_info);
         compositorAddAllWindows (screen_info);
+        mark_all_windows_damaged (screen_info);
     }
     else
     {
