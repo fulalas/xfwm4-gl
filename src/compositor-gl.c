@@ -3044,15 +3044,22 @@ screen_region (ScreenInfo *screen_info)
  * Work out what has to be repainted this frame. With GLX_EXT_buffer_age the
  * damage of the last frames is replayed, otherwise the whole screen is
  * redrawn because the content of the back buffer is undefined after a swap.
+ *
+ * Says through whole when it painted the screen entire, which full_repaint
+ * does not cover: the swap must declare that much as damage or the rest of
+ * the buffer it rewrote keeps the previous frame.
  */
 static cairo_region_t *
-get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
+get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
+                  gboolean *whole)
 {
     XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
     cairo_region_t *region;
     guint age = 0;
     guint i;
+
+    *whole = FALSE;
 
     /*
      * The frame buffer object never loses its content, so it only ever owes
@@ -3109,6 +3116,7 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
     if (age == 0 || age > GL_DAMAGE_HISTORY)
     {
         region = screen_region (screen_info);
+        *whole = TRUE;
     }
     else
     {
@@ -3138,6 +3146,7 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage)
         {
             cairo_region_destroy (region);
             region = screen_region (screen_info);
+            *whole = TRUE;
         }
     }
 
@@ -3478,6 +3487,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     CWindow *cw;
     gboolean zoomed;
     gboolean was_full_repaint;
+    gboolean painted_whole;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
@@ -3529,9 +3539,9 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
      */
     frame_damage = (data->has_buffer_age ||
                     data->present_mode != GL_PRESENT_SWAP ||
-                    data->egl_swap_with_damage != NULL)
+                    data->stats)
                    ? fetch_damage (dpy, damage) : NULL;
-    paint_region = get_paint_region (screen_info, frame_damage);
+    paint_region = get_paint_region (screen_info, frame_damage, &painted_whole);
 
     if (cairo_region_is_empty (paint_region))
     {
@@ -4007,7 +4017,8 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         /* The magnifier drew the whole back buffer, so a swap presents it */
         if (screen_info->use_egl_backend)
         {
-            egl_swap (screen_info, frame_damage, was_full_repaint || zoomed);
+            egl_swap (screen_info, frame_damage,
+                      was_full_repaint || zoomed || painted_whole);
         }
         else
         {
@@ -4055,7 +4066,8 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         if (screen_info->use_egl_backend)
         {
-            egl_swap (screen_info, frame_damage, was_full_repaint || zoomed);
+            egl_swap (screen_info, frame_damage,
+                      was_full_repaint || zoomed || painted_whole);
         }
         else
         {
