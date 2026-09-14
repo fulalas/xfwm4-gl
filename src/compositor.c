@@ -5191,6 +5191,7 @@ compositorCheckCMSelection (ScreenInfo *screen_info)
 {
     DisplayInfo *display_info;
     gchar selection[32];
+    Window owner;
     Atom a;
 
     display_info = screen_info->display_info;
@@ -5198,7 +5199,8 @@ compositorCheckCMSelection (ScreenInfo *screen_info)
     /* Newer EWMH standard property "_NET_WM_CM_S<n>" */
     g_snprintf (selection, sizeof (selection), "_NET_WM_CM_S%d", screen_info->screen);
     a = XInternAtom (display_info->dpy, selection, FALSE);
-    if (XGetSelectionOwner (display_info->dpy, a) != None)
+    owner = XGetSelectionOwner (display_info->dpy, a);
+    if ((owner != None) && (owner != screen_info->xfwm4_win))
     {
         return TRUE;
     }
@@ -5271,6 +5273,10 @@ compositorSetCMSelection (ScreenInfo *screen_info, Window w)
     /* Newer EWMH standard property "_NET_WM_CM_S<n>" */
     g_snprintf (selection, sizeof (selection), "_NET_WM_CM_S%d", screen_info->screen);
     a = XInternAtom (display_info->dpy, selection, FALSE);
+    if (XGetSelectionOwner (display_info->dpy, a) == w)
+    {
+        return;
+    }
     setXAtomManagerOwner (display_info, a, screen_info->xroot, w);
 }
 
@@ -6351,6 +6357,7 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
         if (!keep_gl)
         {
             release_retained_gl (screen_info);
+            compositorSetCMSelection (screen_info, None);
         }
         TRACE ("compositor not active on screen %i", screen_info->screen);
         return;
@@ -6509,7 +6516,10 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
                                     CompositeRedirectManual);
     screen_info->output = screen_info->xroot;
 
-    compositorSetCMSelection (screen_info, None);
+    if (!keep_gl)
+    {
+        compositorSetCMSelection (screen_info, None);
+    }
 
     myDisplayErrorTrapPopIgnored (display_info);
 #endif /* HAVE_COMPOSITOR */
@@ -6573,7 +6583,7 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
          */
         if (!active && !keep_gl)
         {
-            release_retained_gl (screen_info);
+            unmanage_screen (screen_info, keep_gl);
         }
 
         return FALSE;
