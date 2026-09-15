@@ -144,6 +144,17 @@ Fixes:
   raise, restack, map, unmap and workspace change
 * finding the window an event belongs to is a direct lookup now, not a walk
   through the whole list
+* a window opened over a fullscreen video now shows up over it. The video used
+  to stay on screen and take the clicks meant for the new window
+* windows are painted again once compositing comes back, instead of the screen
+  keeping what was on it
+* the panel and the taskbar no longer rebuild themselves every time a
+  fullscreen window takes the screen and gives it back
+* windows are drawn in the right order when one of them is raised or lowered
+* a window that is opening is no longer covered by the border pattern of its
+  own frame
+* the decoration asks for fewer redraws, and a theme that ships only a
+  stretched border image is used instead of being skipped
 
 ## Requirements
 
