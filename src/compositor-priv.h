@@ -122,7 +122,6 @@ struct _CWindow
     gboolean viewable;
     gboolean shaped;
     gboolean redirected;
-    gboolean fulloverlay;
     gboolean argb;
     gboolean skipped;
     gboolean native_opacity;

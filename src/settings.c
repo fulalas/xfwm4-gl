@@ -1455,6 +1455,7 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 else if (!strcmp (name, "unredirect_overlays"))
                 {
                     screen_info->params->unredirect_overlays = g_value_get_boolean (value);
+                    compositorUpdateUnredirected (screen_info);
                 }
                 else if (!strcmp (name, "use_gl_compositing"))
                 {

@@ -2804,8 +2804,16 @@ unredirect_win (CWindow *cw)
 
         free_win_data (cw, FALSE);
         cw->redirected = FALSE;
+        screen_info->wins_unredirected++;
         TRACE ("window 0x%lx unredirected, wins_unredirected is %i",
                cw->id, screen_info->wins_unredirected);
+#if HAVE_OVERLAYS
+        if ((screen_info->wins_unredirected == 1) && (display_info->have_overlays))
+        {
+            TRACE ("unmapping overlay window");
+            XUnmapWindow (display_info->dpy, screen_info->overlay);
+        }
+#endif /* HAVE_OVERLAYS */
     }
 }
 
@@ -4012,7 +4020,7 @@ set_win_opacity (CWindow *cw, guint32 opacity)
 }
 
 static void
-map_win (CWindow *cw)
+redirect_win (CWindow *cw)
 {
     ScreenInfo *screen_info;
     DisplayInfo *display_info;
@@ -4020,103 +4028,197 @@ map_win (CWindow *cw)
     g_return_if_fail (cw != NULL);
     TRACE ("window 0x%lx", cw->id);
 
+    if (WIN_IS_REDIRECTED(cw))
+    {
+        return;
+    }
+
     screen_info = cw->screen_info;
     display_info = screen_info->display_info;
 
-    if (!WIN_IS_REDIRECTED(cw))
+    myDisplayErrorTrapPush (display_info);
+    XCompositeRedirectWindow (display_info->dpy, cw->id, CompositeRedirectManual);
+    myDisplayErrorTrapPopIgnored (display_info);
+
+    free_win_data (cw, FALSE);
+    cw->redirected = TRUE;
+    cw->damaged = WIN_IS_VIEWABLE(cw);
+    screen_info->wins_unredirected--;
+    TRACE ("window 0x%lx redirected, wins_unredirected is %i",
+           cw->id, screen_info->wins_unredirected);
+
+    if (!screen_info->wins_unredirected)
     {
-        cw->fulloverlay = is_fullscreen (cw);
-        if (cw->fulloverlay)
-        {
-            /*
-             * To be safe, we only count the fullscreen un-redirected windows.
-             * We do not want a smaller override redirect such as a tooltip
-             * for example to prevent the overlay to be remapped and leave
-             * a black screen until the tooltip is unmapped...
-             */
-            screen_info->wins_unredirected++;
-            TRACE ("mapping fullscreen window 0x%lx, wins_unredirected increased to %i", cw->id, screen_info->wins_unredirected);
-        }
-        TRACE ("mapping unredirected window 0x%lx, wins_unredirected is now %i", cw->id, screen_info->wins_unredirected);
 #if HAVE_OVERLAYS
-        if ((screen_info->wins_unredirected == 1) && (display_info->have_overlays))
+        if (display_info->have_overlays)
         {
-            TRACE ("unmapping overlay window");
-            XUnmapWindow (myScreenGetXDisplay (screen_info), screen_info->overlay);
+            TRACE ("remapping overlay window");
+            XMapWindow (display_info->dpy, screen_info->overlay);
         }
 #endif /* HAVE_OVERLAYS */
-        return;
+        damage_screen (screen_info);
     }
+}
+
+static gboolean
+can_draw_direct (CWindow *cw)
+{
+    ScreenInfo *screen_info;
+
+    screen_info = cw->screen_info;
+
+    if (!WIN_HAS_DAMAGE(cw) || !WIN_IS_NATIVE_OPAQUE(cw) || WIN_IS_SHAPED(cw))
+    {
+        return FALSE;
+    }
+
+    /* For NET_WM_BYPASS_COMPOSITOR, 0 indicates no preference, 1 hints
+     * the compositor to disabling compositing.
+     */
+    return (cw->bypass_compositor == 1) ||
+           (screen_info->params->unredirect_overlays &&
+            WIN_IS_OVERRIDE(cw) && cw->bypass_compositor == 0);
+}
+
+static void
+window_rect (CWindow *cw, cairo_rectangle_int_t *rect)
+{
+    rect->x = cw->attr.x;
+    rect->y = cw->attr.y;
+    rect->width = cw->attr.width + 2 * cw->attr.border_width;
+    rect->height = cw->attr.height + 2 * cw->attr.border_width;
+}
+
+static GList *
+direct_windows (ScreenInfo *screen_info)
+{
+    GList *list;
+    GList *direct;
+    cairo_region_t *covered;
+    gboolean fullscreen;
+    gboolean blocked;
+
+    if (screen_info->zoomed || screen_info->adding_windows)
+    {
+        return NULL;
+    }
+
+    fullscreen = FALSE;
+    for (list = screen_info->cwindows; list && !fullscreen; list = g_list_next (list))
+    {
+        CWindow *cw = (CWindow *) list->data;
+
+        fullscreen = WIN_IS_VISIBLE(cw) && can_draw_direct (cw) && is_fullscreen (cw);
+    }
+    if (!fullscreen)
+    {
+        return NULL;
+    }
+
+    direct = NULL;
+    blocked = FALSE;
+    covered = cairo_region_create ();
+    for (list = screen_info->cwindows; list && !blocked; list = g_list_next (list))
+    {
+        CWindow *cw = (CWindow *) list->data;
+        cairo_rectangle_int_t rect;
+
+        if (!WIN_IS_VISIBLE(cw))
+        {
+            continue;
+        }
+
+        window_rect (cw, &rect);
+        if (cairo_region_contains_rectangle (covered, &rect) == CAIRO_REGION_OVERLAP_IN)
+        {
+            continue;
+        }
+
+        if (can_draw_direct (cw))
+        {
+            direct = g_list_prepend (direct, cw);
+            cairo_region_union_rectangle (covered, &rect);
+        }
+        else
+        {
+            blocked = TRUE;
+        }
+    }
+    cairo_region_destroy (covered);
+
+    if (blocked)
+    {
+        g_list_free (direct);
+        direct = NULL;
+    }
+
+    return direct;
+}
+
+static void
+update_unredirected (ScreenInfo *screen_info)
+{
+    GList *list;
+    GList *direct;
+
+    direct = direct_windows (screen_info);
+    for (list = screen_info->cwindows; list; list = g_list_next (list))
+    {
+        CWindow *cw = (CWindow *) list->data;
+
+        if (g_list_find (direct, cw))
+        {
+            unredirect_win (cw);
+        }
+        else
+        {
+            redirect_win (cw);
+        }
+    }
+    g_list_free (direct);
+}
+
+static void
+map_win (CWindow *cw)
+{
+    g_return_if_fail (cw != NULL);
+    TRACE ("window 0x%lx", cw->id);
 
     cw->viewable = TRUE;
     cw->damaged = FALSE;
 
-    /* Check for new windows to un-redirect. */
     if (WIN_HAS_DAMAGE(cw) && WIN_IS_NATIVE_OPAQUE(cw) &&
-        WIN_IS_REDIRECTED(cw) && !WIN_IS_SHAPED(cw) &&
-        ((screen_info->wins_unredirected > 0) || is_fullscreen (cw)))
+        !WIN_IS_SHAPED(cw) && is_fullscreen (cw))
     {
-        /* Make those opaque, we don't want them to be transparent */
         cw->opacity = NET_WM_OPAQUE;
-
-        /* For NET_WM_BYPASS_COMPOSITOR, 0 indicates no preference, 1 hints
-         * the compositor to disabling compositing.
-         */
-        if ((cw->bypass_compositor == 1) ||
-            (screen_info->params->unredirect_overlays &&
-             WIN_IS_OVERRIDE(cw) && cw->bypass_compositor == 0))
-        {
-            TRACE ("unredirecting toplevel window 0x%lx", cw->id);
-            unredirect_win (cw);
-        }
     }
+
+    update_unredirected (cw->screen_info);
 }
 
 static void
 unmap_win (CWindow *cw)
 {
-    ScreenInfo *screen_info;
-    DisplayInfo *display_info;
-
     g_return_if_fail (cw != NULL);
     TRACE ("window 0x%lx", cw->id);
 
-    screen_info = cw->screen_info;
-    display_info = screen_info->display_info;
-
-    if (!WIN_IS_REDIRECTED(cw) && (screen_info->wins_unredirected > 0))
-    {
-        if (cw->fulloverlay)
-        {
-            screen_info->wins_unredirected--;
-            TRACE ("unmapping fullscreen window 0x%lx, wins_unredirected decreased to %i",
-                   cw->id, screen_info->wins_unredirected);
-        }
-        TRACE ("unmapped window 0x%lx, wins_unredirected is now %i", cw->id, screen_info->wins_unredirected);
-        if (!screen_info->wins_unredirected)
-        {
-            /* Restore the overlay if that was the last unredirected window */
-#if HAVE_OVERLAYS
-            if (display_info->have_overlays)
-            {
-                TRACE ("remapping overlay window");
-                XMapWindow (myScreenGetXDisplay (screen_info), screen_info->overlay);
-            }
-#endif /* HAVE_OVERLAYS */
-            damage_screen (screen_info);
-       }
-    }
-    else if (WIN_IS_VISIBLE(cw))
+    if (WIN_IS_VISIBLE(cw))
     {
         damage_win (cw);
     }
 
     cw->viewable = FALSE;
     cw->damaged = FALSE;
-    cw->redirected = TRUE;
-    cw->fulloverlay = FALSE;
+    if (WIN_IS_REDIRECTED(cw))
+    {
+        free_win_data (cw, FALSE);
+    }
+    else
+    {
+        redirect_win (cw);
+    }
 
-    free_win_data (cw, FALSE);
+    update_unredirected (cw->screen_info);
 }
 
 static void
@@ -4300,7 +4402,6 @@ add_win (DisplayInfo *display_info, Window id, Client *c)
     new->id = id;
     new->damaged = FALSE;
     new->redirected = TRUE;
-    new->fulloverlay = FALSE;
     new->shaped = is_shaped (display_info, id);
     new->viewable = (new->attr.map_state == IsViewable);
 
@@ -4875,6 +4976,7 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
             }
             set_win_opacity (cw, cw->opacity);
             cw->native_opacity = WIN_IS_OPAQUE(cw);
+            update_unredirected (cw->screen_info);
 
             /* Transset changes the property on the frame, not the client
                window. We need to check and update the client "opacity"
@@ -4933,6 +5035,7 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
              */
             cw->bypass_compositor = 0;
             getBypassCompositor (display_info, ev->window, &cw->bypass_compositor);
+            update_unredirected (cw->screen_info);
         }
 
         /*
@@ -5018,6 +5121,7 @@ compositorHandleConfigureNotify (DisplayInfo *display_info, XConfigureEvent *ev)
     {
         restack_win (cw, ev->above);
         resize_win (cw, ev->x, ev->y, ev->width, ev->height, ev->border_width);
+        update_unredirected (cw->screen_info);
     }
 }
 
@@ -5040,7 +5144,7 @@ compositorHandleCirculateNotify (DisplayInfo *display_info, XCirculateEvent *ev)
     }
 
     first = cw->screen_info->cwindows;
-    top = (CWindow *) first;
+    top = first ? (CWindow *) first->data : NULL;
 
     if ((ev->place == PlaceOnTop) && (top))
     {
@@ -5051,6 +5155,7 @@ compositorHandleCirculateNotify (DisplayInfo *display_info, XCirculateEvent *ev)
         above = None;
     }
     restack_win (cw, above);
+    update_unredirected (cw->screen_info);
 }
 
 static void
@@ -5165,6 +5270,7 @@ compositorHandleShapeNotify (DisplayInfo *display_info, XShapeEvent *ev)
             {
                 cw->shaped = TRUE;
             }
+            update_unredirected (cw->screen_info);
         }
     }
 }
@@ -5520,6 +5626,7 @@ compositorResizeWindow (DisplayInfo *display_info, Window id, int x, int y, int 
     if (is_on_compositor (cw))
     {
         resize_win (cw, x, y, width, height, 0);
+        update_unredirected (cw->screen_info);
     }
 #endif /* HAVE_COMPOSITOR */
 }
@@ -5662,6 +5769,7 @@ compositorZoomIn (ScreenInfo *screen_info, XfwmEventButton *event)
     }
 
     screen_info->zoomed = TRUE;
+    update_unredirected (screen_info);
     if (!screen_info->zoom_timeout_id)
     {
         gint timeout_rate;
@@ -5698,6 +5806,7 @@ compositorZoomOut (ScreenInfo *screen_info, XfwmEventButton *event)
             screen_info->transform.matrix[0][2] = 0;
             screen_info->transform.matrix[1][2] = 0;
             screen_info->zoomed = FALSE;
+            update_unredirected (screen_info);
 
             if (screen_info->cursor_is_zoomed)
             {
@@ -6224,6 +6333,7 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->cwindows = NULL;
     screen_info->cwindow_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
     screen_info->wins_unredirected = 0;
+    screen_info->adding_windows = FALSE;
     screen_info->compositor_timeout_id = 0;
     screen_info->zoomed = FALSE;
     screen_info->zoom_timeout_id = 0;
@@ -6544,6 +6654,7 @@ compositorAddAllWindows (ScreenInfo *screen_info)
     myDisplayGrabServer (display_info);
     XQueryTree (display_info->dpy, screen_info->xroot, &w1, &w2, &wins, &count);
 
+    screen_info->adding_windows = TRUE;
     for (i = 0; i < count; i++)
     {
         Client *c;
@@ -6551,6 +6662,8 @@ compositorAddAllWindows (ScreenInfo *screen_info)
         c = myScreenGetClientFromWindow (screen_info, wins[i], SEARCH_FRAME);
         compositorAddWindow (display_info, wins[i], c);
     }
+    screen_info->adding_windows = FALSE;
+    update_unredirected (screen_info);
     if (wins)
     {
         XFree (wins);
@@ -6689,6 +6802,19 @@ compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
 }
 
 void
+compositorUpdateUnredirected (ScreenInfo *screen_info)
+{
+#ifdef HAVE_COMPOSITOR
+    g_return_if_fail (screen_info != NULL);
+
+    if (screen_info->compositor_active)
+    {
+        update_unredirected (screen_info);
+    }
+#endif /* HAVE_COMPOSITOR */
+}
+
+void
 compositorUnmanageScreen (ScreenInfo *screen_info)
 {
 #ifdef HAVE_COMPOSITOR
@@ -6763,6 +6889,7 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
         screen_info->screenRegion = None;
     }
 
+    update_unredirected (screen_info);
     damage_screen (screen_info);
     myDisplayErrorTrapPopIgnored (display_info);
 #endif /* HAVE_COMPOSITOR */

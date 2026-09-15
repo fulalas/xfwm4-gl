@@ -212,6 +212,7 @@ struct _ScreenInfo
     gboolean cursor_is_zoomed;
 
     guint wins_unredirected;
+    gboolean adding_windows;
     gboolean compositor_active;
     gboolean clipChanged;
 
