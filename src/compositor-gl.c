@@ -66,6 +66,7 @@ typedef struct
     gint depth;
     GLXFBConfig fbconfig;
     gboolean usable;
+    gboolean y_inverted;
 } XfwmGLDepth;
 
 typedef enum
@@ -167,6 +168,7 @@ typedef struct
     GLuint root_texture;
     GLenum root_tex_type;
     gboolean root_repeat;
+    gboolean root_y_inverted;
     GLuint black_texture;
     gboolean root_missing;
     gint root_width;
@@ -564,7 +566,7 @@ link_program (const gchar *fragment_source)
 
 static gboolean
 find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
-               GLXFBConfig *fbconfig)
+               GLXFBConfig *fbconfig, gboolean *y_inverted)
 {
     Display *dpy = myScreenGetXDisplay (screen_info);
     GLint attribs[] = {
@@ -625,6 +627,8 @@ find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
             continue;
         }
 
+        status = glXGetFBConfigAttrib (dpy, configs[i], GLX_Y_INVERTED_EXT, &value);
+        *y_inverted = (status != Success || value != False);
         *fbconfig = configs[i];
         found = TRUE;
         break;
@@ -698,7 +702,7 @@ depth_config (ScreenInfo *screen_info, gint depth)
     entry = &data->depths[data->n_depths++];
     entry->depth = depth;
     entry->usable = find_fbconfig (screen_info, depth, data->tex_target,
-                                   &entry->fbconfig);
+                                   &entry->fbconfig, &entry->y_inverted);
     if (!entry->usable)
     {
         g_info ("No GLX config to bind a window of depth %i as a texture", depth);
@@ -966,6 +970,7 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     XfwmGLData *data;
     Display *dpy;
     gboolean no_ext;
+    gboolean can_blit_fbo;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
@@ -1019,6 +1024,9 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         xfwmGLScreenFinish (screen_info);
         return FALSE;
     }
+    can_blit_fbo = epoxy_gl_version () >= 30 ||
+                   epoxy_has_gl_extension ("GL_ARB_framebuffer_object") ||
+                   epoxy_has_gl_extension ("GL_EXT_framebuffer_blit");
 
     if (screen_info->use_egl_backend)
     {
@@ -1113,7 +1121,7 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
 
         if (mode == NULL || g_strcmp0 (mode, "auto") == 0)
         {
-            if (data->has_buffer_age || !has_copy_sub_buffer)
+            if (data->has_buffer_age || !has_copy_sub_buffer || !can_blit_fbo)
             {
                 data->present_mode = GL_PRESENT_SWAP;
             }
@@ -1135,13 +1143,10 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
                 g_warning ("XFWM4_GL_PRESENT=%s wanted but "
                            "GLX_MESA_copy_sub_buffer is missing, swapping.", mode);
             }
-            else if (g_strcmp0 (mode, "copy") == 0)
-            {
-                data->present_mode = GL_PRESENT_COPY;
-            }
             else
             {
-                data->present_mode = GL_PRESENT_FBO;
+                data->present_mode = g_strcmp0 (mode, "copy") == 0
+                                     ? GL_PRESENT_COPY : GL_PRESENT_FBO;
             }
         }
         else if (g_strcmp0 (mode, "swap") != 0)
@@ -1152,6 +1157,13 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
                 data->present_mode == GL_PRESENT_SWAP ? "swap" :
                 data->present_mode == GL_PRESENT_COPY ? "copy" :
                 "fbo");
+    }
+    if ((data->present_mode == GL_PRESENT_SCENE ||
+         data->present_mode == GL_PRESENT_FBO) && !can_blit_fbo)
+    {
+        g_warning ("XFWM4_GL_PRESENT=%s wanted but frame buffer blits are "
+                   "missing, swapping.", g_getenv ("XFWM4_GL_PRESENT"));
+        data->present_mode = GL_PRESENT_SWAP;
     }
     data->wait_new_pixmap =
         (g_strcmp0 (g_getenv ("XFWM4_GL_PIXMAP_WAIT"), "off") != 0);
@@ -1644,6 +1656,7 @@ bind_window_texture (CWindow *cw)
         return FALSE;
     }
 
+    cw->gl_y_inverted = TRUE;
     if (screen_info->use_egl_backend)
     {
         if (cw->egl_image == NULL)
@@ -1671,6 +1684,7 @@ bind_window_texture (CWindow *cw)
 
             return FALSE;
         }
+        cw->gl_y_inverted = dc->y_inverted;
 
         if (cw->gl_pixmap == None)
         {
@@ -1746,7 +1760,7 @@ bind_window_texture (CWindow *cw)
 }
 
 static void
-draw_quad (ScreenInfo *screen_info, GLenum tex_type,
+draw_quad (ScreenInfo *screen_info, GLenum tex_type, gboolean y_inverted,
            gint sx, gint sy, gint tex_width, gint tex_height,
            gint dx, gint dy, gint width, gint height,
            cairo_region_t *clip)
@@ -1803,6 +1817,11 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
         u2 = (gfloat) (sx + x2 - dx);
         v1 = (gfloat) (sy + y1 - dy);
         v2 = (gfloat) (sy + y2 - dy);
+        if (!y_inverted)
+        {
+            v1 = (gfloat) tex_height - v1;
+            v2 = (gfloat) tex_height - v2;
+        }
         if (tex_type != GL_TEXTURE_RECTANGLE_ARB)
         {
             u1 /= (gfloat) tex_width;
@@ -1840,7 +1859,7 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
 
     get_window_pixmap_size (cw, &tex_width, &tex_height);
 
-    draw_quad (screen_info, data->tex_type,
+    draw_quad (screen_info, data->tex_type, cw->gl_y_inverted,
                sx, sy, tex_width, tex_height,
                dx, dy, width, height, clip);
 }
@@ -1940,7 +1959,7 @@ paint_shadow_gl (CWindow *cw, cairo_region_t *clip)
         glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
     }
 
-    draw_quad (screen_info, GL_TEXTURE_2D,
+    draw_quad (screen_info, GL_TEXTURE_2D, TRUE,
                0, 0, cw->shadow_width, cw->shadow_height,
                cw->attr.x + cw->shadow_dx, cw->attr.y + cw->shadow_dy,
                cw->shadow_width, cw->shadow_height, clip);
@@ -2018,6 +2037,7 @@ bind_root_texture (ScreenInfo *screen_info)
     target = data->tex_target;
     data->root_tex_type = data->tex_type;
     data->root_repeat = FALSE;
+    data->root_y_inverted = TRUE;
 
     if (!screen_info->use_egl_backend)
     {
@@ -2029,12 +2049,14 @@ bind_root_texture (ScreenInfo *screen_info)
             return FALSE;
         }
         fbconfig = dc->fbconfig;
+        data->root_y_inverted = dc->y_inverted;
     }
 
     if (((gint) width_ret < screen_info->width) ||
         ((gint) height_ret < screen_info->height))
     {
         GLXFBConfig fbconfig_2d;
+        gboolean y_inverted_2d;
 
         if (data->tex_target == GLX_TEXTURE_2D_EXT)
         {
@@ -2042,12 +2064,14 @@ bind_root_texture (ScreenInfo *screen_info)
         }
         else if (!screen_info->use_egl_backend &&
                  find_fbconfig (screen_info, (gint) depth_ret,
-                                GLX_TEXTURE_2D_EXT, &fbconfig_2d))
+                                GLX_TEXTURE_2D_EXT, &fbconfig_2d,
+                                &y_inverted_2d))
         {
             fbconfig = fbconfig_2d;
             target = GLX_TEXTURE_2D_EXT;
             data->root_tex_type = GL_TEXTURE_2D;
             data->root_repeat = TRUE;
+            data->root_y_inverted = y_inverted_2d;
         }
     }
 
@@ -2152,7 +2176,7 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
         if (data->root_repeat)
         {
             use_program (data->program_2d, data->u_opacity_2d, 1.0f);
-            draw_quad (screen_info, GL_TEXTURE_2D,
+            draw_quad (screen_info, GL_TEXTURE_2D, data->root_y_inverted,
                        0, 0, tex_width, tex_height,
                        0, 0, screen_info->width, screen_info->height, clip);
         }
@@ -2171,6 +2195,7 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
                 for (x = first_x; x < area.x + area.width; x += tex_width)
                 {
                     draw_quad (screen_info, data->root_tex_type,
+                               data->root_y_inverted,
                                0, 0, tex_width, tex_height,
                                x, y, tex_width, tex_height, clip);
                 }
@@ -2181,7 +2206,7 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
     {
         use_program (data->program_2d, data->u_opacity_2d, 1.0f);
         glBindTexture (GL_TEXTURE_2D, data->black_texture);
-        draw_quad (screen_info, GL_TEXTURE_2D, 0, 0, 1, 1,
+        draw_quad (screen_info, GL_TEXTURE_2D, TRUE, 0, 0, 1, 1,
                    0, 0, screen_info->width, screen_info->height, clip);
         glBindTexture (GL_TEXTURE_2D, 0);
     }
@@ -2226,13 +2251,13 @@ paint_cursor_gl (ScreenInfo *screen_info)
         {
             glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
                              cursor->width, cursor->height,
-                             GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+                             GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
         }
         else
         {
             set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, cursor->width, cursor->height,
-                          0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+                          0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
         }
         g_free (pixels);
 
@@ -2254,7 +2279,7 @@ paint_cursor_gl (ScreenInfo *screen_info)
 
     glEnable (GL_BLEND);
     use_program (data->program_2d, data->u_opacity_2d, 1.0f);
-    draw_quad (screen_info, GL_TEXTURE_2D,
+    draw_quad (screen_info, GL_TEXTURE_2D, TRUE,
                0, 0, data->cursor_width, data->cursor_height,
                screen_info->cursorLocation.x, screen_info->cursorLocation.y,
                screen_info->cursorLocation.width, screen_info->cursorLocation.height,
@@ -2932,6 +2957,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
              list = g_list_next (list))
         {
             cw = (CWindow *) list->data;
+            if (!WIN_IS_PAINTABLE(cw))
+            {
+                continue;
+            }
             fresh = cw->gl_content_dirty || !cw->gl_texture_bound;
         }
         if (fresh)
@@ -2962,8 +2991,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             cw->gl_paint_clip = NULL;
         }
 
-        if (!WIN_IS_VISIBLE(cw) || !WIN_IS_DAMAGED(cw) ||
-            !WIN_IS_REDIRECTED(cw) || !WIN_IS_ON_SCREEN(cw))
+        if (!WIN_IS_PAINTABLE(cw))
         {
             cw->skipped = TRUE;
             continue;
@@ -2971,7 +2999,7 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         if (cw->extents == None)
         {
-            cw->extents = win_extents (cw);
+            cw->extents = win_extents (cw, NULL);
         }
 
         shape = window_shape (cw);

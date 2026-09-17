@@ -160,30 +160,6 @@ clientGetNetState (Client * c)
     atoms = NULL;
     n_atoms = 0;
 
-    if (FLAG_TEST (c->xfwm_flags, XFWM_FLAG_SESSION_MANAGED))
-    {
-        if (FLAG_TEST (c->flags, CLIENT_FLAG_SHADED))
-        {
-            TRACE ("shaded from session management");
-            FLAG_SET (c->flags, CLIENT_FLAG_SHADED);
-        }
-        if (FLAG_TEST (c->flags, CLIENT_FLAG_STICKY))
-        {
-            TRACE ("sticky from session management");
-            FLAG_SET (c->flags, CLIENT_FLAG_STICKY);
-        }
-        if (FLAG_TEST (c->flags, CLIENT_FLAG_MAXIMIZED_HORIZ))
-        {
-            TRACE ("maximized horiz from session management");
-            FLAG_SET (c->flags, CLIENT_FLAG_MAXIMIZED_HORIZ | CLIENT_FLAG_RESTORE_SIZE_POS);
-        }
-        if (FLAG_TEST (c->flags, CLIENT_FLAG_MAXIMIZED_VERT))
-        {
-            TRACE ("maximized vert from session management");
-            FLAG_SET (c->flags, CLIENT_FLAG_MAXIMIZED_VERT | CLIENT_FLAG_RESTORE_SIZE_POS);
-        }
-    }
-
     if (getAtomList (display_info, c->window, NET_WM_STATE, &atoms, &n_atoms))
     {
         int i;

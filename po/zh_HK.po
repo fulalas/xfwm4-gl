@@ -301,7 +301,7 @@ msgstr "至其他視窗(_W)"
 
 #: settings-dialogs/xfwm4-dialog.glade:1177
 msgid "Dis_tance:"
-msgstr "距離(T)："
+msgstr "距離(_T)："
 
 #. Snapping distance
 #. Edge resistance
@@ -609,7 +609,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
 msgid "Opaci_ty of window decorations:"
-msgstr "視窗裝飾的不透明度(T)："
+msgstr "視窗裝飾的不透明度(_T)："
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1057
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1133
@@ -633,7 +633,7 @@ msgstr "非當前視窗的不透明度(_I)："
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1184
 msgid "Opacity of windows during _move:"
-msgstr "移動視窗時的不透明度(M)："
+msgstr "移動視窗時的不透明度(_M)："
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1260
 msgid "Opacity of windows during resi_ze:"

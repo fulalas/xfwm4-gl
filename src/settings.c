@@ -48,7 +48,6 @@
 #define XPM_COLOR_SYMBOL_SIZE   24
 
 #define KEYMAP_UPDATE_TIMEOUT   250 /* ms */
-static guint keymap_timeout   = 0;
 
 /* Forward static decls. */
 
@@ -929,17 +928,17 @@ loadSettings (ScreenInfo *screen_info)
 
     if (screen_info->workspace_count == 0)
     {
-        workspaceSetCount (screen_info, (guint) MAX (getIntValue ("workspace_count", rc), 1));
-    }
+        workspaceSetCount (screen_info, (guint) getIntValue ("workspace_count", rc));
 
-    value = getStringValue ("vblank_mode", rc);
-    if (value)
-    {
-        vblankMode vblank_mode = compositorParseVblankMode (value);
+        value = getStringValue ("vblank_mode", rc);
+        if (value)
+        {
+            vblankMode vblank_mode = compositorParseVblankMode (value);
 
-        compositorSetVblankMode (screen_info,
-                                 (vblank_mode == VBLANK_ERROR) ? VBLANK_AUTO
-                                                               : vblank_mode);
+            compositorSetVblankMode (screen_info,
+                                     (vblank_mode == VBLANK_ERROR) ? VBLANK_AUTO
+                                                                   : vblank_mode);
+        }
     }
 
     freeRc (rc);
@@ -1115,7 +1114,7 @@ initSettings (ScreenInfo *screen_info)
     }
     if (getHint (display_info, screen_info->xroot, NET_NUMBER_OF_DESKTOPS, &val))
     {
-        workspaceSetCount (screen_info, (guint) MAX (val, 1));
+        workspaceSetCount (screen_info, (guint) val);
     }
 
     if (getUTF8StringList (display_info, screen_info->xroot, NET_DESKTOP_NAMES, &names, &i))
@@ -1232,7 +1231,7 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 }
                 else if (!strcmp (name, "workspace_count"))
                 {
-                    workspaceSetCount(screen_info, (guint) MAX (g_value_get_int (value), 1));
+                    workspaceSetCount(screen_info, (guint) g_value_get_int (value));
                 }
                 else if (!strcmp (name, "frame_opacity"))
                 {
@@ -1519,7 +1518,7 @@ keymap_reload (gpointer data)
     clientUpdateAllFrames (screen_info, UPDATE_BUTTON_GRABS);
 
     /* We're done */
-    keymap_timeout = 0;
+    screen_info->keymap_timeout_id = 0;
 
     return FALSE;
 }
@@ -1527,14 +1526,14 @@ keymap_reload (gpointer data)
 static void
 cb_keys_changed (GdkKeymap *keymap, ScreenInfo *screen_info)
 {
-    if (keymap_timeout)
+    if (screen_info->keymap_timeout_id)
     {
-        g_source_remove (keymap_timeout);
+        g_source_remove (screen_info->keymap_timeout_id);
     }
-    keymap_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT,
-                                         KEYMAP_UPDATE_TIMEOUT,
-                                         keymap_reload,
-                                         screen_info, NULL);
+    screen_info->keymap_timeout_id = g_timeout_add_full (G_PRIORITY_DEFAULT,
+                                                         KEYMAP_UPDATE_TIMEOUT,
+                                                         keymap_reload,
+                                                         screen_info, NULL);
 }
 
 static void

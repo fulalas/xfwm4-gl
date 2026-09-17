@@ -236,7 +236,7 @@ msgstr "Fokuak _sagua jarraitzen du"
 
 #: settings-dialogs/xfwm4-dialog.glade:765
 msgid "_Delay before window receives focus:"
-msgstr "Fokua duen leihoa bistaratu arteko _denbora:"
+msgstr "Leihoak fokua jaso arteko _denbora:"
 
 #. Focus delay
 #. Raise focus delay
@@ -679,7 +679,7 @@ msgstr "%s (%s-(e)n)"
 #: src/keyboard.c:143 src/settings.c:160
 #, c-format
 msgid "Unsupported keyboard modifier '%s'"
-msgstr " '%s' teklatu aldatzailea ez onartua"
+msgstr "'%s' teklatu aldatzailea ez onartua"
 
 #: src/main.c:616
 msgid "Set the compositor mode"

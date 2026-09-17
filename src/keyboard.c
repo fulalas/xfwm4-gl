@@ -71,9 +71,13 @@ unsigned int HyperMask;
 static KeyCode
 getKeycode (Display *dpy, const char *str)
 {
-    GdkModifierType keysym;
+    guint keysym;
 
     gtk_accelerator_parse (str, &keysym, NULL);
+    if (keysym == 0)
+    {
+        return 0;
+    }
     return XKeysymToKeycode (dpy, keysym);
 }
 
@@ -152,53 +156,53 @@ parseKeyString (Display * dpy, MyKey * key, const char *str)
 gboolean
 grabKey (XfwmDevices *devices, Display *dpy, MyKey *key, Window w)
 {
-    int status;
+    gboolean status;
 
     TRACE ("window 0x%lx", w);
 
-    status = GrabSuccess;
+    status = TRUE;
     if (key->keycode)
     {
         if (key->modifier != 0)
         {
-            status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+            status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                                 key->modifier,
                                                 w, TRUE, KEYCODE_GRAB_MASK,
                                                 GrabModeAsync, GrabModeSync);
         }
 
         /* Here we grab all combinations of well known modifiers */
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | ScrollLockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | NumLockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | LockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | ScrollLockMask | NumLockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | ScrollLockMask | LockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | LockMask | NumLockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
-        status |= xfwm_device_grab_keycode (devices, dpy, key->keycode,
+        status &= xfwm_device_grab_keycode (devices, dpy, key->keycode,
                                             key->modifier | ScrollLockMask | LockMask | NumLockMask,
                                             w, TRUE, KEYCODE_GRAB_MASK,
                                             GrabModeAsync, GrabModeSync);
     }
 
-    return (status == GrabSuccess);
+    return status;
 }
 
 void

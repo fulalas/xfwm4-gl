@@ -68,7 +68,7 @@ msgstr "."
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nנסה %s --help לראות רשימה מלאה של אפשרויות שורת פקודות זמינות.\n\n"
+msgstr "%s: %s\nנסה %s --help לראות רשימה מלאה של אפשרויות שורת פקודות זמינות.\n"
 
 #: settings-dialogs/workspace-settings.c:94
 #: settings-dialogs/workspace-settings.c:109
@@ -247,14 +247,14 @@ msgstr "_שיהוי בטרם חלון מקבל מיקוד:"
 #: settings-dialogs/xfwm4-dialog.glade:791
 #: settings-dialogs/xfwm4-dialog.glade:967
 msgid "<i>Short</i>"
-msgstr "קצר"
+msgstr "<i>קצר</i>"
 
 #. Focus delay
 #. Raise focus delay
 #: settings-dialogs/xfwm4-dialog.glade:818
 #: settings-dialogs/xfwm4-dialog.glade:994
 msgid "<i>Long</i>"
-msgstr "ארוך"
+msgstr "<i>ארוך</i>"
 
 #: settings-dialogs/xfwm4-dialog.glade:844
 msgid "<b>Focus model</b>"
@@ -691,7 +691,7 @@ msgstr "קבע את מצב הסדרן"
 
 #: src/main.c:618
 msgid "Set the vblank mode"
-msgstr "קבע את מצב vblank "
+msgstr "קבע את מצב vblank"
 
 #: src/main.c:628
 msgid "Replace the existing window manager"
@@ -805,12 +805,12 @@ msgstr "_הפעל מחדש"
 #: src/menu.c:457
 #, c-format
 msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: נכשלה תפיסת הסמן ב־GtkMenu\n\n"
+msgstr "%s: נכשלה תפיסת הסמן ב־GtkMenu\n"
 
 #: src/terminate.c:77
 #, c-format
 msgid "Error reading data from child process: %s\n"
-msgstr "שגיאה בקריאת מידע מתהליך בן: %s \n\n"
+msgstr "שגיאה בקריאת מידע מתהליך בן: %s\n"
 
 #: src/terminate.c:135
 #, c-format

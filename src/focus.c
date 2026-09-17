@@ -543,6 +543,15 @@ clientUpdateFocus (ScreenInfo *screen_info, Client * c, unsigned short flags)
     compositorUpdateUnredirected (screen_info->display_info);
 }
 
+static void
+clientDropFocus (ScreenInfo *screen_info, Client *previous, guint32 timestamp)
+{
+    client_focus = NULL;
+    clientFocusNone (screen_info, previous, timestamp);
+    clientClearDelayedFocus ();
+    compositorUpdateUnredirected (screen_info->display_info);
+}
+
 void
 clientSetFocus (ScreenInfo *screen_info, Client *c, guint32 timestamp, unsigned short flags)
 {
@@ -599,9 +608,7 @@ clientSetFocus (ScreenInfo *screen_info, Client *c, guint32 timestamp, unsigned 
             }
             if (myDisplayErrorTrapPop (screen_info->display_info) != Success)
             {
-                client_focus = NULL;
-                clientFocusNone (screen_info, c2, timestamp);
-                clientClearDelayedFocus ();
+                clientDropFocus (screen_info, c2, timestamp);
             }
         }
         else if (flags & FOCUS_TRANSITION)
@@ -626,10 +633,7 @@ clientSetFocus (ScreenInfo *screen_info, Client *c, guint32 timestamp, unsigned 
     {
         TRACE ("setting focus to none");
 
-        client_focus = NULL;
-        clientFocusNone (screen_info, c2, timestamp);
-        clientClearDelayedFocus ();
-        compositorUpdateUnredirected (screen_info->display_info);
+        clientDropFocus (screen_info, c2, timestamp);
     }
 }
 

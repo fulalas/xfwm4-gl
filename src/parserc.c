@@ -40,8 +40,9 @@
 gboolean
 parseRc (const gchar * file, const gchar * dir, Settings *rc)
 {
-    gchar buf[255];
+    gchar buf[1024];
     gchar *filename, *lvalue, *rvalue;
+    gboolean truncated;
     FILE *fp;
 
     TRACE ("file \"%s\" dir \"%s\"", file, dir);
@@ -64,8 +65,19 @@ parseRc (const gchar * file, const gchar * dir, Settings *rc)
     {
         return FALSE;
     }
+    truncated = FALSE;
     while (fgets (buf, sizeof (buf), fp))
     {
+        if (truncated)
+        {
+            truncated = (strchr (buf, '\n') == NULL);
+            continue;
+        }
+        if ((strchr (buf, '\n') == NULL) && !feof (fp))
+        {
+            truncated = TRUE;
+            continue;
+        }
         lvalue = strtok (buf, "=");
         rvalue = strtok (NULL, "\n");
         if ((lvalue) && (rvalue))
@@ -153,27 +165,39 @@ gboolean
 setBooleanValue (const gchar * lvalue, gboolean value, Settings *rc)
 {
     GValue tmp_val = {0, };
+    gboolean ret;
+
     g_value_init(&tmp_val, G_TYPE_BOOLEAN);
     g_value_set_boolean(&tmp_val, value);
-    return setGValue (lvalue, &tmp_val, rc);
+    ret = setGValue (lvalue, &tmp_val, rc);
+    g_value_unset (&tmp_val);
+    return ret;
 }
 
 gboolean
 setIntValue (const gchar * lvalue, gint value, Settings *rc)
 {
     GValue tmp_val = {0, };
+    gboolean ret;
+
     g_value_init(&tmp_val, G_TYPE_INT);
     g_value_set_int(&tmp_val, value);
-    return setGValue (lvalue, &tmp_val, rc);
+    ret = setGValue (lvalue, &tmp_val, rc);
+    g_value_unset (&tmp_val);
+    return ret;
 }
 
 gboolean
 setStringValue (const gchar * lvalue, const gchar *value, Settings *rc)
 {
     GValue tmp_val = {0, };
+    gboolean ret;
+
     g_value_init(&tmp_val, G_TYPE_STRING);
     g_value_set_string(&tmp_val, value);
-    return setGValue (lvalue, &tmp_val, rc);
+    ret = setGValue (lvalue, &tmp_val, rc);
+    g_value_unset (&tmp_val);
+    return ret;
 }
 
 gchar *

@@ -363,7 +363,7 @@ msgstr "При изменении р_азмера"
 
 #: settings-dialogs/xfwm4-dialog.glade:1504
 msgid "<b>Hide content of windows</b>"
-msgstr "Скрывать содержимое окна"
+msgstr "<b>Скрывать содержимое окна</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1532
 msgid "The action to perform when the title-bar is double-clicked"
@@ -607,7 +607,7 @@ msgstr "Отображать тени под _всплывающими окна�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:965
 msgid "Show shadows under _dock windows"
-msgstr "Отображать тени под _сворачивающимися окнами"
+msgstr "Отображать тени под окнами _панелей"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:981
 msgid "Show shadows under _regular windows"
@@ -799,7 +799,7 @@ msgstr "_Перенести в другое рабочее место"
 
 #: src/menu.c:71
 msgid "Move to Another Monitor"
-msgstr "Переместить на другой экран "
+msgstr "Переместить на другой экран"
 
 #. --------------------------------------------------------
 #: src/menu.c:76

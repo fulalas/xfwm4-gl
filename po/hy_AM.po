@@ -357,7 +357,7 @@ msgstr "<b>Կրկնահպման _գործողութիւն</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1563
 msgid "Ad_vanced"
-msgstr "Յառ_աջացած "
+msgstr "Յառ_աջացած"
 
 #: settings-dialogs/xfwm4-settings.c:218
 msgid "Shade window"
@@ -526,7 +526,7 @@ msgstr "_Հասանելիութիւն"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:604
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "Աւգտագործել մկնիկի անիւը _աշխատատարածքները փոխանջատելու համար "
+msgstr "Աւգտագործել մկնիկի անիւը _աշխատատարածքները փոխանջատելու համար"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:620
 msgid ""
@@ -540,7 +540,7 @@ msgstr "Ծալել աշխատատարածքները կախուած աշխատա�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:653
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Ծալել աշխատատարածքները, երբ _առաջին կամ երկրորդ աշխատատարածքները տեղում են "
+msgstr "Ծալել աշխատատարածքները, երբ _առաջին կամ երկրորդ աշխատատարածքները տեղում են"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:676
 msgid "_Workspaces"

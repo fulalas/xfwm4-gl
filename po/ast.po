@@ -465,7 +465,7 @@ msgstr "_Escoyeta"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:257
 msgid "Activate foc_us stealing prevention"
-msgstr "Activar prevención de robu de foc_u "
+msgstr "Activar prevención de robu de foc_u"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:273
 msgid "Honor _standard ICCCM focus hint"
@@ -481,7 +481,7 @@ msgstr "_Trayer ventana a la estaya de trabayu actual"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:338
 msgid "Switch to win_dow's workspace"
-msgstr "Camudar la estaya de trabayu del _ventana"
+msgstr "Camudar a la estaya de trabayu de la _ventana"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:356
 msgid "Do _nothing"

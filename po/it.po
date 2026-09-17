@@ -243,7 +243,7 @@ msgstr "Il fuoco segue il mo_use"
 
 #: settings-dialogs/xfwm4-dialog.glade:765
 msgid "_Delay before window receives focus:"
-msgstr "Ritar_do prima di sollevare la finestra con il fuoco"
+msgstr "Ritar_do prima che la finestra riceva il fuoco:"
 
 #. Focus delay
 #. Raise focus delay

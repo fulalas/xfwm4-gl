@@ -156,6 +156,13 @@ XDT_CHECK_OPTIONAL_PACKAGE([EPOXY],
                        [epoxy], [libepoxy_minimum_version],
                        [epoxy],
                        [library for handling OpenGL function pointer management], [yes])
+if test x"$EPOXY_FOUND" = x"yes"; then
+  xdt_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $EPOXY_CFLAGS"
+  AC_CHECK_HEADER([epoxy/egl.h], [],
+    [AC_MSG_ERROR([libepoxy was built without EGL support, which the OpenGL compositor needs])])
+  CPPFLAGS="$xdt_save_CPPFLAGS"
+fi
 
 dnl
 dnl Startup notification support

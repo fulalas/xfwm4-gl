@@ -52,6 +52,7 @@ theme_DATA = 								\
 	right-active.xpm						\
 	right-inactive.png						\
 	right-inactive.xpm						\
+	save-pressed.png						\
 	shade-active.png						\
 	shade-active.xpm						\
 	shade-inactive.png						\

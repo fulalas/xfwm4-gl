@@ -4,7 +4,7 @@ if (@ARGV != 1) {
     die "Usage: gen-color-table.pl rgb.txt > xpm-color-table.h\n";
 }
 
-open IN, $ARGV[0] || die "Cannot open $ARGV[0]: $!\n";
+open(IN, "<", $ARGV[0]) or die "Cannot open $ARGV[0]: $!\n";
 
 @colors = ();
 while (defined($_ = <IN>)) {

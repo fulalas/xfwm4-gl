@@ -100,7 +100,7 @@ find_cwindow_in_display (DisplayInfo *display_info, Window id)
         ScreenInfo *screen_info = (ScreenInfo *) list->data;
         CWindow *cw;
 
-        if (!compositorIsActive (screen_info))
+        if (!screen_info->compositor_active)
         {
             continue;
         }
@@ -928,7 +928,7 @@ root_background_pixmap (ScreenInfo *screen_info)
             (actual_format == 32) &&
             (nitems == 1))
         {
-            memcpy (&pixmap, prop, 4);
+            pixmap = (Pixmap) ((unsigned long *) prop)[0];
             XFree (prop);
             break;
         }
@@ -1203,12 +1203,19 @@ acceleration_is_available (ScreenInfo *screen_info)
     Display *dpy;
     GDir *dir;
     const gchar *name;
+    const gchar *software;
     int op, event, error;
     gboolean have_node;
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
 
-    if (g_getenv ("LIBGL_ALWAYS_SOFTWARE") != NULL)
+    software = g_getenv ("LIBGL_ALWAYS_SOFTWARE");
+    if (software != NULL &&
+        (g_ascii_strcasecmp (software, "1") == 0 ||
+         g_ascii_strcasecmp (software, "y") == 0 ||
+         g_ascii_strcasecmp (software, "yes") == 0 ||
+         g_ascii_strcasecmp (software, "t") == 0 ||
+         g_ascii_strcasecmp (software, "true") == 0))
     {
         g_info ("Software rendering was requested, staying on XRender");
 
@@ -1970,12 +1977,12 @@ apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
 }
 
 static void
-set_swap_interval (ScreenInfo *screen_info, gushort buffer)
+set_swap_interval (ScreenInfo *screen_info)
 {
     gint interval = wanted_swap_interval (screen_info);
 
     screen_info->glx_swap_control =
-        apply_swap_interval (screen_info, screen_info->glx_drawable[buffer],
+        apply_swap_interval (screen_info, screen_info->glx_window,
                              &interval);
     screen_info->glx_swap_interval = interval;
 
@@ -2030,7 +2037,7 @@ bind_glx_texture (ScreenInfo *screen_info, gushort buffer)
     if (screen_info->glx_drawable[buffer] == None)
     {
         create_glx_drawable (screen_info, buffer);
-        set_swap_interval (screen_info, buffer);
+        set_swap_interval (screen_info);
         set_render_backend_property (screen_info);
     }
     TRACE ("(re)Binding GLX pixmap 0x%lx to texture 0x%x",
@@ -2333,11 +2340,57 @@ ensure_win_shadow (CWindow *cw)
     drop_win_shadow (cw);
 }
 
+static void
+window_rect (CWindow *cw, cairo_rectangle_int_t *rect)
+{
+    rect->x = cw->attr.x;
+    rect->y = cw->attr.y;
+    rect->width = cw->attr.width + 2 * cw->attr.border_width;
+    rect->height = cw->attr.height + 2 * cw->attr.border_width;
+}
+
+static void
+win_extents_rect (CWindow *cw, cairo_rectangle_int_t *r)
+{
+    window_rect (cw, r);
+    ensure_win_shadow (cw);
+
+    if (cw->shadow_width > 0 && cw->shadow_height > 0)
+    {
+        cairo_rectangle_int_t sr;
+
+        sr.x = cw->attr.x + cw->shadow_dx;
+        sr.y = cw->attr.y + cw->shadow_dy;
+        sr.width = cw->shadow_width;
+        sr.height = cw->shadow_height;
+
+        if (sr.x < r->x)
+        {
+            r->width = (r->x + r->width) - sr.x;
+            r->x = sr.x;
+        }
+        if (sr.y < r->y)
+        {
+            r->height = (r->y + r->height) - sr.y;
+            r->y = sr.y;
+        }
+        if (sr.x + sr.width > r->x + r->width)
+        {
+            r->width = sr.x + sr.width - r->x;
+        }
+        if (sr.y + sr.height > r->y + r->height)
+        {
+            r->height = sr.y + sr.height - r->y;
+        }
+    }
+}
+
 XserverRegion
-win_extents (CWindow *cw)
+win_extents (CWindow *cw, cairo_rectangle_int_t *bounds)
 {
     DisplayInfo *display_info;
     ScreenInfo *screen_info;
+    cairo_rectangle_int_t rect;
     XRectangle r;
 
     g_return_val_if_fail (cw != NULL, None);
@@ -2345,41 +2398,16 @@ win_extents (CWindow *cw)
 
     screen_info = cw->screen_info;
     display_info = screen_info->display_info;
-    r.x = cw->attr.x;
-    r.y = cw->attr.y;
-    r.width = cw->attr.width + cw->attr.border_width * 2;
-    r.height = cw->attr.height + cw->attr.border_width * 2;
-
-    ensure_win_shadow (cw);
-
-    if (cw->shadow_width > 0 && cw->shadow_height > 0)
+    win_extents_rect (cw, &rect);
+    if (bounds)
     {
-        XRectangle sr;
-
-        sr.x = cw->attr.x + cw->shadow_dx;
-        sr.y = cw->attr.y + cw->shadow_dy;
-        sr.width = cw->shadow_width;
-        sr.height = cw->shadow_height;
-
-        if (sr.x < r.x)
-        {
-            r.width = (r.x + r.width) - sr.x;
-            r.x = sr.x;
-        }
-        if (sr.y < r.y)
-        {
-            r.height = (r.y + r.height) - sr.y;
-            r.y = sr.y;
-        }
-        if (sr.x + sr.width > r.x + r.width)
-        {
-            r.width = sr.x + sr.width - r.x;
-        }
-        if (sr.y + sr.height > r.y + r.height)
-        {
-            r.height = sr.y + sr.height - r.y;
-        }
+        *bounds = rect;
     }
+    r.x = rect.x;
+    r.y = rect.y;
+    r.width = rect.width;
+    r.height = rect.height;
+
     return XFixesCreateRegion (display_info->dpy, &r, 1);
 }
 
@@ -2907,6 +2935,8 @@ set_render_backend_property (ScreenInfo *screen_info)
 static void setup_presentation (ScreenInfo *screen_info);
 
 #ifdef HAVE_EPOXY
+static void setup_gl (ScreenInfo *screen_info);
+
 static void
 abandon_gl_render (ScreenInfo *screen_info)
 {
@@ -2937,6 +2967,7 @@ abandon_gl_render (ScreenInfo *screen_info)
 
     screen_info->gl_render_failed = TRUE;
 
+    setup_gl (screen_info);
     setup_presentation (screen_info);
     set_render_backend_property (screen_info);
 }
@@ -3064,7 +3095,7 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 
         if (cw->extents == None)
         {
-            cw->extents = win_extents (cw);
+            cw->extents = win_extents (cw, NULL);
         }
         if (cw->picture == None)
         {
@@ -3258,6 +3289,39 @@ remove_timeouts (ScreenInfo *screen_info)
 
 static void damage_screen (ScreenInfo *screen_info);
 
+static void
+note_paint_stats (ScreenInfo *screen_info)
+{
+    static gint want = -1;
+    gint64 now;
+
+    if (want < 0)
+    {
+        want = (g_getenv ("XFWM4_PAINT_STATS") != NULL);
+    }
+    if (!want)
+    {
+        return;
+    }
+
+    now = g_get_monotonic_time ();
+    if (screen_info->paint_stats_since == 0)
+    {
+        screen_info->paint_stats_since = now;
+    }
+    screen_info->paint_stats_painted++;
+    if (now - screen_info->paint_stats_since >= G_USEC_PER_SEC * 5)
+    {
+        g_message ("screen %i: %s paints %.1f/s",
+                   screen_info->screen,
+                   screen_info->use_gl_render ? "opengl" : "xrender",
+                   screen_info->paint_stats_painted /
+                   ((now - screen_info->paint_stats_since) / 1e6));
+        screen_info->paint_stats_painted = 0;
+        screen_info->paint_stats_since = now;
+    }
+}
+
 static gboolean
 repair_screen (ScreenInfo *screen_info)
 {
@@ -3332,35 +3396,7 @@ repair_screen (ScreenInfo *screen_info)
 
         remove_timeouts (screen_info);
         paint_all (screen_info, damage, screen_info->current_buffer);
-
-        {
-            static gint want = -1;
-
-            if (want < 0)
-            {
-                want = (g_getenv ("XFWM4_PAINT_STATS") != NULL);
-            }
-            if (want)
-            {
-                gint64 now = g_get_monotonic_time ();
-
-                if (screen_info->paint_stats_since == 0)
-                {
-                    screen_info->paint_stats_since = now;
-                }
-                screen_info->paint_stats_painted++;
-                if (now - screen_info->paint_stats_since >= G_USEC_PER_SEC * 5)
-                {
-                    g_message ("screen %i: %s paints %.1f/s",
-                               screen_info->screen,
-                               screen_info->use_gl_render ? "opengl" : "xrender",
-                               screen_info->paint_stats_painted /
-                               ((now - screen_info->paint_stats_since) / 1e6));
-                    screen_info->paint_stats_painted = 0;
-                    screen_info->paint_stats_since = now;
-                }
-            }
-        }
+        note_paint_stats (screen_info);
 
         if (screen_info->use_n_buffers > 1)
         {
@@ -3442,9 +3478,11 @@ add_repair (ScreenInfo *screen_info)
 }
 
 static void
-add_damage (ScreenInfo *screen_info, XserverRegion damage)
+add_damage (ScreenInfo *screen_info, XserverRegion damage,
+            const cairo_rectangle_int_t *bounds)
 {
     DisplayInfo *display_info;
+    cairo_region_overlap_t overlap;
 
     TRACE ("entering");
 
@@ -3460,17 +3498,43 @@ add_damage (ScreenInfo *screen_info, XserverRegion damage)
         return;
     }
 
+    display_info = screen_info->display_info;
+    overlap = CAIRO_REGION_OVERLAP_PART;
+    if (cairo_region_is_empty (screen_info->direct_region))
+    {
+        overlap = CAIRO_REGION_OVERLAP_OUT;
+    }
+    else if (bounds != NULL)
+    {
+        overlap = cairo_region_contains_rectangle (screen_info->direct_region,
+                                                   bounds);
+    }
+    if (overlap == CAIRO_REGION_OVERLAP_IN)
+    {
+        XFixesDestroyRegion (display_info->dpy, damage);
+
+        return;
+    }
+
+    if (bounds != NULL &&
+        ((bounds->x + bounds->width < 1) || (bounds->y + bounds->height < 1) ||
+         (bounds->x >= screen_info->width) || (bounds->y >= screen_info->height)))
+    {
+        XFixesDestroyRegion (display_info->dpy, damage);
+
+        return;
+    }
+
     if (screen_info->screenRegion == None)
     {
         screen_info->screenRegion = get_screen_region (screen_info);
     }
 
-    display_info = screen_info->display_info;
     XFixesIntersectRegion (display_info->dpy,
                            damage,
                            damage,
                            screen_info->screenRegion);
-    if (!cairo_region_is_empty (screen_info->direct_region) &&
+    if (overlap == CAIRO_REGION_OVERLAP_PART &&
         is_region_empty (display_info->dpy, damage))
     {
         XFixesDestroyRegion (display_info->dpy, damage);
@@ -3549,6 +3613,7 @@ repair_win (CWindow *cw, XRectangle *r)
     DisplayInfo *display_info;
     ScreenInfo *screen_info;
     XserverRegion parts;
+    cairo_rectangle_int_t bounds;
 
     g_return_if_fail (cw != NULL);
 
@@ -3575,10 +3640,11 @@ repair_win (CWindow *cw, XRectangle *r)
         XFixesTranslateRegion (display_info->dpy, parts,
                                cw->attr.x + cw->attr.border_width,
                                cw->attr.y + cw->attr.border_width);
+        window_rect (cw, &bounds);
     }
     else
     {
-        parts = win_extents (cw);
+        parts = win_extents (cw, &bounds);
         /* Subtract all damage from the window's damage */
         XDamageSubtract (display_info->dpy, cw->damage, None, None);
     }
@@ -3588,7 +3654,7 @@ repair_win (CWindow *cw, XRectangle *r)
     {
         fix_region (cw, parts);
         /* parts region will be destroyed by add_damage () */
-        add_damage (cw->screen_info, parts);
+        add_damage (cw->screen_info, parts, &bounds);
         cw->damaged = TRUE;
     }
 }
@@ -3600,7 +3666,7 @@ damage_screen (ScreenInfo *screen_info)
 
     region = get_screen_region (screen_info);
     /* region will be freed by add_damage () */
-    add_damage (screen_info, region);
+    add_damage (screen_info, region, NULL);
 }
 
 static void
@@ -3623,14 +3689,15 @@ static void
 damage_win (CWindow *cw)
 {
     XserverRegion extents;
+    cairo_rectangle_int_t bounds;
 
     g_return_if_fail (cw != NULL);
     TRACE ("window 0x%lx", cw->id);
 
-    extents = win_extents (cw);
+    extents = win_extents (cw, &bounds);
     fix_region (cw, extents);
     /* extents region will be freed by add_damage () */
-    add_damage (cw->screen_info, extents);
+    add_damage (cw->screen_info, extents, &bounds);
 }
 
 static void
@@ -3693,7 +3760,7 @@ determine_mode (CWindow *cw)
         XFixesCopyRegion (display_info->dpy, damage, cw->extents);
         fix_region (cw, damage);
         /* damage region will be destroyed by add_damage () */
-        add_damage (screen_info, damage);
+        add_damage (screen_info, damage, NULL);
     }
 }
 
@@ -3710,7 +3777,7 @@ expose_area (ScreenInfo *screen_info, XRectangle *rects, gint nrects)
     display_info = screen_info->display_info;
     region = XFixesCreateRegion (display_info->dpy, rects, nrects);
     /* region will be destroyed by add_damage () */
-    add_damage (screen_info, region);
+    add_damage (screen_info, region, NULL);
 }
 
 static void
@@ -3734,7 +3801,7 @@ set_win_opacity (CWindow *cw, guint32 opacity)
         {
             XFixesDestroyRegion (display_info->dpy, cw->extents);
         }
-        cw->extents = win_extents (cw);
+        cw->extents = win_extents (cw, NULL);
         add_repair (screen_info);
     }
 }
@@ -3793,15 +3860,6 @@ can_draw_direct (CWindow *cw)
              ((cw->bypass_compositor == 1) ||
               (screen_info->params->unredirect_overlays &&
                WIN_IS_OVERRIDE(cw) && cw->bypass_compositor == 0))));
-}
-
-static void
-window_rect (CWindow *cw, cairo_rectangle_int_t *rect)
-{
-    rect->x = cw->attr.x;
-    rect->y = cw->attr.y;
-    rect->width = cw->attr.width + 2 * cw->attr.border_width;
-    rect->height = cw->attr.height + 2 * cw->attr.border_width;
 }
 
 static GList *
@@ -3892,7 +3950,11 @@ set_direct_region (ScreenInfo *screen_info, cairo_region_t *region)
 
     if (!cairo_region_is_empty (vacated))
     {
-        add_damage (screen_info, region_to_server (screen_info, vacated));
+        cairo_rectangle_int_t bounds;
+
+        cairo_region_get_extents (vacated, &bounds);
+        add_damage (screen_info, region_to_server (screen_info, vacated),
+                    &bounds);
     }
     cairo_region_destroy (vacated);
 }
@@ -3904,6 +3966,11 @@ update_unredirected (ScreenInfo *screen_info)
     GList *direct;
     cairo_region_t *region;
     cairo_region_t *kept;
+
+    if (screen_info->direct_region == NULL)
+    {
+        return;
+    }
 
     direct = direct_windows (screen_info);
     region = cairo_region_create ();
@@ -4062,7 +4129,7 @@ update_opaque_region (CWindow *cw, Window id)
             }
             translate_to_client_region (cw, old_opaque_region);
             /* old_opaque_region region will be destroyed by add_damage () */
-            add_damage (screen_info, old_opaque_region);
+            add_damage (screen_info, old_opaque_region, NULL);
         }
     }
     else
@@ -4356,12 +4423,12 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
 
     if (damage)
     {
-        cw->extents = win_extents (cw);
+        cw->extents = win_extents (cw, NULL);
         XFixesUnionRegion (display_info->dpy, damage, damage, cw->extents);
 
         fix_region (cw, damage);
         /* damage region will be destroyed by add_damage () */
-        add_damage (screen_info, damage);
+        add_damage (screen_info, damage, NULL);
     }
 
     myDisplayErrorTrapPopIgnored (display_info);
@@ -4409,7 +4476,7 @@ reshape_win (CWindow *cw)
 
     if (damage)
     {
-        cw->extents = win_extents (cw);
+        cw->extents = win_extents (cw, NULL);
         XFixesUnionRegion (display_info->dpy, damage, damage, cw->extents);
 
         /* A shape notify will likely change the shadows too, so clear the extents */
@@ -4418,7 +4485,7 @@ reshape_win (CWindow *cw)
 
         fix_region (cw, damage);
         /* damage region will be destroyed by add_damage () */
-        add_damage (screen_info, damage);
+        add_damage (screen_info, damage, NULL);
     }
 
     myDisplayErrorTrapPopIgnored (display_info);
@@ -4632,7 +4699,7 @@ compositorHandleDamage (DisplayInfo *display_info, XDamageNotifyEvent *ev)
                 if (xfwmGLRootPixmapCoversScreen (screen_info))
                 {
                     /* parts region will be destroyed by add_damage () */
-                    add_damage (screen_info, parts);
+                    add_damage (screen_info, parts, NULL);
                 }
                 else
                 {
@@ -5647,6 +5714,12 @@ setup_gl (ScreenInfo *screen_info)
 {
     gboolean want_gl_render;
 
+    screen_info->use_glx = (screen_info->vblank_mode == VBLANK_AUTO ||
+                            screen_info->vblank_mode == VBLANK_GLX ||
+                            screen_info->vblank_mode == VBLANK_ADAPTIVE);
+#ifdef HAVE_XSYNC
+    screen_info->use_glx &= screen_info->display_info->have_xsync;
+#endif /* HAVE_XSYNC */
     screen_info->use_gl_render = FALSE;
     screen_info->gl_data = NULL;
 
@@ -5775,6 +5848,46 @@ setup_presentation (ScreenInfo *screen_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
+#ifdef HAVE_COMPOSITOR
+static void
+release_output (ScreenInfo *screen_info)
+{
+    DisplayInfo *display_info = screen_info->display_info;
+
+    myDisplayErrorTrapPush (display_info);
+    if (screen_info->rootPicture)
+    {
+        XRenderFreePicture (display_info->dpy, screen_info->rootPicture);
+        screen_info->rootPicture = None;
+    }
+
+#if HAVE_OVERLAYS
+    if (display_info->have_overlays)
+    {
+        XDestroyWindow (display_info->dpy, screen_info->root_overlay);
+        screen_info->root_overlay = None;
+
+        XCompositeReleaseOverlayWindow (display_info->dpy, screen_info->overlay);
+        screen_info->overlay = None;
+    }
+#endif /* HAVE_OVERLAYS */
+
+#ifdef HAVE_EPOXY
+    if (screen_info->gl_colormap != None)
+    {
+        XFreeColormap (display_info->dpy, screen_info->gl_colormap);
+        screen_info->gl_colormap = None;
+    }
+    screen_info->gl_visual = NULL;
+#endif /* HAVE_EPOXY */
+
+    screen_info->output = screen_info->xroot;
+
+    compositorSetCMSelection (screen_info, None);
+    myDisplayErrorTrapPopIgnored (display_info);
+}
+#endif /* HAVE_COMPOSITOR */
+
 gboolean
 compositorManageScreen (ScreenInfo *screen_info)
 {
@@ -5889,7 +6002,7 @@ compositorManageScreen (ScreenInfo *screen_info)
     if (!visual_format)
     {
         g_warning ("Cannot find visual format on screen %i", screen_info->screen);
-        compositorUnmanageScreen (screen_info);
+        release_output (screen_info);
         return FALSE;
     }
 
@@ -5900,7 +6013,7 @@ compositorManageScreen (ScreenInfo *screen_info)
     if (screen_info->rootPicture == None)
     {
         g_warning ("Cannot create root picture on screen %i", screen_info->screen);
-        compositorUnmanageScreen (screen_info);
+        release_output (screen_info);
         return FALSE;
     }
 
@@ -5953,13 +6066,6 @@ compositorManageScreen (ScreenInfo *screen_info)
     TRACE ("manual compositing enabled");
 
 #ifdef HAVE_EPOXY
-    screen_info->use_glx = (screen_info->vblank_mode == VBLANK_AUTO ||
-                            screen_info->vblank_mode == VBLANK_GLX ||
-                            screen_info->vblank_mode == VBLANK_ADAPTIVE);
-#ifdef HAVE_XSYNC
-    screen_info->use_glx &= display_info->have_xsync;
-#endif /* HAVE_XSYNC */
-
     setup_gl (screen_info);
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
@@ -6088,12 +6194,6 @@ unmanage_screen (ScreenInfo *screen_info)
         screen_info->zoomBuffer = None;
     }
 
-    if (screen_info->rootPicture)
-    {
-        XRenderFreePicture (display_info->dpy, screen_info->rootPicture);
-        screen_info->rootPicture = None;
-    }
-
     if (screen_info->blackPicture)
     {
         XRenderFreePicture (display_info->dpy, screen_info->blackPicture);
@@ -6123,26 +6223,6 @@ unmanage_screen (ScreenInfo *screen_info)
         screen_info->gaussianMap = NULL;
     }
 
-#if HAVE_OVERLAYS
-    if (display_info->have_overlays)
-    {
-        XDestroyWindow (display_info->dpy, screen_info->root_overlay);
-        screen_info->root_overlay = None;
-
-        XCompositeReleaseOverlayWindow (display_info->dpy, screen_info->overlay);
-        screen_info->overlay = None;
-    }
-#endif /* HAVE_OVERLAYS */
-
-#ifdef HAVE_EPOXY
-    if (screen_info->gl_colormap != None)
-    {
-        XFreeColormap (display_info->dpy, screen_info->gl_colormap);
-        screen_info->gl_colormap = None;
-    }
-    screen_info->gl_visual = NULL;
-#endif /* HAVE_EPOXY */
-
     screen_info->gaussianSize = -1;
     cairo_region_destroy (screen_info->direct_region);
     screen_info->direct_region = NULL;
@@ -6154,9 +6234,7 @@ unmanage_screen (ScreenInfo *screen_info)
 
     XCompositeUnredirectSubwindows (display_info->dpy, screen_info->xroot,
                                     CompositeRedirectManual);
-    screen_info->output = screen_info->xroot;
-
-    compositorSetCMSelection (screen_info, None);
+    release_output (screen_info);
 
     myDisplayErrorTrapPopIgnored (display_info);
 #endif /* HAVE_COMPOSITOR */
@@ -6221,7 +6299,10 @@ activate_screen (ScreenInfo *screen_info, gboolean active)
 
     if (active)
     {
-        compositorManageScreen (screen_info);
+        if (!compositorManageScreen (screen_info))
+        {
+            return FALSE;
+        }
         compositorAddAllWindows (screen_info);
         mark_all_windows_damaged (screen_info);
     }
@@ -6297,6 +6378,11 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
     }
 
     myDisplayErrorTrapPush (display_info);
+    if (screen_info->screenRegion)
+    {
+        XFixesDestroyRegion (display_info->dpy, screen_info->screenRegion);
+        screen_info->screenRegion = None;
+    }
 #if HAVE_OVERLAYS
     if (display_info->have_overlays)
     {
@@ -6340,12 +6426,6 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
 #ifdef HAVE_EPOXY
         fence_destroy (screen_info, buffer);
 #endif /* HAVE_EPOXY */
-    }
-
-    if (screen_info->screenRegion)
-    {
-        XFixesDestroyRegion (display_info->dpy, screen_info->screenRegion);
-        screen_info->screenRegion = None;
     }
 
     update_unredirected (screen_info);

@@ -134,7 +134,7 @@ msgstr "Конфігурація розкладки, назв та полів"
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "робочий простір;налаштування;конфігурування;віртуальні столи;номер;вікна;екран;злиття;\n "
+msgstr "робочий простір;налаштування;конфігурування;віртуальні столи;номер;вікна;екран;злиття;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:71
@@ -342,7 +342,7 @@ msgstr "Відс_тань від краю:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Переходити на іншу робочу область при _залишені курсором меж екрану</b>"
+msgstr "<b>Переходити на іншу робочу область при залишені курсором меж екрану</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"

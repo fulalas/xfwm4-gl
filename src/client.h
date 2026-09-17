@@ -165,7 +165,6 @@
 #define CLIENT_FLAG_HIDE_TITLEBAR       (1L<<21)
 #define CLIENT_FLAG_XSYNC_WAITING       (1L<<22)
 #define CLIENT_FLAG_XSYNC_ENABLED       (1L<<23)
-#define CLIENT_FLAG_XSYNC_EXT_COUNTER   (1L<<24)
 #define CLIENT_FLAG_RESTORE_SIZE_POS    (1L<<25)
 
 #define WM_FLAG_DELETE                  (1L<<0)
@@ -337,6 +336,7 @@ struct _Client
     /* Termination dialog */
     gint dialog_pid;
     gint dialog_fd;
+    guint dialog_watch_id;
     /* Timout for asynchronous icon update */
     guint icon_timeout_id;
     /* Timout for asynchronous frame update */

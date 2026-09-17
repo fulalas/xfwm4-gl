@@ -58,27 +58,11 @@ clientCreateXSyncAlarm (Client *c)
     display_info = screen_info->display_info;
 
     clientDestroyXSyncAlarm (c);
-    if (FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER))
-    {
-        /* Get the counter value from the client, if not, bail out... */
-        if (!XSyncQueryCounter(display_info->dpy, c->xsync_counter, &c->xsync_value))
-        {
-            FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
-            return FALSE;
-        }
-    }
-    else
-    {
-        XSyncIntToValue (&c->xsync_value, 0);
-        XSyncSetCounter (display_info->dpy, c->xsync_counter, c->xsync_value);
-    }
+    XSyncIntToValue (&c->xsync_value, 0);
+    XSyncSetCounter (display_info->dpy, c->xsync_counter, c->xsync_value);
 
     c->next_xsync_value = c->xsync_value;
-    if (!FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER) ||
-        (XSyncValueLow32(c->next_xsync_value) % 2 == 0))
-    {
-        addToXSyncValue (&c->next_xsync_value, 1);
-    }
+    addToXSyncValue (&c->next_xsync_value, 1);
 
     attrs.trigger.counter = c->xsync_counter;
     XSyncIntToValue (&attrs.delta, 1);
@@ -94,6 +78,10 @@ clientCreateXSyncAlarm (Client *c)
                                        XSyncCAValue |
                                        XSyncCAValueType,
                                        &attrs);
+    if (c->xsync_alarm != None)
+    {
+        FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+    }
     return (c->xsync_alarm != None);
 }
 
@@ -136,18 +124,12 @@ clientGetXSyncCounter (Client * c)
     data = NULL;
     if (getCardinalList (display_info, c->window, NET_WM_SYNC_REQUEST_COUNTER, &data, &nitems))
     {
-        switch (nitems)
+        clientDestroyXSyncAlarm (c);
+        FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+        c->xsync_counter = (nitems > 0) ? (XSyncCounter) data[0] : None;
+        if (c->xsync_counter != None)
         {
-            case 0:
-                c->xsync_counter = None;
-                FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
-                FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
-                break;
-            default:
-                c->xsync_counter = (XSyncCounter) data[0];
-                FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER);
-                FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
-                break;
+            clientCreateXSyncAlarm (c);
         }
     }
 
@@ -156,7 +138,7 @@ clientGetXSyncCounter (Client * c)
         XFree (data);
     }
 
-    return FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+    return (c->xsync_counter != None);
 }
 
 void
@@ -199,8 +181,7 @@ clientXSyncTimeout (gpointer data)
     {
         DBG ("client \"%s\" (0x%lx) did not draw in time, dropping its resize sync",
              c->name, c->window);
-        clientXSyncClearTimeout (c);
-
+        clientDestroyXSyncAlarm (c);
         FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
     }
     return FALSE;
@@ -252,7 +233,7 @@ clientXSyncRequest (Client * c)
     xev.data.l[1] = (long) myDisplayGetCurrentTime (display_info);
     xev.data.l[2] = (long) XSyncValueLow32 (next_value);
     xev.data.l[3] = (long) XSyncValueHigh32 (next_value);
-    xev.data.l[4] = (long) (FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER) ? 1 : 0);
+    xev.data.l[4] = 0;
     XSendEvent (display_info->dpy, c->window, FALSE, NoEventMask, (XEvent *) &xev);
 
     clientXSyncResetTimeout (c);
@@ -266,13 +247,6 @@ clientXSyncUpdateValue (Client *c, XSyncValue value)
     TRACE ("client \"%s\" (0x%lx)", c->name, c->window);
 
     c->xsync_value = value;
-    if (FLAG_TEST (c->flags, CLIENT_FLAG_XSYNC_EXT_COUNTER))
-    {
-        if (XSyncValueLow32(c->xsync_value) % 2 == 0)
-        {
-            addToXSyncValue (&value, 1);
-        }
-    }
     c->next_xsync_value = value;
     clientXSyncClearTimeout (c);
 }

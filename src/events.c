@@ -1736,6 +1736,7 @@ handlePropertyNotify (DisplayInfo *display_info, XPropertyEvent * ev)
             {
                 clientSetTransientFor (c, w);
             }
+            clientAttachTransients (c);
             /* Recompute window type as it may have changed */
             clientWindowType (c);
         }
@@ -1985,9 +1986,9 @@ handleClientMessage (DisplayInfo *display_info, XClientMessageEvent * ev)
         else if ((ev->message_type == display_info->atoms[NET_NUMBER_OF_DESKTOPS]) && (ev->format == 32))
         {
             TRACE ("root has received a win_workspace_count event");
-            if (ev->data.l[0] != (long) screen_info->workspace_count)
+            if ((ev->data.l[0] > 0) && (ev->data.l[0] != (long) screen_info->workspace_count))
             {
-                workspaceSetCount (screen_info, ev->data.l[0]);
+                workspaceSetCount (screen_info, (guint) ev->data.l[0]);
                 getDesktopLayout(display_info, screen_info->xroot, screen_info->workspace_count, &screen_info->desktop_layout);
             }
         }

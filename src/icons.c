@@ -52,7 +52,7 @@ downsize_ratio (guint *width, guint *height, guint dest_w, guint dest_h)
 
     g_return_if_fail (width != NULL);
     g_return_if_fail (height != NULL);
-    g_return_if_fail (dest_w > 0 && dest_w > 0);
+    g_return_if_fail (dest_w > 0 && dest_h > 0);
 
     size = MIN (dest_w, dest_h);
     if (*width > *height)
@@ -104,6 +104,13 @@ default_icon_at_size (GdkScreen *screen, guint width, guint height)
 
 
 static gboolean
+icon_entry_valid (guint w, guint h, gulong nitems)
+{
+    return w > 0 && h > 0 && w <= 4096 && h <= 4096 &&
+           nitems >= ((gulong) w * (gulong) h) + 2;
+}
+
+static gboolean
 find_largest_sizes (gulong * data, gulong nitems, guint *width, guint *height)
 {
     guint w, h;
@@ -121,7 +128,7 @@ find_largest_sizes (gulong * data, gulong nitems, guint *width, guint *height)
         w = data[0];
         h = data[1];
 
-        if (nitems < (gulong) ((w * h) + 2))
+        if (!icon_entry_valid (w, h, nitems))
         {
             return FALSE;       /* not enough data */
         }
@@ -181,7 +188,7 @@ find_best_size (gulong * data, gulong nitems, gint ideal_width, gint ideal_heigh
         w = data[0];
         h = data[1];
 
-        if (nitems < (gulong) ((w * h) + 2))
+        if (!icon_entry_valid (w, h, nitems))
         {
             break;              /* not enough data */
         }
@@ -294,7 +301,7 @@ read_rgb_icon (DisplayInfo *display_info, Window window, guint ideal_width, guin
     return TRUE;
 }
 
-static void
+static gboolean
 get_pixmap_geometry (ScreenInfo *screen_info, Pixmap pixmap, guint *out_width, guint *out_height, guint *out_depth)
 {
     Window root;
@@ -312,7 +319,7 @@ get_pixmap_geometry (ScreenInfo *screen_info, Pixmap pixmap, guint *out_width, g
 
     if ((rc == 0) || (result != Success))
     {
-        return;
+        return FALSE;
     }
 
     if (out_width != NULL)
@@ -327,6 +334,8 @@ get_pixmap_geometry (ScreenInfo *screen_info, Pixmap pixmap, guint *out_width, g
     {
         *out_depth = depth;
     }
+
+    return TRUE;
 }
 
 static cairo_surface_t *
@@ -381,12 +390,15 @@ try_pixmap_and_mask (ScreenInfo *screen_info, Pixmap src_pixmap, Pixmap src_mask
         return NULL;
     }
 
-    get_pixmap_geometry (screen_info, src_pixmap, &w, &h, &depth);
+    if (!get_pixmap_geometry (screen_info, src_pixmap, &w, &h, &depth))
+    {
+        return NULL;
+    }
     surface = get_surface_from_pixmap (screen_info, src_pixmap, w, h, depth);
 
-    if (surface && src_mask != None)
+    if (surface && src_mask != None &&
+        get_pixmap_geometry (screen_info, src_mask, &w, &h, &depth))
     {
-        get_pixmap_geometry (screen_info, src_mask, &w, &h, &depth);
         mask_surface = get_surface_from_pixmap (screen_info, src_mask, w, h, depth);
     }
     else
@@ -473,6 +485,7 @@ scaled_from_pixdata (guchar * pixdata, guint w, guint h, guint dest_w, guint des
 
     if (G_UNLIKELY (src == NULL))
     {
+        g_free (pixdata);
         return NULL;
     }
 
@@ -598,27 +611,33 @@ getClientIcon (Client *c, guint width, guint height)
         app_content = default_icon_at_size (screen_info->gscr, width, height);
     }
 
-    app_icon_width = (guint) gdk_pixbuf_get_width (app_content);
-    app_icon_height = (guint) gdk_pixbuf_get_height (app_content);
+    if (app_content != NULL)
+    {
+        app_icon_width = (guint) gdk_pixbuf_get_width (app_content);
+        app_icon_height = (guint) gdk_pixbuf_get_height (app_content);
 
-    gdk_pixbuf_copy_area (app_content, 0, 0, app_icon_width, app_icon_height, icon_pixbuf,
-                          (width - app_icon_width) / 2, (height - app_icon_height) / 2);
-    g_object_unref (app_content);
+        gdk_pixbuf_copy_area (app_content, 0, 0, app_icon_width, app_icon_height, icon_pixbuf,
+                              (width - app_icon_width) / 2, (height - app_icon_height) / 2);
+        g_object_unref (app_content);
+    }
 
     small_icon_size = MIN (width / 4, height / 4);
     small_icon_size = MIN (small_icon_size, 48);
 
     small_icon = getAppIcon (c, small_icon_size, small_icon_size);
 
-    gdk_pixbuf_composite (small_icon, icon_pixbuf,
-                          (width - small_icon_size) / 2, height - small_icon_size,
-                          small_icon_size, small_icon_size,
-                          (width - small_icon_size) / 2, height - small_icon_size,
-                          1.0, 1.0,
-                          GDK_INTERP_BILINEAR,
-                          0xff);
+    if (small_icon != NULL)
+    {
+        gdk_pixbuf_composite (small_icon, icon_pixbuf,
+                              (width - small_icon_size) / 2, height - small_icon_size,
+                              small_icon_size, small_icon_size,
+                              (width - small_icon_size) / 2, height - small_icon_size,
+                              1.0, 1.0,
+                              GDK_INTERP_BILINEAR,
+                              0xff);
 
-    g_object_unref (small_icon);
+        g_object_unref (small_icon);
+    }
 
     if (FLAG_TEST (c->flags, CLIENT_FLAG_ICONIFIED))
     {

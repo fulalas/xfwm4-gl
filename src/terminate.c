@@ -39,6 +39,11 @@ terminateCloseDialog (Client *c)
 {
     g_return_if_fail (c != NULL);
 
+    if (c->dialog_watch_id)
+    {
+        g_source_remove (c->dialog_watch_id);
+        c->dialog_watch_id = 0;
+    }
     if (c->dialog_pid)
     {
         kill (c->dialog_pid, SIGKILL);
@@ -64,6 +69,7 @@ terminateProcessIO (GIOChannel   *channel,
     c = (Client *) data;
     g_return_val_if_fail (c != NULL, FALSE);
 
+    c->dialog_watch_id = 0;
     str = NULL;
     len = 0;
     err = NULL;
@@ -122,7 +128,7 @@ terminateShowDialog (Client *c)
 
     argv[0] = HELPERDIR "/xfce4/xfwm4/helper-dialog";
     argv[1] = xid;
-    argv[2] = c->name;
+    argv[2] = c->name ? c->name : "";
     argv[3] = NULL;
 
     err = NULL;
@@ -143,10 +149,10 @@ terminateShowDialog (Client *c)
     c->dialog_fd = outpipe;
 
     channel = g_io_channel_unix_new (c->dialog_fd);
-    g_io_add_watch_full (channel, G_PRIORITY_DEFAULT,
-                         G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
-                         terminateProcessIO,
-                         (gpointer) c, NULL);
+    c->dialog_watch_id = g_io_add_watch_full (channel, G_PRIORITY_DEFAULT,
+                                              G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
+                                              terminateProcessIO,
+                                              (gpointer) c, NULL);
     g_io_channel_unref (channel);
 
     return TRUE;

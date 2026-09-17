@@ -38,16 +38,18 @@ used instead.
 
 OpenGL talks to the driver through EGL by default, because it was the cheapest
 on the processor on every driver tested. `XFWM4_GL_BACKEND=glx` switches to
-GLX, and if EGL cannot start, GLX takes over on its own.
+GLX, and if EGL cannot start, GLX takes over on its own. `XFWM4_PAINT_STATS`
+set to `1` prints how many frames were painted per second every 5 seconds.
 
 Only the parts of the screen that changed are painted, then the whole buffer
 is swapped, which the display hardware does for free. `XFWM4_GL_PRESENT` set
 to `copy` or `fbo` picks other ways of getting the frame on screen; they are
 for drivers that behave differently, not for everyday use.
 
-Adaptive vsync can be picked now, with either renderer: frames wait for the
-screen while they can keep up, and stop waiting when they cannot, so a slow
-moment costs no extra lag. See [Settings](#settings).
+Adaptive vsync can be picked now: frames wait for the screen while they can
+keep up, and stop waiting when they cannot, so a slow moment costs no extra
+lag. It needs the GLX backend (`XFWM4_GL_BACKEND=glx`) or XRender; the EGL
+default always syncs every frame. See [Settings](#settings).
 
 To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
 
@@ -91,7 +93,7 @@ only:
 | value | description |
 | --- | --- |
 | `auto` | (default) sync every frame to the screen |
-| `adaptive` | (new) turns vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (needs `GLX_EXT_swap_control_tear`, otherwise same as `auto`) |
+| `adaptive` | (new) turns vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (needs GLX, `XFWM4_GL_BACKEND=glx`, or XRender, plus `GLX_EXT_swap_control_tear`; otherwise, and always with the EGL default, same as `auto`) |
 | `off` | no sync, fastest, tears |
 
 Two more values exist, `glx` and `xpresent`, but with the OpenGL renderer both
@@ -105,9 +107,8 @@ The OpenGL path is skipped, quietly and without breaking the session, if:
 * the driver is a software renderer such as `llvmpipe` or `swrast`
 * the driver is older than OpenGL 2.0, has no frame buffer objects, or cannot
   hand windows over as textures
-* the graphics context is lost while running, after a driver reset for
-  instance
 * a colour depth the driver cannot hand over
+* a window that fails to bind as a texture several frames in a row
 
 ## Other changes to xfwm4
 

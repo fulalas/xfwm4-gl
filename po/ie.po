@@ -759,7 +759,7 @@ msgstr "Devoluer li fenestre"
 
 #: src/menu.c:65
 msgid "_Fullscreen"
-msgstr "_Plen-_ecran"
+msgstr "_Plen-ecran"
 
 #: src/menu.c:66
 msgid "Leave _Fullscreen"

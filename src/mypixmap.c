@@ -158,6 +158,10 @@ parse_color (const char *spec, XPMColor   *colorPtr)
                 return FALSE;
         }
         i /= 3;
+        if (i < 1 || i > 4)
+        {
+                return FALSE;
+        }
 
         g_snprintf (fmt, 16, "%%%dx%%%dx%%%dx", i, i, i);
 
@@ -646,6 +650,7 @@ pixbuf_create_from_xpm (gpointer handle, xfwmColorSymbol *color_sym)
         buffer = file_buffer (op_body, handle);
         if ((!buffer) || (wbytes > (gint) strlen (buffer)))
         {
+            memset (pixtmp, 0, w * 4);
             continue;
         }
 
@@ -822,7 +827,7 @@ xfwmPixmapDrawFromGdkPixbuf (xfwmPixmap * pm, GdkPixbuf *pixbuf)
     gint width, height;
     gint dest_x, dest_y;
     guchar *pixels;
-    gint dpx;
+    gint rowstride, n_channels;
     gboolean status, start_status;
     gint x, y, start;
 
@@ -864,7 +869,8 @@ xfwmPixmapDrawFromGdkPixbuf (xfwmPixmap * pm, GdkPixbuf *pixbuf)
         /* draw alpha with threshold as gdk_pixbuf_render_threshold_alpha did before */
 
         pixels = gdk_pixbuf_get_pixels (pixbuf);
-        dpx = gdk_pixbuf_get_rowstride (pixbuf) / gdk_pixbuf_get_width (pixbuf);
+        rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+        n_channels = gdk_pixbuf_get_n_channels (pixbuf);
 
         cairo_translate (cr, dest_x, dest_y);
         cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -877,7 +883,7 @@ xfwmPixmapDrawFromGdkPixbuf (xfwmPixmap * pm, GdkPixbuf *pixbuf)
             start = 0;
             for (x = 0; x < width; x++)
             {
-                status = pixels[(y * width + x + 1) * dpx - 1] == 0xff;
+                status = pixels[y * rowstride + x * n_channels + 3] == 0xff;
                 if (status != start_status)
                 {
                     if (!status)
@@ -948,6 +954,7 @@ xfwmPixmapRenderGdkPixbuf (xfwmPixmap * pm, GdkPixbuf *pixbuf)
     if (!src)
     {
         g_warning ("Cannot get pixbuf");
+        cairo_surface_destroy (surface);
         return FALSE;
     }
     gdk_pixbuf_composite (pixbuf, src, 0, 0, width, height,
@@ -1018,6 +1025,7 @@ xfwmPixmapCreate (ScreenInfo * screen_info, xfwmPixmap * pm,
     g_return_if_fail (screen_info != NULL);
     TRACE ("pixmap %p [%i×%i]", pm, width, height);
 
+    xfwmPixmapFree (pm);
     if ((width < 1) || (height < 1))
     {
         xfwmPixmapInit (screen_info, pm);

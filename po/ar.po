@@ -226,7 +226,7 @@ msgstr "_تحرير"
 
 #: settings-dialogs/xfwm4-dialog.glade:629
 msgid "_Clear"
-msgstr "41\nامسح_"
+msgstr "_امسح"
 
 #: settings-dialogs/xfwm4-dialog.glade:645
 msgid "_Reset to Defaults"
@@ -246,7 +246,7 @@ msgstr "التركيز يتبع الفأرة"
 
 #: settings-dialogs/xfwm4-dialog.glade:765
 msgid "_Delay before window receives focus:"
-msgstr "_المهلة قبل رفع النافذة ذات التركيز:"
+msgstr "_المهلة قبل أن تتلقى النافذة التركيز:"
 
 #. Focus delay
 #. Raise focus delay

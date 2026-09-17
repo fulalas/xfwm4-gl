@@ -277,7 +277,7 @@ msgstr "<b>Pacelt pie fokusa</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1053
 msgid "Raise window when clicking _inside application window"
-msgstr "Pacelt logu, ka_d lietotnes logā ir ieklikšķināts "
+msgstr "Pacelt logu, ka_d lietotnes logā ir ieklikšķināts"
 
 #: settings-dialogs/xfwm4-dialog.glade:1068
 msgid "<b>Raise on click</b>"

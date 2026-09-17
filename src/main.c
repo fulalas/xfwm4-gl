@@ -27,6 +27,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <glib.h>
+#include <glib-unix.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
@@ -145,11 +146,13 @@ setupLog (gboolean debug)
 }
 #endif /* DEBUG */
 
-static void
-handleSignal (int sig)
+static gboolean
+handleSignal (gpointer data)
 {
     DisplayInfo *display_info;
+    int sig;
 
+    sig = GPOINTER_TO_INT (data);
     display_info = myDisplayGetDefault ();
     if (display_info)
     {
@@ -170,24 +173,30 @@ handleSignal (int sig)
                 break;
         }
     }
+
+    return TRUE;
 }
 
 static void
 setupHandler (gboolean install)
 {
-    struct sigaction act;
+    static const int signals[] = { SIGINT, SIGTERM, SIGHUP, SIGUSR1 };
+    static guint source_ids[G_N_ELEMENTS (signals)];
+    guint i;
 
-    if (install)
-        act.sa_handler = handleSignal;
-    else
-        act.sa_handler = SIG_DFL;
-
-    sigemptyset (&act.sa_mask);
-    act.sa_flags = 0;
-    sigaction (SIGINT,  &act, NULL);
-    sigaction (SIGTERM, &act, NULL);
-    sigaction (SIGHUP,  &act, NULL);
-    sigaction (SIGUSR1, &act, NULL);
+    for (i = 0; i < G_N_ELEMENTS (signals); i++)
+    {
+        if (install)
+        {
+            source_ids[i] = g_unix_signal_add (signals[i], handleSignal,
+                                               GINT_TO_POINTER (signals[i]));
+        }
+        else if (source_ids[i])
+        {
+            g_source_remove (source_ids[i]);
+            source_ids[i] = 0;
+        }
+    }
 }
 
 static void
@@ -204,6 +213,7 @@ cleanUp (void)
     g_return_if_fail (display_info);
 
     eventFilterClose (display_info->xfilter);
+    display_info->xfilter = NULL;
     for (screens = display_info->screens; screens; screens = g_slist_next (screens))
     {
         ScreenInfo *screen_info_n = (ScreenInfo *) screens->data;

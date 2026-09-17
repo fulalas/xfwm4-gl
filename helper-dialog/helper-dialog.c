@@ -39,7 +39,7 @@ on_realize (GtkWidget *dialog,
 {
     Window xid;
 
-    xid = (Window) GPOINTER_TO_INT (data);
+    xid = (Window) GPOINTER_TO_SIZE (data);
     gdk_x11_display_error_trap_push (gtk_widget_get_display (dialog));
     XSetTransientForHint (gdk_x11_get_default_xdisplay (),
                           GDK_WINDOW_XID (gtk_widget_get_window (dialog)),
@@ -90,7 +90,7 @@ main (int argc, char **argv)
     g_object_set (GTK_WIDGET (dialog), "secondary-text", title, NULL);
     gtk_window_set_title (GTK_WINDOW (dialog), _("Warning"));
     g_signal_connect (G_OBJECT (dialog), "realize",
-                      G_CALLBACK (on_realize), (gpointer) GINT_TO_POINTER (xid));
+                      G_CALLBACK (on_realize), (gpointer) GSIZE_TO_POINTER (xid));
     gtk_widget_realize (dialog);
 
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_YES)

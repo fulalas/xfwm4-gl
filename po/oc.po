@@ -654,7 +654,7 @@ msgstr "Agençament"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:174
 msgid "Names"
-msgstr "_Noms :"
+msgstr "Noms"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:194
 msgid "_General"

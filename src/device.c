@@ -66,7 +66,7 @@ xfwm_device_obtain_state_xi2 (XIButtonState *buttons, XIModifierState *mods, XIG
     gint i, count;
 
     result = mods->effective | (group->effective << 13);
-    count = MIN (3, buttons->mask_len / 8);
+    count = MIN (3, buttons->mask_len * 8 - 1);
     for (i = 0; i < count; i++)
     {
         /* check first 3 buttons as GDK does */
@@ -159,11 +159,11 @@ xfwm_device_translate_event_motion_core (XEvent *xevent, XfwmEvent *event)
 {
     xfwm_device_fill_meta (XFWM_EVENT_MOTION, xevent->xany.window, None);
 
-    event->motion.x = xevent->xbutton.x;
-    event->motion.y = xevent->xbutton.y;
-    event->motion.x_root = xevent->xbutton.x_root;
-    event->motion.y_root = xevent->xbutton.y_root;
-    event->motion.time = xevent->xbutton.time;
+    event->motion.x = xevent->xmotion.x;
+    event->motion.y = xevent->xmotion.y;
+    event->motion.x_root = xevent->xmotion.x_root;
+    event->motion.y_root = xevent->xmotion.y_root;
+    event->motion.time = xevent->xmotion.time;
 
     return (XfwmEvent *)event;
 }

@@ -33,7 +33,7 @@ msgstr ""
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Okno nie odpowiada, ponieważ może być zajęte.\nZakończyć działanie programu? "
+msgstr "Okno nie odpowiada, ponieważ może być zajęte.\nZakończyć działanie programu?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"

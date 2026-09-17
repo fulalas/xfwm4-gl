@@ -164,6 +164,7 @@ apply_default_theme (TabwinWidget *tabwin_widget, ScreenInfo *screen_info)
         g_return_if_fail (theme != NULL);
 
         provider = gtk_css_provider_get_named (theme, NULL);
+        g_free (theme);
         g_return_if_fail (provider != NULL);
 
         css = gtk_css_provider_to_string (provider);
@@ -321,22 +322,32 @@ createWindowIcon (GdkScreen *screen, GdkPixbuf *icon_pixbuf, gint size, gint sca
 {
     GtkIconTheme *icon_theme;
     GtkWidget * icon;
+    GdkPixbuf *fallback_pixbuf;
     cairo_surface_t *surface;
 
     TRACE ("entering");
 
+    fallback_pixbuf = NULL;
     if (icon_pixbuf == NULL)
     {
         icon_theme = gtk_icon_theme_get_for_screen (screen);
-        icon_pixbuf = gtk_icon_theme_load_icon (icon_theme, "xfwm4-default",
-                                                size * scale, 0, NULL);
+        fallback_pixbuf = gtk_icon_theme_load_icon (icon_theme, "xfwm4-default",
+                                                    size * scale, 0, NULL);
+        icon_pixbuf = fallback_pixbuf;
     }
 
     icon = gtk_image_new ();
-    surface = gdk_cairo_surface_create_from_pixbuf (icon_pixbuf, scale, NULL);
-    if (surface != NULL) {
-        gtk_image_set_from_surface (GTK_IMAGE (icon), surface);
-        cairo_surface_destroy (surface);
+    if (icon_pixbuf != NULL)
+    {
+        surface = gdk_cairo_surface_create_from_pixbuf (icon_pixbuf, scale, NULL);
+        if (surface != NULL) {
+            gtk_image_set_from_surface (GTK_IMAGE (icon), surface);
+            cairo_surface_destroy (surface);
+        }
+    }
+    if (fallback_pixbuf != NULL)
+    {
+        g_object_unref (fallback_pixbuf);
     }
     return icon;
 }
@@ -682,8 +693,8 @@ computeTabwinData (ScreenInfo *screen_info, TabwinWidget *tabwin_widget)
             tabwin->icon_size = standard_icon_size;
         }
         size_request = tabwin->icon_size + tabwin->label_height + 2 * WIN_ICON_BORDER;
-        tabwin->grid_cols = (int) (floor ((double) tabwin->monitor_width * WIN_MAX_RATIO /
-                                          (double) size_request));
+        tabwin->grid_cols = MAX (1, (int) (floor ((double) tabwin->monitor_width * WIN_MAX_RATIO /
+                                                  (double) size_request)));
         tabwin->grid_rows = (int) (ceil ((double) tabwin->client_count /
                                          (double) tabwin->grid_cols));
 
@@ -702,8 +713,8 @@ computeTabwinData (ScreenInfo *screen_info, TabwinWidget *tabwin_widget)
             size_request = tabwin->icon_size + tabwin->label_height + 2 * WIN_ICON_BORDER;
 
             /* Recalculate with new icon size */
-            tabwin->grid_cols = (int) (floor ((double) tabwin->monitor_width * WIN_MAX_RATIO /
-                                              (double) size_request));
+            tabwin->grid_cols = MAX (1, (int) (floor ((double) tabwin->monitor_width * WIN_MAX_RATIO /
+                                                      (double) size_request)));
             tabwin->grid_rows = (int) (ceil ((double) tabwin->client_count /
                                              (double) tabwin->grid_cols));
 
@@ -720,8 +731,8 @@ computeTabwinData (ScreenInfo *screen_info, TabwinWidget *tabwin_widget)
         tabwin->icon_size = LISTVIEW_WIN_ICON_SIZE;
         gtk_widget_style_get (GTK_WIDGET (tabwin_widget),
                               "listview-icon-size", &tabwin->icon_size, NULL);
-        tabwin->grid_rows = (int) (floor ((double) tabwin->monitor_height * WIN_MAX_RATIO /
-                                          (double) (tabwin->icon_size + 2 * WIN_ICON_BORDER)));
+        tabwin->grid_rows = MAX (1, (int) (floor ((double) tabwin->monitor_height * WIN_MAX_RATIO /
+                                                  (double) (tabwin->icon_size + 2 * WIN_ICON_BORDER))));
         tabwin->grid_cols = (int) (ceil ((double) tabwin->client_count /
                                          (double) tabwin->grid_rows));
     }
@@ -982,7 +993,14 @@ tabwinRemoveClient (Tabwin *tabwin, Client *c)
         {
             if (client_list == tabwin->selected)
             {
-                tabwinSelectNext (tabwin);
+                if ((g_list_next (client_list) == NULL) && (client_list == *tabwin->client_list))
+                {
+                    tabwin->selected = NULL;
+                }
+                else
+                {
+                    tabwinSelectNext (tabwin);
+                }
             }
             *tabwin->client_list = g_list_delete_link (*tabwin->client_list, client_list);
             break;
@@ -1107,9 +1125,9 @@ tabwinSelectDelta (Tabwin *tabwin, int row_delta, int col_delta)
             return NULL;
         }
     }
-    else if (tabwin->client_list)
+    else if (*tabwin->client_list)
     {
-        c = (Client *) tabwin->client_list;
+        c = (Client *) (*tabwin->client_list)->data;
         screen_info = c->screen_info;
         if (!screen_info)
         {

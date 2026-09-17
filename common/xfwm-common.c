@@ -58,6 +58,14 @@ xfwm_get_screen_dimensions (gint *width, gint *height)
 
   display = gdk_display_get_default ();
   monitor = gdk_display_get_primary_monitor (display);
+  if (monitor == NULL)
+    {
+      if (width != NULL)
+        *width = 0;
+      if (height != NULL)
+        *height = 0;
+      return;
+    }
   gdk_monitor_get_geometry (monitor, &geometry);
 
   if (width != NULL)

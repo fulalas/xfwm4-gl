@@ -30,10 +30,10 @@
 #include <glib.h>
 #include "client.h"
 
-#define CLIENT_CONSTRAINED_TOP     1<<0
-#define CLIENT_CONSTRAINED_BOTTOM  1<<1
-#define CLIENT_CONSTRAINED_LEFT    1<<2
-#define CLIENT_CONSTRAINED_RIGHT   1<<3
+#define CLIENT_CONSTRAINED_TOP     (1<<0)
+#define CLIENT_CONSTRAINED_BOTTOM  (1<<1)
+#define CLIENT_CONSTRAINED_LEFT    (1<<2)
+#define CLIENT_CONSTRAINED_RIGHT   (1<<3)
 
 gboolean                 strutsToRectangles                     (Client *,
                                                                  GdkRectangle * /* left */,

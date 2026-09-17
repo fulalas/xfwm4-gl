@@ -245,8 +245,8 @@ sn_client_startup_properties (Client * c)
             {
                 sequence = tmp->data;
 
-                free (c->startup_id);
-                c->startup_id = strdup (sn_startup_sequence_get_id (sequence));
+                g_free (c->startup_id);
+                c->startup_id = g_strdup (sn_startup_sequence_get_id (sequence));
                 startup_id = c->startup_id;
 
                 sn_startup_sequence_complete (sequence);

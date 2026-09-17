@@ -102,7 +102,7 @@ msgstr ""
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid "Fine-tune window behaviour and effects"
-msgstr "Fine-tune window behaviour and effects"
+msgstr ""
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:6
 msgid ""
@@ -517,7 +517,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:564
 msgid "Keep urgent windows _blinking repeatedly"
-msgstr "හදිසි කවුළු "
+msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:587
 msgid "_Accessibility"
@@ -808,4 +808,4 @@ msgstr ""
 #: src/terminate.c:135
 #, c-format
 msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "උදව් සංවාද කොටුව ඉපදවීමට නොහැක: %s\n\r\n"
+msgstr "උදව් සංවාද කොටුව ඉපදවීමට නොහැක: %s\n"

@@ -580,7 +580,7 @@ msgstr "_Ligar composição de ecrã"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:917
 msgid "Display _fullscreen overlay windows directly"
-msgstr "O ecrã completo cobre as ja_nelas"
+msgstr "Mostrar diretamente as ja_nelas em ecrã completo"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:933
 msgid "Show windows preview in place of icons when cycling"

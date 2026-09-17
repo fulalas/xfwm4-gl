@@ -60,6 +60,7 @@
 #include "settings.h"
 #include "stacking.h"
 #include "startup_notification.h"
+#include "terminate.h"
 #include "transients.h"
 #include "workspaces.h"
 #include "xsync.h"
@@ -745,7 +746,7 @@ clientConfigure (Client *c, XWindowChanges * wc, unsigned long mask, unsigned sh
     g_return_if_fail (c->window != None);
 
     TRACE ("client \"%s\" (0x%lx) %s, type %u", c->name, c->window,
-           flags & CFG_CONSTRAINED ? "constrained" : "not contrained", c->type);
+           flags & CFG_CONSTRAINED ? "constrained" : "not constrained", c->type);
 
     px = c->x;
     py = c->y;
@@ -1393,14 +1394,7 @@ clientFree (Client *c)
     {
         XFree (c->class.res_class);
     }
-    if (c->dialog_pid)
-    {
-        kill (c->dialog_pid, SIGKILL);
-    }
-    if (c->dialog_fd >= 0)
-    {
-        close (c->dialog_fd);
-    }
+    terminateCloseDialog (c);
 
     g_free (c);
 }
@@ -1702,6 +1696,7 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     /* Termination dialog */
     c->dialog_pid = 0;
     c->dialog_fd = -1;
+    c->dialog_watch_id = 0;
 
     getWindowName (display_info, c->window, &wm_name);
     getWindowHostname (display_info, c->window, &c->hostname);
@@ -2082,10 +2077,6 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     {
         clientGetXSyncCounter (c);
     }
-    if (c->xsync_counter)
-    {
-        clientCreateXSyncAlarm (c);
-    }
 #endif /* HAVE_XSYNC */
 
     DBG ("client \"%s\" (0x%lx) is now managed", c->name, c->window);
@@ -2110,10 +2101,10 @@ clientUnframe (Client *c, gboolean remap)
     int i;
     gboolean reparented;
 
+    g_return_if_fail (c != NULL);
+
     TRACE ("client \"%s\" (0x%lx) [%s]",
             c->name, c->window, remap ? "remap" : "no remap");
-
-    g_return_if_fail (c != NULL);
 
     screen_info = c->screen_info;
     display_info = screen_info->display_info;
@@ -2213,6 +2204,8 @@ clientFrameAll (ScreenInfo *screen_info)
 
     XSync (display_info->dpy, FALSE);
     myDisplayGrabServer (display_info);
+    wins = NULL;
+    count = 0;
     XQueryTree (display_info->dpy, screen_info->xroot, &w1, &w2, &wins, &count);
     for (i = 0; i < count; i++)
     {
@@ -2254,6 +2247,8 @@ clientUnframeAll (ScreenInfo *screen_info)
     clientSetFocus (screen_info, NULL, myDisplayGetCurrentTime (display_info), FOCUS_IGNORE_MODAL);
     XSync (display_info->dpy, FALSE);
     myDisplayGrabServer (display_info);
+    wins = NULL;
+    count = 0;
     XQueryTree (display_info->dpy, screen_info->xroot, &w1, &w2, &wins, &count);
     for (i = 0; i < count; i++)
     {

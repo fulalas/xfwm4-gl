@@ -911,8 +911,8 @@ clientInitPosition (Client * c)
     if (place)
     {
         if ((screen_info->params->placement_ratio >= 100) ||
-            (100 * frameExtentWidth(c) * frameExtentHeight(c)) <
-                (screen_info->params->placement_ratio * full.width * full.height))
+            ((gint64) 100 * frameExtentWidth(c) * frameExtentHeight(c)) <
+                ((gint64) screen_info->params->placement_ratio * full.width * full.height))
         {
             if (screen_info->params->placement_mode == PLACE_MOUSE)
             {

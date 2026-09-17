@@ -680,7 +680,7 @@ xfwm_settings_set_property (GObject      *object,
     case PROP_GTK_BUILDER:
       if (GTK_IS_BUILDER (settings->priv->builder))
         g_object_unref (settings->priv->builder);
-      settings->priv->builder = g_value_get_object (value);
+      settings->priv->builder = g_value_dup_object (value);
       g_object_notify (object, "gtk-builder");
       break;
     default:
@@ -694,15 +694,22 @@ xfwm_settings_set_property (GObject      *object,
 XfwmSettings *
 xfwm_settings_new (void)
 {
-  XfwmSettings *settings = NULL;
+  XfwmSettings *settings;
   GtkBuilder   *builder;
+  GError       *error = NULL;
 
   builder = gtk_builder_new ();
 
-  gtk_builder_add_from_string (builder, xfwm4_dialog_ui, xfwm4_dialog_ui_length, NULL);
+  if (gtk_builder_add_from_string (builder, xfwm4_dialog_ui, xfwm4_dialog_ui_length, &error) == 0)
+    {
+      g_critical ("Failed to load UI: %s", error->message);
+      g_error_free (error);
+      g_object_unref (builder);
+      return NULL;
+    }
 
-  if (G_LIKELY (builder != NULL))
-    settings = g_object_new (XFWM_TYPE_SETTINGS, "gtk-builder", builder, NULL);
+  settings = g_object_new (XFWM_TYPE_SETTINGS, "gtk-builder", builder, NULL);
+  g_object_unref (builder);
 
   return settings;
 }
@@ -716,6 +723,7 @@ xfwm_settings_theme_sort_func (GtkTreeModel *model,
 {
   gchar *str1 = NULL;
   gchar *str2 = NULL;
+  gint   result;
 
   gtk_tree_model_get (model, iter1, 0, &str1, -1);
   gtk_tree_model_get (model, iter2, 0, &str2, -1);
@@ -724,12 +732,16 @@ xfwm_settings_theme_sort_func (GtkTreeModel *model,
   if (str2 == NULL) str2 = g_strdup ("");
 
   if (g_str_equal (str1, DEFAULT_THEME))
-    return -1;
+    result = -1;
+  else if (g_str_equal (str2, DEFAULT_THEME))
+    result = 1;
+  else
+    result = g_utf8_collate (str1, str2);
 
-  if (g_str_equal (str2, DEFAULT_THEME))
-    return 1;
+  g_free (str1);
+  g_free (str2);
 
-  return g_utf8_collate (str1, str2);
+  return result;
 }
 
 
@@ -879,6 +891,12 @@ main (int    argc,
       return EXIT_FAILURE;
     }
 
+  if (G_UNLIKELY (opt_version))
+    {
+      g_print ("%s\n", PACKAGE_STRING);
+      return EXIT_SUCCESS;
+    }
+
   wm_name = gdk_x11_screen_get_window_manager_name (gdk_screen_get_default ());
   if (G_UNLIKELY (g_ascii_strcasecmp (wm_name, "Xfwm4")))
     {
@@ -886,17 +904,11 @@ main (int    argc,
       return EXIT_FAILURE;
     }
 
-  if (G_UNLIKELY (opt_version))
-    {
-      g_print ("%s\n", PACKAGE_STRING);
-      return EXIT_SUCCESS;
-    }
-
   if (G_UNLIKELY (!xfconf_init (&error)))
     {
       if (G_LIKELY (error != NULL))
         {
-          g_error (_("Failed to initialize xfconf. Reason: %s"), error->message);
+          g_critical (_("Failed to initialize xfconf. Reason: %s"), error->message);
           g_error_free (error);
         }
 
@@ -907,7 +919,7 @@ main (int    argc,
 
   if (G_UNLIKELY (settings == NULL))
     {
-      g_error (_("Could not create the settings dialog."));
+      g_critical (_("Could not create the settings dialog."));
       xfconf_shutdown ();
       return EXIT_FAILURE;
     }
@@ -1004,7 +1016,8 @@ xfwm_settings_title_alignment_changed (GtkComboBox  *combo,
 
   model = gtk_combo_box_get_model (combo);
 
-  gtk_combo_box_get_active_iter (combo, &iter);
+  if (!gtk_combo_box_get_active_iter (combo, &iter))
+    return;
   gtk_tree_model_get (model, &iter, 1, &alignment, -1);
 
   xfconf_channel_set_string (settings->priv->wm_channel, "/general/title_alignment", alignment);
@@ -1484,7 +1497,8 @@ xfwm_settings_double_click_action_changed (GtkComboBox  *combo,
   g_return_if_fail (XFWM_IS_SETTINGS (settings));
 
   model = gtk_combo_box_get_model (combo);
-  gtk_combo_box_get_active_iter (combo, &iter);
+  if (!gtk_combo_box_get_active_iter (combo, &iter))
+    return;
   gtk_tree_model_get (model, &iter, 1, &value, -1);
 
   xfconf_channel_set_string (settings->priv->wm_channel, "/general/double_click_action", value);
@@ -1671,7 +1685,8 @@ xfwm_settings_clear_shortcuts_view (XfwmSettings *settings)
       do
         {
           gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                              SHORTCUTS_SHORTCUT_COLUMN, NULL, -1);
+                              SHORTCUTS_SHORTCUT_COLUMN, NULL,
+                              SHORTCUTS_SHORTCUT_LABEL_COLUMN, NULL, -1);
         }
       while (gtk_tree_model_iter_next (model, &iter));
     }

@@ -813,4 +813,4 @@ msgstr "Error reading data from child process: %s\n"
 #: src/terminate.c:135
 #, c-format
 msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Cannot spawn helper-dialogue: %s\n"
+msgstr "Cannot spawn helper-dialog: %s\n"

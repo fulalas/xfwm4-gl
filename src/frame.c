@@ -921,8 +921,9 @@ frameDrawWin (Client * c)
         /* and those that we do have on right... */
         x = frameWidth (c) - frameRight (c) + screen_info->params->button_spacing -
             frameButtonOffset (c);
-        for (j = strlen (screen_info->params->button_layout) - 1; j >= i; j--)
+        for (j = strlen (screen_info->params->button_layout); j > i; )
         {
+            j--;
             button = getButtonFromLetter (screen_info->params->button_layout[j], c);
             if (button == TITLE_SEPARATOR)
             {
@@ -1537,8 +1538,9 @@ frameButtonX (Client * c, int button, int state)
     /* Look for the button starting from the right */
     x = -frameButtonOffset (c);
 
-    for (j = strlen (screen_info->params->button_layout) - 1; j >= i; j--)
+    for (j = strlen (screen_info->params->button_layout); j > i; )
     {
+        j--;
         check_button = getButtonFromLetter (screen_info->params->button_layout[j], c);
 
         if (check_button < 0)
@@ -1557,7 +1559,7 @@ frameButtonX (Client * c, int button, int state)
             return x;
         }
 
-        x -= screen_info->buttons[check_button][state].width -
+        x -= screen_info->buttons[check_button][state].width +
             screen_info->params->button_spacing;
     }
 

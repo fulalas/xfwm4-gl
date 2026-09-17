@@ -431,10 +431,7 @@ workspaceSetCount (ScreenInfo * screen_info, guint count)
 
     TRACE ("count %u", count);
 
-    if (count < 1)
-    {
-        count = 1;
-    }
+    count = CLAMP (count, 1, WORKSPACE_COUNT_MAX);
     if (count == screen_info->workspace_count)
     {
         return;
@@ -503,7 +500,7 @@ workspaceDelete (ScreenInfo * screen_info, guint position)
     TRACE ("position %u", position);
 
     count = screen_info->workspace_count;
-    if ((count < 1) || (position > count))
+    if ((count < 1) || (position >= count))
     {
         return;
     }

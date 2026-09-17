@@ -167,7 +167,7 @@ wireframeUpdate (Client *c, WireFrame *wireframe)
     wireframe->y = frameExtentY (c);
 
     screen_info = wireframe->screen_info;
-    if (compositorIsActive (screen_info))
+    if (wireframe->cr != NULL)
     {
          wireframeDrawCairo (wireframe, frameExtentWidth (c), frameExtentHeight (c));
     }

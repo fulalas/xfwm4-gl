@@ -180,7 +180,7 @@ msgstr "Fixar"
 
 #: settings-dialogs/xfwm4-dialog.glade:405
 msgid "Shade"
-msgstr "Sombra"
+msgstr "Enrolar"
 
 #: settings-dialogs/xfwm4-dialog.glade:426
 msgid "Minimize"
@@ -363,7 +363,7 @@ msgstr "A_vanzado"
 
 #: settings-dialogs/xfwm4-settings.c:218
 msgid "Shade window"
-msgstr "Ensombrecer a xanela"
+msgstr "Enrolar a xanela"
 
 #: settings-dialogs/xfwm4-settings.c:219
 msgid "Hide window"

@@ -210,6 +210,7 @@ myScreenInit (DisplayInfo *display_info, GdkScreen *gscr, unsigned long event_ma
     if (!myScreenSetWMAtom (screen_info, replace_wm))
     {
         gtk_widget_destroy (screen_info->gtk_win);
+        g_free (screen_info->params);
         g_free (screen_info);
         return NULL;
     }
@@ -218,6 +219,7 @@ myScreenInit (DisplayInfo *display_info, GdkScreen *gscr, unsigned long event_ma
     if (!event_win)
     {
         gtk_widget_destroy (screen_info->gtk_win);
+        g_free (screen_info->params);
         g_free (screen_info);
         return NULL;
     }
@@ -737,7 +739,9 @@ myScreenRebuildMonitorIndex (ScreenInfo *screen_info)
         cloned = FALSE;
         for (j = 0; j < (gint) screen_info->monitors_index->len; j++)
         {
-            xfwm_get_monitor_geometry (screen_info->gscr, j, &previous, TRUE);
+            xfwm_get_monitor_geometry (screen_info->gscr,
+                                       g_array_index (screen_info->monitors_index, gint, j),
+                                       &previous, TRUE);
             if ((previous.x == monitor.x) && (previous.y == monitor.y))
             {
                 cloned = TRUE;
@@ -839,7 +843,7 @@ myScreenGetXineramaMonitorGeometry (ScreenInfo *screen_info, gint monitor_num, G
     g_return_if_fail (rect != NULL);
 
     infos = XineramaQueryScreens (myScreenGetXDisplay (screen_info), &n);
-    if (infos == NULL || n <= 0 || monitor_num > n)
+    if (infos == NULL || n <= 0 || monitor_num < 0 || monitor_num >= n)
     {
         g_warning ("Cannot query Xinerama!");
         XFree (infos);

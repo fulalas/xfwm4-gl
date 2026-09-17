@@ -741,7 +741,7 @@ msgstr "Ma_ksimumigu"
 
 #: ../src/menu.c:54
 msgid "Minimize _Other Windows"
-msgstr "Magnete algluu la fenestrojn unu al la alia"
+msgstr "Mi_nimumigi la aliajn fenestrojn"
 
 #: ../src/menu.c:55
 msgid "S_how"

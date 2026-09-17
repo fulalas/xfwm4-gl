@@ -72,8 +72,14 @@ createGC (ScreenInfo *screen_info, char *col, int func, XFontStruct * font,
     TRACE ("color=%s", col);
 
     mask = GCForeground | GCFunction;
-    XAllocNamedColor (myScreenGetXDisplay (screen_info), screen_info->cmap, col, &xc1, &xc2);
-    gv.foreground = xc2.pixel;
+    if (XAllocNamedColor (myScreenGetXDisplay (screen_info), screen_info->cmap, col, &xc1, &xc2))
+    {
+        gv.foreground = xc2.pixel;
+    }
+    else
+    {
+        gv.foreground = WhitePixel (myScreenGetXDisplay (screen_info), screen_info->screen);
+    }
     gv.function = func;
     if (font)
     {
@@ -98,7 +104,7 @@ void
 sendClientMessage (ScreenInfo *screen_info, Window w, int atom_id, guint32 timestamp)
 {
     DisplayInfo *display_info;
-    XClientMessageEvent ev;
+    XClientMessageEvent ev = { 0 };
 
     g_return_if_fail ((atom_id > 0) && (atom_id < ATOM_COUNT));
     TRACE ("atom %i, timestamp %u", atom_id, (unsigned int) timestamp);
@@ -120,7 +126,7 @@ void
 sendRootMessage (ScreenInfo *screen_info, int atom_id, long value, guint32 timestamp)
 {
     DisplayInfo *display_info;
-    XClientMessageEvent ev;
+    XClientMessageEvent ev = { 0 };
 
     g_return_if_fail ((atom_id > 0) && (atom_id < ATOM_COUNT));
     TRACE ("atom %i, timestamp %u", atom_id, (unsigned int) timestamp);
@@ -207,7 +213,9 @@ get_atom_name (DisplayInfo *display_info, Atom atom)
 
     if (atom)
     {
+        myDisplayErrorTrapPush (display_info);
         xname = (gchar *) XGetAtomName (display_info->dpy, atom);
+        myDisplayErrorTrapPopIgnored (display_info);
         if (xname)
         {
             value = g_strdup (xname);

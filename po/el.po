@@ -480,7 +480,7 @@ msgstr "Ενεργοποίηση πρ_οστασίας απώλειας της �
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:273
 msgid "Honor _standard ICCCM focus hint"
-msgstr "Να τηρείται η πρότυπη υπό_δειξη εστίασης ICCM "
+msgstr "Να τηρείται η πρότυπη υπό_δειξη εστίασης ICCM"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:298
 msgid "When a window raises itself:"

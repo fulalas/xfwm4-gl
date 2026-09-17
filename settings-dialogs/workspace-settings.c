@@ -48,7 +48,7 @@
 #define WORKSPACE_NAMES_PROP       "/general/workspace_names"
 #define WORKSPACE_COUNT_PROP       "/general/workspace_count"
 
-static Window opt_socket_id = 0;
+static gint opt_socket_id = 0;
 static gboolean opt_version = FALSE;
 
 
@@ -104,13 +104,11 @@ workspace_names_update_xfconf(gint workspace,
             /* the property exists, but it's smaller than the current
              * actual number of workspaces */
             names = g_realloc(names, sizeof(gchar *) * (n_workspaces + 1));
-            for(i = prop_len; i < n_workspaces; ++i) {
-                if(i != workspace)
-                    names[i] = g_strdup_printf(_("Workspace %d"), i + 1);
-                else
-                    names[i] = g_strdup(new_name);
-            }
+            for(i = prop_len; i < n_workspaces; ++i)
+                names[i] = g_strdup_printf(_("Workspace %d"), i + 1);
             names[n_workspaces] = NULL;
+            g_free(names[workspace]);
+            names[workspace] = g_strdup(new_name);
         } else {
             /* here we may have a |names| array longer than the actual
              * number of workspaces, but that's fine.  the user might
@@ -187,6 +185,8 @@ xfconf_workspace_names_update(GPtrArray *names,
         }
 
         new_name = g_value_get_string(val);
+        if(new_name == NULL)
+            new_name = "";
 
         path = gtk_tree_path_new_from_indices(i, -1);
         if(gtk_tree_model_get_iter(model, &iter, path)) {
@@ -465,42 +465,46 @@ main(int argc, gchar **argv)
       return 1;
 
     builder = gtk_builder_new();
-    gtk_builder_add_from_string(builder, workspace_dialog_ui, workspace_dialog_ui_length, NULL);
+    if(gtk_builder_add_from_string(builder, workspace_dialog_ui, workspace_dialog_ui_length, &cli_error) == 0) {
+        g_critical ("Failed to load UI: %s", cli_error->message);
+        g_error_free (cli_error);
+        g_object_unref (builder);
+        xfconf_shutdown();
+        return 1;
+    }
 
-    if(builder) {
-        workspace_dialog_configure_widgets (builder, channel);
+    workspace_dialog_configure_widgets (builder, channel);
 
-        if(opt_socket_id == 0) {
-            dialog = GTK_WIDGET (gtk_builder_get_object (builder, "main-dialog"));
-            gtk_widget_show (dialog);
-            g_signal_connect (dialog, "response", G_CALLBACK (workspace_dialog_response), NULL);
+    if(opt_socket_id == 0) {
+        dialog = GTK_WIDGET (gtk_builder_get_object (builder, "main-dialog"));
+        gtk_widget_show (dialog);
+        g_signal_connect (dialog, "response", G_CALLBACK (workspace_dialog_response), NULL);
 
-            /* To prevent the settings dialog to be saved in the session */
-            gdk_x11_set_sm_client_id ("FAKE ID");
+        /* To prevent the settings dialog to be saved in the session */
+        gdk_x11_set_sm_client_id ("FAKE ID");
 
-            gtk_main ();
+        gtk_main ();
 
-            gtk_widget_destroy(dialog);
-        } else {
-            /* Create plug widget */
-            plug = gtk_plug_new (opt_socket_id);
-            g_signal_connect (plug, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
-            gtk_widget_show (plug);
+        gtk_widget_destroy(dialog);
+    } else {
+        /* Create plug widget */
+        plug = gtk_plug_new ((Window) opt_socket_id);
+        g_signal_connect (plug, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
+        gtk_widget_show (plug);
 
-            /* Get plug child widget */
-            plug_child = GTK_WIDGET (gtk_builder_get_object (builder, "plug-child"));
-            xfwm_widget_reparent (plug_child, plug);
-            gtk_widget_show (plug_child);
+        /* Get plug child widget */
+        plug_child = GTK_WIDGET (gtk_builder_get_object (builder, "plug-child"));
+        xfwm_widget_reparent (plug_child, plug);
+        gtk_widget_show (plug_child);
 
-            /* To prevent the settings dialog to be saved in the session */
-            gdk_x11_set_sm_client_id ("FAKE ID");
+        /* To prevent the settings dialog to be saved in the session */
+        gdk_x11_set_sm_client_id ("FAKE ID");
 
-            /* Stop startup notification */
-            gdk_notify_startup_complete ();
+        /* Stop startup notification */
+        gdk_notify_startup_complete ();
 
-            /* Enter main loop */
-            gtk_main ();
-        }
+        /* Enter main loop */
+        gtk_main ();
     }
 
     xfconf_shutdown();

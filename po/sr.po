@@ -379,7 +379,7 @@ msgstr "Попуни прозор"
 
 #: settings-dialogs/xfwm4-settings.c:222
 msgid "Always on top"
-msgstr "Увек на _врху"
+msgstr "Увек на врху"
 
 #: settings-dialogs/xfwm4-settings.c:223
 msgid "Nothing"

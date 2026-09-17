@@ -249,15 +249,17 @@ getsubstring (gchar * s, gint * length)
         (*length)++;
     }
     ns = g_new0 (gchar, lg + 1);
-    /* Skip pbrk character */
-    end--;
+    if (finished)
+    {
+        /* Skip pbrk character */
+        end--;
+    }
     idx1 = skip;
     idx2 = ns;
-    do
+    while (idx1 < end)
     {
-        *(idx2++) = *idx1;
+        *(idx2++) = *(idx1++);
     }
-    while (++idx1 < end);
     *idx2 = '\0';
     return ns;
 }
@@ -320,12 +322,12 @@ sessionSaveScreen (ScreenInfo *screen_info, FILE *f)
             window_role = NULL;
         }
 
-        if (c->class.res_class)
+        if (c->class.res_name)
         {
             fprintf (f, "  [RES_NAME] %s\n", c->class.res_name);
         }
 
-        if (c->class.res_name)
+        if (c->class.res_class)
         {
             fprintf (f, "  [RES_CLASS] %s\n", c->class.res_class);
         }
@@ -411,7 +413,10 @@ sessionLoadWindowStates (const gchar * filename)
     {
         while (fgets (s, sizeof (s), f))
         {
-            sscanf (s, "%4000s", s1);
+            if (sscanf (s, "%4000s", s1) != 1)
+            {
+                continue;
+            }
             if (!strcmp (s1, "[CLIENT]"))
             {
                 sscanf (s, "%*s 0x%lx", &w);
@@ -437,6 +442,10 @@ sessionLoadWindowStates (const gchar * filename)
                 matches[num_match - 1].screen = 0;
                 matches[num_match - 1].used = FALSE;
                 matches[num_match - 1].flags = 0;
+            }
+            else if (num_match < 1)
+            {
+                continue;
             }
             else if (!strcmp (s1, "[GEOMETRY]"))
             {
@@ -495,17 +504,28 @@ sessionLoadWindowStates (const gchar * filename)
             }
             else if (!strcmp (s1, "[WM_COMMAND]"))
             {
-                sscanf (s, "%*s (%i)%n", &matches[num_match - 1].wm_command_count, &pos);
+                if ((sscanf (s, "%*s (%i)%n", &matches[num_match - 1].wm_command_count, &pos) != 1) ||
+                    (matches[num_match - 1].wm_command_count < 1) ||
+                    (matches[num_match - 1].wm_command_count > (gint) sizeof (s)))
+                {
+                    matches[num_match - 1].wm_command_count = 0;
+                    continue;
+                }
                 matches[num_match - 1].wm_command = g_new0 (gchar *, matches[num_match - 1].wm_command_count + 1);
                 for (i = 0; i < matches[num_match - 1].wm_command_count; i++)
                 {
                     gchar *substring;
+                    if ((s[pos] == '\0') || (s[pos] == '\n'))
+                    {
+                        break;
+                    }
                     substring = getsubstring (s + pos, &pos1);
                     pos += pos1;
                     matches[num_match - 1].wm_command[i] = unescape_quote (substring);
                     g_free (substring);
                 }
-                matches[num_match - 1].wm_command[matches[num_match - 1].wm_command_count] = NULL;
+                matches[num_match - 1].wm_command_count = i;
+                matches[num_match - 1].wm_command[i] = NULL;
             }
         }
         fclose (f);

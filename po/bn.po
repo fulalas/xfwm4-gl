@@ -443,7 +443,7 @@ msgstr "লুকানো (আইকনযুক্ত) উইন্ডোস�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:173
 msgid "Cycle _through windows on all workspaces"
-msgstr "উইন্ডোর মাধ্যমে সকল কর্মপরিসরের মধ্যে বৃত্তাকারে ঘোরা হবে (_t) "
+msgstr "উইন্ডোর মাধ্যমে সকল কর্মপরিসরের মধ্যে বৃত্তাকারে ঘোরা হবে (_t)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:189
 msgid "_Draw frame around selected window while cycling"
@@ -491,7 +491,7 @@ msgstr "উইন্ডোসমূহকে টেনে আনা ও সর�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:453
 msgid "_Raise windows when any mouse button is pressed"
-msgstr "যেকোন মাউস বোতাম চাপা হলেই উইন্ডো উঠানো হবে (_R) "
+msgstr "যেকোন মাউস বোতাম চাপা হলেই উইন্ডো উঠানো হবে (_R)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:469
 msgid "Hide frame of windows when ma_ximized"
@@ -507,7 +507,7 @@ msgstr "পর্দার কিনারায় সরানোর সময় �
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:516
 msgid "Use _edge resistance instead of window snapping"
-msgstr "উইন্ডো স্ন্যাপিংয়ের পরিবর্তে প্রান্তিক প্রতিরোধ ব্যবহার "
+msgstr "উইন্ডো স্ন্যাপিংয়ের পরিবর্তে প্রান্তিক প্রতিরোধ ব্যবহার"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:532
 msgid "Use mouse wheel on title bar to ro_ll up the window"
@@ -527,7 +527,7 @@ msgstr "স্বাচ্ছন্দ্যকরণ (_A)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:604
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "কর্মপরিসর পরিবর্তন করতে ডেস্কটপে মাউসের চাকা ব্যবহার করা হবে (_m)   "
+msgstr "কর্মপরিসর পরিবর্তন করতে ডেস্কটপে মাউসের চাকা ব্যবহার করা হবে (_m)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:620
 msgid ""

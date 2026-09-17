@@ -379,7 +379,7 @@ msgstr "Užpildyti langą"
 
 #: settings-dialogs/xfwm4-settings.c:222
 msgid "Always on top"
-msgstr "Visada viršuje "
+msgstr "Visada viršuje"
 
 #: settings-dialogs/xfwm4-settings.c:223
 msgid "Nothing"

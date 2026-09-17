@@ -40,11 +40,11 @@
 #include <libxfce4util/libxfce4util.h>
 #include "ui_style.h"
 
-char *states[] = {
+static const gchar *const states[] = {
     "normal", "active", "prelight", "selected", "insensitive", NULL
 };
 
-char *names[] = {
+static const gchar *const names[] = {
     "fg", "bg", "light", "dark", "mid", NULL
 };
 

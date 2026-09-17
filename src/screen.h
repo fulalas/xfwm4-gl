@@ -226,6 +226,11 @@ struct _ScreenInfo
 
     vblankMode vblank_mode;
 
+    gboolean use_gl_render;
+    gboolean use_egl_backend;
+    guint paint_stats_painted;
+    gint64 paint_stats_since;
+
 #ifdef HAVE_EPOXY
     gboolean has_mesa_swap_control;
     gboolean has_ext_swap_control;
@@ -249,11 +254,7 @@ struct _ScreenInfo
     Visual *gl_visual;
     Colormap gl_colormap;
 
-    gboolean use_gl_render;
-    gboolean use_egl_backend;
     gboolean gl_prefer_egl;
-    guint paint_stats_painted;
-    gint64 paint_stats_since;
     gboolean gl_render_failed;
     gpointer gl_data;
 #ifdef HAVE_XSYNC
@@ -266,6 +267,7 @@ struct _ScreenInfo
 #endif /* HAVE_PRESENT_EXTENSION */
 
 #endif /* HAVE_COMPOSITOR */
+    guint keymap_timeout_id;
 };
 
 gboolean                 myScreenCheckWMAtom                    (ScreenInfo *,

@@ -710,7 +710,7 @@ msgstr "列印版本信息后退出"
 
 #: src/main.c:633
 msgid "Enable debug logging"
-msgstr " 启用调试日志"
+msgstr "启用调试日志"
 
 #: src/main.c:673
 msgid "[ARGUMENTS...]"
@@ -803,7 +803,7 @@ msgstr "摧毁"
 
 #: src/menu.c:79
 msgid "_Quit"
-msgstr "退出(_Q) "
+msgstr "退出(_Q)"
 
 #: src/menu.c:80
 msgid "Restart"

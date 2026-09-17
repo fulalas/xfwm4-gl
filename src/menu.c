@@ -141,7 +141,7 @@ menu_workspace (Menu * menu, MenuOp insensitive, gint ws, gint nws, gchar **wsn,
     gint i;
 
     menu_widget = gtk_menu_new ();
-    gtk_menu_set_screen (GTK_MENU (menu->menu), menu->screen);
+    gtk_menu_set_screen (GTK_MENU (menu_widget), menu->screen);
 
     for (i = 0; i < nws; i++)
     {
@@ -195,6 +195,7 @@ menu_monitor (Client *c, Menu * menu, MenuOp insensitive)
     GtkWidget *menu_widget;
     GtkWidget *menuitem;
     MenuData *menudata;
+    const gchar *label;
     gint i, key;
 
     /* menu_widget is only initialized if there's a valid possible direction to move */
@@ -203,32 +204,33 @@ menu_monitor (Client *c, Menu * menu, MenuOp insensitive)
     {
         switch(i) {
             case 0:
-                menuitem = gtk_menu_item_new_with_label ("Monitor Left");
+                label = _("Monitor _Left");
                 key = KEY_MOVE_TO_MONITOR_LEFT;
                 break;
             case 1:
-                menuitem = gtk_menu_item_new_with_label ("Monitor Right");
+                label = _("Monitor _Right");
                 key = KEY_MOVE_TO_MONITOR_RIGHT;
                 break;
             case 2:
-                menuitem = gtk_menu_item_new_with_label ("Monitor Up");
+                label = _("Monitor _Up");
                 key = KEY_MOVE_TO_MONITOR_UP;
                 break;
             case 3:
-                menuitem = gtk_menu_item_new_with_label ("Monitor Down");
+                label = _("Monitor _Down");
                 key = KEY_MOVE_TO_MONITOR_DOWN;
                 break;
             default:
-                break;
+                continue;
         }
         if (!clientMoveToMonitorByDirectionPossible(c, key))
         {
             continue;
         }
+        menuitem = gtk_menu_item_new_with_mnemonic (label);
         if (!menu_widget)
         {
             menu_widget = gtk_menu_new ();
-            gtk_menu_set_screen (GTK_MENU (menu->menu), menu->screen);
+            gtk_menu_set_screen (GTK_MENU (menu_widget), menu->screen);
         }
         gtk_widget_set_sensitive (menuitem, !(insensitive & MENU_OP_MONITORS));
         gtk_widget_show (menuitem);
@@ -378,8 +380,8 @@ menu_check_and_close (void)
     TRACE ("entering");
     if (menu_open)
     {
-        TRACE ("emitting deactivate signal");
-        g_signal_emit_by_name (G_OBJECT (menu_open), "deactivate");
+        TRACE ("cancelling open menu");
+        gtk_menu_shell_cancel (GTK_MENU_SHELL (menu_open));
         menu_open = NULL;
         return TRUE;
     }
@@ -460,8 +462,9 @@ menu_popup (Menu *menu, gint root_x, gint root_y, guint button, guint32 timestam
             eventFilterPop (menu->filter_setup);
             return FALSE;
         }
+        return TRUE;
     }
-    return TRUE;
+    return FALSE;
 }
 
 void

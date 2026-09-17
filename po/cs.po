@@ -240,7 +240,7 @@ msgstr "Zaměřovat u_místěním ukazatele myši nad okno"
 
 #: settings-dialogs/xfwm4-dialog.glade:765
 msgid "_Delay before window receives focus:"
-msgstr "Prodleva pře_d přesunutím okna do popředí"
+msgstr "Prodleva pře_d zaměřením okna:"
 
 #. Focus delay
 #. Raise focus delay
@@ -607,7 +607,7 @@ msgstr "Zvětšovat pracovní plochu kolečkem myši"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
 msgid "Zoom pointer along with the desktop"
-msgstr "S pracovní plochou současně zvětšit ukazatel "
+msgstr "S pracovní plochou současně zvětšit ukazatel"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
 msgid "Opaci_ty of window decorations:"

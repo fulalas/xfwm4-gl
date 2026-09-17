@@ -72,7 +72,7 @@ msgstr "Hapësirë pune %d"
 
 #: settings-dialogs/workspace-settings.c:307
 msgid "Workspace Name"
-msgstr "Emër Hapësire Pune:"
+msgstr "Emër Hapësire Pune"
 
 #: settings-dialogs/workspace-settings.c:422
 #: settings-dialogs/xfwm4-settings.c:240

@@ -241,6 +241,7 @@ getHint (DisplayInfo *display_info, Window w, int atom_id, long *value)
     if ((result == Success) &&
         (status == Success) &&
         (data != NULL) &&
+        (real_format == 32) &&
         (items_read > 0))
     {
         *value = *((long *) (gpointer) data) & ((1LL << real_format) - 1);
@@ -809,8 +810,8 @@ getUTF8String (DisplayInfo *display_info, Window w, int atom_id, gchar **str_p, 
     {
         TRACE ("getUTF8String() returned invalid UTF-8 characters");
         g_free (*str_p);
-        str_p = NULL;
-        length = 0;
+        *str_p = NULL;
+        *length = 0;
 
         return FALSE;
     }
@@ -1127,6 +1128,12 @@ getKDEIcon (DisplayInfo *display_info, Window window, Pixmap * pixmap, Pixmap * 
         return FALSE;
     }
 
+    if ((format != 32) || (nitems < 2))
+    {
+        XFree (data);
+        return FALSE;
+    }
+
     icons = (Pixmap *) (gpointer) data;
     *pixmap = icons[0];
     *mask = icons[1];
@@ -1159,14 +1166,16 @@ getRGBIconData (DisplayInfo *display_info, Window window, unsigned long **data, 
 
     if ((status != Success) ||
         (result != Success) ||
-        (type != XA_CARDINAL))
+        (type != XA_CARDINAL) ||
+        (*data == NULL) ||
+        (format != 32))
     {
         XFree (*data);
         *data = NULL;
         return FALSE;
     }
 
-    return (data != NULL);
+    return TRUE;
 }
 
 gboolean

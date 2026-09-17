@@ -275,7 +275,7 @@ msgstr "Trì hoãn trước khi nâng cửa sổ:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1027
 msgid "<b>Raise on focus</b>"
-msgstr "Nâng khi nhận tiêu điểm"
+msgstr "<b>Nâng khi nhận tiêu điểm</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1053
 msgid "Raise window when clicking _inside application window"
@@ -283,7 +283,7 @@ msgstr "Nâng cửa sổ khi nhấn vào cửa sổ"
 
 #: settings-dialogs/xfwm4-dialog.glade:1068
 msgid "<b>Raise on click</b>"
-msgstr "Nâng khi nhấn"
+msgstr "<b>Nâng khi nhấn</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1088
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:397
@@ -320,7 +320,7 @@ msgstr "<i>Rộng</i>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1263
 msgid "<b>Windows snapping</b>"
-msgstr "Dính cửa sổ"
+msgstr "<b>Dính cửa sổ</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1300
 msgid "With the mouse _pointer"
@@ -336,7 +336,7 @@ msgstr "Kháng cự cạnh:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "Chuyển không gian làm việc khi chạm đến cạnh màn hình"
+msgstr "<b>Chuyển không gian làm việc khi chạm đến cạnh màn hình</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -433,7 +433,7 @@ msgstr "Đặt về mặc định"
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "Bỏ qua những cửa sổ có thuộc tính skip pager hoặc skip taskbar được đặt"
+msgstr "Bỏ qua những cửa sổ có thuộc tính skip pager\nhoặc skip taskbar được đặt"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:141
 msgid "Cycle _through minimized windows in most recently used order"
@@ -556,7 +556,7 @@ msgstr "Kích thước tối thiểu của cửa sổ để kích hoạt bố tr
 #. Smart placement size
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:750
 msgid "<i>Large</i>"
-msgstr "To"
+msgstr "<i>To</i>"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:779
 msgid "By default, place windows:"
@@ -616,7 +616,7 @@ msgstr "Độ đục của vùng trang trí cửa sổ"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1285
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1361
 msgid "<i>Transparent</i>"
-msgstr "Trong suốt"
+msgstr "<i>Trong suốt</i>"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1085
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1161
@@ -624,7 +624,7 @@ msgstr "Trong suốt"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1313
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1389
 msgid "<i>Opaque</i>"
-msgstr "Đục"
+msgstr "<i>Đục</i>"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1108
 msgid "Opacity of _inactive windows:"

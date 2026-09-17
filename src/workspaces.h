@@ -38,6 +38,8 @@
 #include "placement.h"
 #include "client.h"
 
+#define WORKSPACE_COUNT_MAX 100
+
 gboolean                workspaceMove                           (ScreenInfo *,
                                                                  int,
                                                                  int,

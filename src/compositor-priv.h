@@ -103,6 +103,8 @@
                                            (cw->attr.y + cw->attr.height >= 1) && \
                                            (cw->attr.x < cw->screen_info->width) && \
                                            (cw->attr.y < cw->screen_info->height))
+#define WIN_IS_PAINTABLE(cw)            (WIN_IS_VISIBLE(cw) && WIN_IS_DAMAGED(cw) && \
+                                           WIN_IS_REDIRECTED(cw) && WIN_IS_ON_SCREEN(cw))
 
 #define ZOOM_SMOOTHING_WANTED(zoom)     ((zoom) > 0.25 && (zoom) < 1.0)
 
@@ -156,6 +158,7 @@ struct _CWindow
     GLuint gl_shadow_texture;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
+    gboolean gl_y_inverted;
     gboolean gl_content_dirty;
     cairo_region_t *gl_shape;
     cairo_region_t *gl_opaque;
@@ -187,7 +190,8 @@ gboolean         renderer_matches_any           (const char *,
 #if HAVE_NAME_WINDOW_PIXMAP
 Pixmap           ensure_name_window_pixmap      (CWindow *);
 #endif /* HAVE_NAME_WINDOW_PIXMAP */
-XserverRegion    win_extents                    (CWindow *);
+XserverRegion    win_extents                    (CWindow *,
+                                                 cairo_rectangle_int_t *);
 gboolean         client_area                    (CWindow *,
                                                  gint *,
                                                  gint *,
