@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2022 Olivier Fourdan
 
@@ -890,7 +889,6 @@ rootScrollButton (DisplayInfo *display_info, XfwmEventButton *event)
     }
 }
 
-
 static eventFilterStatus
 handleButtonPress (DisplayInfo *display_info, XfwmEventButton *event)
 {
@@ -1409,11 +1407,6 @@ handleEnterNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
                     int drawn_before = clientGetButtonState (c, b, frame_state);
 
                     c->button_status[b] = BUTTON_STATE_PRELIGHT;
-                    /*
-                     * clientGetButtonState() owns what a button is drawn with,
-                     * so ask it rather than repeat its rules. Nothing to redraw
-                     * when the answer did not change.
-                     */
                     if (clientGetButtonState (c, b, frame_state) != drawn_before)
                     {
                         need_redraw = TRUE;
@@ -1478,11 +1471,6 @@ handleLeaveNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
                     int drawn_before = clientGetButtonState (c, b, frame_state);
 
                     c->button_status[b] = BUTTON_STATE_NORMAL;
-                    /*
-                     * The same rule handleEnterNotify() follows: the hover is
-                     * always recorded, and only a change in what the button is
-                     * drawn with is worth a redraw.
-                     */
                     if (clientGetButtonState (c, b, frame_state) != drawn_before)
                     {
                         need_redraw = TRUE;
@@ -1498,7 +1486,6 @@ handleLeaveNotify (DisplayInfo *display_info, XfwmEventCrossing *event)
         /* No need to process the event any further */
         return EVENT_FILTER_REMOVE;
     }
-
 
     return EVENT_FILTER_PASS;
 }
@@ -1603,7 +1590,6 @@ handleFocusIn (DisplayInfo *display_info, XFocusChangeEvent * ev)
             }
         }
     }
-
 
     return EVENT_FILTER_REMOVE;
 }
@@ -2524,7 +2510,6 @@ show_window_menu (Client *c, gint px, gint py, guint button, guint32 timestamp, 
         insensitive |= MENU_OP_SHADE | MENU_OP_UNSHADE;
     }
 
-
     if (!FLAG_TEST (c->xfwm_flags, XFWM_FLAG_HAS_CLOSE))
     {
         insensitive |= MENU_OP_DELETE;
@@ -2840,7 +2825,6 @@ monitors_changed_cb(GdkScreen *gscreen, gpointer data)
 
     if (size_changed || (screen_info->num_monitors != previous_num_monitors))
     {
-
         setNetWorkarea (display_info, screen_info->xroot, screen_info->workspace_count,
                         screen_info->width, screen_info->height, screen_info->margins);
         setNetDesktopInfo (display_info, screen_info->xroot, screen_info->current_ws,

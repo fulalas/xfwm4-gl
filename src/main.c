@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
@@ -85,7 +84,6 @@
 #ifdef HAVE_COMPOSITOR
 static gboolean compositor = TRUE;
 static vblankMode vblank_mode = VBLANK_AUTO;
-/* Whether --vblank was given at all, so that asking for auto overrides the setting */
 static gboolean vblank_given = FALSE;
 #define XFWM4_ERROR      (xfwm4_error_quark ())
 

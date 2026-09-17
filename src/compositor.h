@@ -64,8 +64,7 @@ void                     compositorUnmanageScreen               (ScreenInfo *);
 void                     compositorAddAllWindows                (ScreenInfo *);
 gboolean                 compositorActivateScreen               (ScreenInfo *,
                                                                  gboolean);
-void                     compositorUpdateFullscreenSuspend      (ScreenInfo *);
-void                     compositorUpdateUnredirected           (ScreenInfo *);
+void                     compositorUpdateUnredirected           (DisplayInfo *);
 void                     compositorResetGLRenderer              (ScreenInfo *);
 void                     compositorUpdateScreenSize             (ScreenInfo *);
 

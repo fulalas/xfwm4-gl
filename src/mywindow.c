@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
  */
@@ -153,7 +152,6 @@ xfwmWindowDelete (xfwmWindow * win)
     win->map = FALSE;
 }
 
-/* Put one piece of the frame above whatever else the frame holds */
 void
 xfwmWindowRaise (xfwmWindow * win)
 {
@@ -165,11 +163,6 @@ xfwmWindowRaise (xfwmWindow * win)
     XRaiseWindow (myScreenGetXDisplay (win->screen_info), win->window);
 }
 
-/*
- * Pin a piece of the frame to an edge of it, so the server carries the piece
- * along in the same operation that resizes the frame instead of the piece
- * waiting to be moved by the next frame drawing, a request later.
- */
 void
 xfwmWindowSetGravity (xfwmWindow * win, gint gravity)
 {

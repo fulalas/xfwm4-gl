@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
@@ -60,7 +59,6 @@
                                  MetaMask | \
                                  SuperMask | \
                                  HyperMask)
-
 
 #ifdef HAVE_COMPOSITOR
 
@@ -202,6 +200,7 @@ struct _ScreenInfo
     Picture blackPicture;
     Picture rootTile;
     XserverRegion screenRegion;
+    cairo_region_t *direct_region;
     XserverRegion prevDamage;
     XserverRegion allDamage;
     unsigned long cursorSerial;
@@ -211,7 +210,6 @@ struct _ScreenInfo
     XRectangle cursorLocation;
     gboolean cursor_is_zoomed;
 
-    guint wins_unredirected;
     gboolean adding_windows;
     gboolean compositor_active;
     gboolean clipChanged;
@@ -234,10 +232,6 @@ struct _ScreenInfo
     gboolean has_ext_swap_control_tear;
     gboolean has_ext_arb_sync;
 
-    /*
-     * What apply_swap_interval() last applied, recorded for the state we
-     * advertise. Only one renderer presents at a time, so both record here.
-     */
     gboolean glx_swap_control;
     gint glx_swap_interval;
 
@@ -252,20 +246,12 @@ struct _ScreenInfo
     GLXWindow glx_window;
     GLsync gl_sync;
 
-    /*
-     * The visual the window we draw into was created with, and the colormap it
-     * needs, when it is not the visual of the screen. See pick_gl_visual().
-     */
     Visual *gl_visual;
     Colormap gl_colormap;
 
-    /* GL compositing backend, see compositor-gl.c */
     gboolean use_gl_render;
-    /* setup_gl() decided the EGL backend; the renderer must not decide again */
     gboolean use_egl_backend;
-    /* Decided when the screen is managed, cleared when EGL failed to start */
     gboolean gl_prefer_egl;
-    /* XFWM4_PAINT_STATS, counted per screen */
     guint paint_stats_painted;
     gint64 paint_stats_since;
     gboolean gl_render_failed;

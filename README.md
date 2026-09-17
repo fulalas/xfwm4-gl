@@ -55,11 +55,15 @@ To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
 
 * **Use OpenGL for compositing (default on)** — enables the OpenGL renderer;
   XRender is used if it cannot start.
-* **Suspend compositing for focused fullscreen windows (default on)** — turns
-  compositing off while a fullscreen application has focus. Useful for games.
-  While it is off, avoiding tearing is up to the application: fine for OpenGL
-  and Vulkan, others may tear. An application can ask never to be bypassed,
-  which is what `mpv --x11-bypass-compositor=never` does.
+* **Suspend compositing for focused fullscreen windows (default on)** — lets a
+  fullscreen application with focus draw straight to the screen, and nothing
+  behind it is painted. Useful for games. Other monitors are composited as
+  usual, and a window opened over it that needs compositing, a menu with a
+  shadow or the picker of a screenshot tool for instance, brings compositing
+  back for as long as it is there. While the application
+  draws directly, avoiding tearing is up to it: fine for OpenGL and Vulkan,
+  others may tear. An application can ask never to be bypassed, which is what
+  `mpv --x11-bypass-compositor=never` does.
 * **Display fullscreen overlay windows directly (default on)** — same as the
   original `xfwm4`; it only gained a tooltip. It covers quite old games and
   players that bypass the window manager without saying anything.
@@ -78,8 +82,8 @@ To try it without installing, replace the running window manager:
 `/general/use_gl_compositing` turns the OpenGL renderer on and off. It takes
 effect immediately.
 
-`/general/suspend_compositing_fullscreen` turns compositing off while a
-fullscreen window has focus.
+`/general/suspend_compositing_fullscreen` lets a fullscreen window with focus
+draw straight to the screen.
 
 `/general/vblank_mode`, or `--vblank` on the command line, read at startup
 only:
@@ -115,8 +119,8 @@ New features:
 * two new boxes in Window Manager Tweaks, under Compositor: one turns the
   OpenGL renderer on and off, one turns off the fullscreen behaviour above.
   The dialog also says which renderer is running
-* compositing switches itself off while a fullscreen window has focus, so games
-  and video get the screen to themselves
+* a fullscreen window with focus draws straight to the screen, so games and
+  video get it to themselves while the other monitors stay composited
 * `--vblank` parameter now supports the `adaptive` value
 * buttons in the title bar can light up under the pointer on a window that is
   not focused, from a new `inactive-prelight` image in the theme

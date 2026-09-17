@@ -104,10 +104,6 @@
                                            (cw->attr.x < cw->screen_info->width) && \
                                            (cw->attr.y < cw->screen_info->height))
 
-/*
- * Whether the magnifier smooths the scaled scene: only within this range does
- * filtering improve it. Both renderers apply the same rule.
- */
 #define ZOOM_SMOOTHING_WANTED(zoom)     ((zoom) > 0.25 && (zoom) < 1.0)
 
 typedef struct _CWindow CWindow;
@@ -152,44 +148,23 @@ struct _CWindow
     guint32 bypass_compositor;
 
 #ifdef HAVE_EPOXY
-    /* GL backend per window data, see compositor-gl.c */
     GLXPixmap gl_pixmap;
-    /* The EGL backend's counterpart of gl_pixmap, an EGLImageKHR */
     gpointer egl_image;
     GLuint gl_texture;
-    /*
-     * The real size of name_window_pixmap, measured when it was named. During
-     * a resize the window's attributes run ahead of its pixmap, and a texture
-     * drawn at the attributes' size stretches old content into new geometry:
-     * the window visibly wobbles. Drawing at the pixmap's own size makes a
-     * stale frame merely lag instead.
-     */
     gint gl_pixmap_width;
     gint gl_pixmap_height;
     GLuint gl_shadow_texture;
     gfloat gl_shadow_opacity;
     gboolean gl_texture_bound;
     gboolean gl_content_dirty;
-    /*
-     * Client side regions, so the paint loop never has to ask the X server
-     * what a window covers. Cached until the geometry, the shape or the
-     * opaque region changes, see xfwmGLInvalidateWindowRegions().
-     */
     cairo_region_t *gl_shape;
     cairo_region_t *gl_opaque;
     cairo_region_t *gl_paint_clip;
-    /*
-     * The rectangles _NET_WM_OPAQUE_REGION last gave us, kept so gl_opaque can
-     * be rebuilt without reading the property again.
-     */
     XRectangle *gl_opaque_rects;
     gint gl_n_opaque_rects;
 #endif /* HAVE_EPOXY */
 };
 
-/*
- * Helpers of compositor.c shared with the rendering backends.
- */
 XImage          *make_shadow                    (ScreenInfo *,
                                                  gdouble,
                                                  gint,
@@ -221,4 +196,4 @@ gboolean         client_area                    (CWindow *,
 
 #endif /* HAVE_COMPOSITOR */
 
-#endif /* INC_COMPOSITOR_PRIV_H */
+#endif

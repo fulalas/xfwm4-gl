@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
  */
@@ -83,7 +82,6 @@ myScreenSetWMAtom (ScreenInfo *screen_info, gboolean replace_wm)
     Window current_wm;
     XEvent event;
     Atom wm_sn_atom;
-
 
     g_return_val_if_fail (screen_info, FALSE);
     g_return_val_if_fail (screen_info->display_info, FALSE);
@@ -619,7 +617,6 @@ myScreenGetClientFromWindow (ScreenInfo *screen_info, Window w, unsigned short m
     g_return_val_if_fail (w != None, NULL);
     TRACE ("looking for (0x%lx)", w);
 
-    /* The display looks it up, we only keep it if it is ours */
     c = myDisplayGetClientFromWindow (screen_info->display_info, w, mode);
     if ((c != NULL) && (c->screen_info == screen_info))
     {

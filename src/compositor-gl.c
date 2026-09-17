@@ -57,22 +57,10 @@
 #include <epoxy/egl.h>
 
 #define GL_DAMAGE_HISTORY       8
-/* Well past the handful of depths an X server can advertise, so it cannot fill */
 #define GL_MAX_DEPTHS           32
 #define GL_MAX_ROOT_TILES       256
-/*
- * A pixmap the driver refused once may well bind on the next frame, a refusal
- * for want of video memory being the one that goes away. After this many frames
- * in a row it is not going to, and XRender takes the screen over.
- */
 #define GL_MAX_BIND_RETRIES     3
 
-/*
- * Binding a pixmap as a texture needs a frame buffer config matching the depth
- * of that pixmap. Windows are nearly always 24 or 32 bit, but a screen can run
- * at another depth, ten bit colour for instance, so the configs are looked up
- * per depth as windows turn up and kept here.
- */
 typedef struct
 {
     gint depth;
@@ -80,20 +68,6 @@ typedef struct
     gboolean usable;
 } XfwmGLDepth;
 
-/*
- * How a finished frame reaches the screen. SWAP paints only the damage and
- * swaps the whole screen. COPY paints the whole screen and copies only the
- * damage, because a copy leaves the back buffer undefined. FBO paints only the
- * damage into a texture that is guaranteed to survive, then copies only the
- * damage out of it, so it saves on both sides. FBO is the normal GLX choice
- * when the driver has the copy operation; SWAP remains the safe fallback.
- *
- * SCENE is FBO's way of drawing with SWAP's way of presenting, for drivers
- * with no copy operation, the EGL backend among them. The scene is kept in a
- * texture and only what changed is composited into it; the buffer that is
- * about to be swapped in is a few frames old, so what it is missing is blitted
- * out of that texture, which is far less work than compositing it again.
- */
 typedef enum
 {
     GL_PRESENT_SWAP,
@@ -102,25 +76,15 @@ typedef enum
     GL_PRESENT_SCENE
 } XfwmGLPresentMode;
 
-/* More rectangles than this are presented as their bounding box instead */
 #define GL_MAX_PRESENT_RECTS    32
 
-/*
- * Making an image out of a pixmap is allowed to throw the pixmap's content
- * away unless it is asked to keep it: the default of EGL_IMAGE_PRESERVED_KHR
- * is false. Without this a window comes up holding nothing until it draws
- * itself again, which is exactly the black first frame wait_for_pixmap() was
- * written for.
- */
 static const EGLint preserved_image[] = {
     EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
     EGL_NONE
 };
 
-/* Timer queries in flight for XFWM4_GL_PROFILE, enough to never wait on one */
 #define GL_PROF_QUERIES         4
 
-/* Buffer age histogram buckets for XFWM4_GL_PROFILE, the last collects the rest */
 #define GL_PROF_AGE_BUCKETS     12
 
 typedef struct
@@ -146,76 +110,28 @@ typedef struct
     gboolean has_buffer_age;
     XfwmGLPresentMode present_mode;
 
-    /*
-     * XFWM4_GL_FENCE=off: do not fence the frame. The repaint loop waits for
-     * the fence of the last frame before starting the next, and while it is
-     * unsignalled it retries on a 1 ms timer, so a frame the GPU is slow to
-     * finish costs a burst of wakeups that each ask the driver again.
-     */
     gboolean use_fence;
 
-    /*
-     * XFWM4_GL_NOPAINT=1: a diagnostic. Everything a frame does except putting
-     * pixels anywhere: the damage is fetched, the regions are worked out, the
-     * textures are bound and the frame is presented, but no quad is drawn. The
-     * screen is garbage, so this is for measuring only. What the application
-     * then reaches is the ceiling the compositor could have if its drawing were
-     * free, which bounds what is left to win.
-     */
     gboolean no_paint;
 
-    /*
-     * XFWM4_GL_PIXMAP_WAIT=off: do not read a pixel back from a window's pixmap
-     * after binding it. That read is a blocking round trip for every window that
-     * appears and it costs about 2% on a workload of menus opening and closing.
-     * It is on by default because the comment on wait_for_pixmap() records a
-     * measured defect without it, and because no test here can show that defect
-     * is gone: resize_check, with teeth proven by injecting a black frame, sees
-     * nothing either way over hundreds of resizes. Absence of evidence, so the
-     * default does not move.
-     */
     gboolean wait_new_pixmap;
 
-    /*
-     * XFWM4_GL_BACKEND=egl: the same renderer on an EGL context instead of a
-     * GLX one. Windows are sampled through EGL images rather than
-     * GLX_EXT_texture_from_pixmap, and frames are presented with
-     * eglSwapBuffersWithDamage, which passes the damage to the driver and
-     * leaves the synchronisation to it. Present modes other than swap are
-     * GLX experiments and do not apply here. Whether this backend is in use
-     * is screen_info->use_egl_backend, decided once in setup_gl().
-     */
     EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
     EGLConfig egl_config;
-    /* The KHR or EXT entry point, whichever the driver has, or NULL */
     EGLBoolean (*egl_swap_with_damage) (EGLDisplay, EGLSurface,
                                         EGLint *, EGLint);
     gpointer root_egl_image;
 
-    /* XFWM4_GL_STATS: paints a second and pixels presented, printed every 5 s */
     gboolean stats;
     guint stat_frames;
     gdouble stat_pixels;
-    /* What actually changed, against what had to be painted for it */
     gdouble stat_damage_pixels;
     gdouble stat_paint_pixels;
-    /*
-     * The frames the buffer age was read for. Not the same as the frames that
-     * reached the screen: a frame can be dropped after the age was read, and
-     * dividing the age numbers by the presented frames made percentages that
-     * could pass 100.
-     */
     gdouble prof_age_frames;
     gint64 stat_since;
 
-    /*
-     * XFWM4_GL_PROFILE: where the processor time of a paint goes, printed
-     * every 5 s. Measured on this thread's own clock, not the wall clock, so
-     * the driver's command submission thread cannot be counted as ours; the
-     * wall clock figure is kept alongside so the difference is visible.
-     */
     gboolean profile;
     gboolean prof_gpu;
     gdouble prof_damage;
@@ -236,11 +152,6 @@ typedef struct
     guint prof_age_max;
     gdouble prof_age_hist[GL_PROF_AGE_BUCKETS];
 
-    /*
-     * How long the graphics card spends on our drawing, as opposed to how
-     * long we spend asking it to. A ring of queries so that reading one never
-     * waits for the frame that is still being drawn.
-     */
     GLuint prof_query[GL_PROF_QUERIES];
     gboolean prof_query_busy[GL_PROF_QUERIES];
     guint prof_query_next;
@@ -278,13 +189,7 @@ typedef struct
 
     gchar *renderer;
 
-    /* A window turned up that this GPU cannot bind, so GL cannot draw the screen */
     gboolean give_up;
-    /*
-     * A window pixmap could not be bound this frame, so the frame has a hole in
-     * it and is dropped rather than shown. Counted so that a refusal that never
-     * goes away does not drop every frame from here on.
-     */
     gboolean retry_paint;
     guint bind_failures;
 } XfwmGLData;
@@ -316,12 +221,6 @@ static const gchar *fragment_source_rect =
     "    gl_FragColor = texture2DRect (tex, uv) * opacity;\n"
     "}\n";
 
-/*
- * A box blurred by a gaussian is separable, so the shadow of any window big
- * enough is the product of one horizontal and one vertical edge profile. That
- * turns every shadow into a single quad sampling a small profile texture, with
- * no per window gaussian to compute and no per window texture to keep.
- */
 static const gchar *fragment_shadow_profile =
     "uniform sampler2D prof;\n"
     "uniform vec2 size;\n"
@@ -337,23 +236,9 @@ static const gchar *fragment_shadow_profile =
     "    gl_FragColor = vec4 (0.0, 0.0, 0.0, a * opacity);\n"
     "}\n";
 
-/*
- * Everything below works on client side regions. Asking the X server what a
- * window covers means waiting for a reply, and doing that for every window of
- * every frame is the most expensive thing a compositor can do. The shape of a
- * window only changes when the window does, so it is worked out once and kept.
- */
-/* The whole window as the X server sees it, border included */
 static void
 get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
 {
-    /*
-     * The pixmap's measured size, never the attributes': during a resize the
-     * attributes run a step ahead, and drawing old content at the new size
-     * stretches it a few pixels differently every frame, which the eye reads
-     * as the window wobbling. The attributes remain the fallback for the
-     * moment before a pixmap has ever been named.
-     */
     if (cw->gl_pixmap_width > 0 && cw->gl_pixmap_height > 0)
     {
         *width = cw->gl_pixmap_width;
@@ -365,23 +250,6 @@ get_window_pixmap_size (CWindow *cw, gint *width, gint *height)
     *height = cw->attr.height + 2 * cw->attr.border_width;
 }
 
-/*
- * A window is drawn at its own size, or at the size of the pixmap behind it,
- * whichever is smaller. During a resize the pixmap is a step behind, and the
- * strip the window has just gained is in neither of them: not in the pixmap,
- * which is still the old size, and not anywhere else either, because the
- * client has not drawn it and the window manager has not drawn its border
- * into it. Nothing can paint pixels that do not exist.
- *
- * What is left is the choice of what shows there for that one frame, and the
- * strip is deliberately left holding what the screen already had: the same
- * window, its border and all, one step of the resize ago. The two
- * alternatives are worse. Stretching the edge of the pixmap into the strip
- * smears the border across the client's own area - a band down the side of
- * the window, which is what it looked like before. Painting the desktop there
- * takes the border away for that frame, and a window resized without its
- * bottom and right edges is what a person notices.
- */
 static void
 window_painted_size (CWindow *cw, gint *width, gint *height)
 {
@@ -420,7 +288,6 @@ region_from_rects (XRectangle *rects, gint nrects, gint dx, gint dy)
     return region;
 }
 
-/* The area a window covers on screen, its shape included */
 static cairo_region_t *
 window_shape (CWindow *cw)
 {
@@ -432,24 +299,12 @@ window_shape (CWindow *cw)
         return cw->gl_shape;
     }
 
-    /*
-     * cw->shaped, not WIN_IS_SHAPED(): the latter tests the client, while the
-     * window tracked here can be the frame, which themes with rounded corners
-     * shape on their own. Treating such a frame as a rectangle draws the
-     * undefined corners of its pixmap and hides what is really behind them.
-     */
     if (cw->shaped)
     {
         XRectangle *rects;
         gint nrects = 0, ordering;
         gboolean answered;
 
-        /*
-         * Xlib hands back a null pointer both when the window has no shape
-         * rectangles at all and when the request failed, so the error trap is
-         * what tells the two apart. An empty shape means the window covers
-         * nothing, and it must not fall through to the whole window below.
-         */
         myDisplayErrorTrapPush (display_info);
         rects = XShapeGetRectangles (myScreenGetXDisplay (screen_info), cw->id,
                                      ShapeBounding, &nrects, &ordering);
@@ -466,7 +321,6 @@ window_shape (CWindow *cw)
             {
                 XFree (rects);
             }
-            /* No further than the window is drawn, see below */
             drawn.x = cw->attr.x;
             drawn.y = cw->attr.y;
             window_painted_size (cw, &drawn.width, &drawn.height);
@@ -479,16 +333,6 @@ window_shape (CWindow *cw)
     {
         cairo_rectangle_int_t r;
 
-        /*
-         * What the window covers is what it is drawn at, which is not always
-         * what it measures: during a resize the pixmap behind it can still be
-         * the old one and the drawing stops where the pixmap does. This region
-         * is also what the window claims out of the area left to paint, and a
-         * claim wider than the drawing leaves the difference to whatever the
-         * back buffer held - with the buffer age, a frame or three old. It
-         * shows while a window shrinks, where the pixmap is the larger of the
-         * two. See window_painted_size().
-         */
         r.x = cw->attr.x;
         r.y = cw->attr.y;
         window_painted_size (cw, &r.width, &r.height);
@@ -498,22 +342,12 @@ window_shape (CWindow *cw)
     return cw->gl_shape;
 }
 
-/*
- * The client area of a framed window, the whole window for anything else.
- * Returns FALSE when the window has no frame, as client_area() does.
- */
 static gboolean
 window_client_area (CWindow *cw, cairo_rectangle_int_t *r)
 {
-    /* The rule lives in compositor.c so both renderers read the same one */
     return client_area (cw, &r->x, &r->y, &r->width, &r->height);
 }
 
-/*
- * What the window itself says is opaque, in screen coordinates. Windows with an
- * alpha channel use this to tell us which part of them still hides what is
- * below, which is how most toolkit windows with rounded corners behave.
- */
 static cairo_region_t *
 window_opaque_region (CWindow *cw)
 {
@@ -524,22 +358,11 @@ window_opaque_region (CWindow *cw)
     {
         return cw->gl_opaque;
     }
-    /*
-     * The rectangles come from update_opaque_region(), which already read the
-     * property, so the paint loop never asks the X server for them. A count of
-     * zero is the cached answer that this window claims nothing.
-     */
     if (cw->gl_n_opaque_rects == 0)
     {
         return NULL;
     }
 
-    /*
-     * The rectangles are relative to the client window. Taking the origin from
-     * the client area rather than from the client keeps this cache, the bounding
-     * shape and the drawing on the same coordinates while a move is still on its
-     * way to the X server. A frameless window starts inside its own border.
-     */
     if (window_client_area (cw, &client))
     {
         dx = client.x;
@@ -554,17 +377,12 @@ window_opaque_region (CWindow *cw)
     cw->gl_opaque = region_from_rects (cw->gl_opaque_rects,
                                        cw->gl_n_opaque_rects, dx, dy);
 
-    /* Never claim more than the window covers */
     cairo_region_intersect (cw->gl_opaque, window_shape (cw));
     cairo_region_intersect_rectangle (cw->gl_opaque, &client);
 
     return cw->gl_opaque;
 }
 
-/*
- * Only what the window itself says is opaque. The bounding shape is a separate
- * fact and a change of one says nothing about the other.
- */
 static void
 xfwmGLInvalidateOpaqueRegion (CWindow *cw)
 {
@@ -595,10 +413,6 @@ xfwmGLInvalidateWindowRegions (CWindow *cw)
     xfwmGLInvalidateOpaqueRegion (cw);
 }
 
-/*
- * A window that only moved covers the same shape somewhere else, so the cached
- * regions are shifted rather than thrown away and asked for again.
- */
 void
 xfwmGLTranslateWindowRegions (CWindow *cw, gint dx, gint dy)
 {
@@ -619,10 +433,6 @@ xfwmGLTranslateWindowRegions (CWindow *cw, gint dx, gint dy)
     }
 }
 
-/*
- * Keep the rectangles _NET_WM_OPAQUE_REGION gave the compositor, so the paint
- * loop can build the region from them without reading the property again.
- */
 void
 xfwmGLSetOpaqueRects (CWindow *cw, XRectangle *rects, gint nrects)
 {
@@ -633,7 +443,6 @@ xfwmGLSetOpaqueRects (CWindow *cw, XRectangle *rects, gint nrects)
     cw->gl_n_opaque_rects = 0;
     xfwmGLInvalidateOpaqueRegion (cw);
 
-    /* Nothing reads a copy of these unless the GL renderer is the one drawing */
     if (cw->screen_info->gl_data == NULL)
     {
         return;
@@ -664,12 +473,6 @@ gl_data (ScreenInfo *screen_info)
     return (XfwmGLData *) screen_info->gl_data;
 }
 
-/*
- * Whether GL calls would land in this screen's context. Any context being
- * current is not good enough: with a context of another screen current,
- * deleting a name would free someone else's object and leak ours, and GL
- * would say nothing about it.
- */
 static gboolean
 gl_context_is_current (ScreenInfo *screen_info)
 {
@@ -739,7 +542,6 @@ link_program (const gchar *fragment_source)
     glAttachShader (program, vertex);
     glAttachShader (program, fragment);
     glLinkProgram (program);
-    /* The shaders are kept alive by the program */
     glDeleteShader (vertex);
     glDeleteShader (fragment);
 
@@ -760,10 +562,6 @@ link_program (const gchar *fragment_source)
     return program;
 }
 
-/*
- * Find a frame buffer config able to bind a pixmap of that depth as a texture
- * on the given target. See pick_texture_target() for how the target is chosen.
- */
 static gboolean
 find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
                GLXFBConfig *fbconfig)
@@ -821,10 +619,6 @@ find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
             continue;
         }
 
-        /*
-         * Every depth has to end up on the same target, the pixmaps are all
-         * bound and sampled by the same code.
-         */
         if (!(value & ((want_target == GLX_TEXTURE_2D_EXT)
                        ? GLX_TEXTURE_2D_BIT_EXT : GLX_TEXTURE_RECTANGLE_BIT_EXT)))
         {
@@ -840,15 +634,6 @@ find_fbconfig (ScreenInfo *screen_info, gint depth, GLenum want_target,
     return found;
 }
 
-/*
- * Sync the swaps to the screen. The XRender path does this on the pixmap it
- * presents, here the frames go straight to the overlay window.
- *
- *   off      no sync at all, the fastest but it tears
- *   adaptive sync, except that a late frame is shown at once rather than
- *            held back until the next refresh
- *   other    sync to every vblank
- */
 static void
 set_swap_interval_gl (ScreenInfo *screen_info)
 {
@@ -859,10 +644,6 @@ set_swap_interval_gl (ScreenInfo *screen_info)
 
     if (data != NULL && screen_info->use_egl_backend)
     {
-        /*
-         * EGL knows no adaptive interval, so a late frame waits like any
-         * other: that is an interval of one. Zero would be no sync at all.
-         */
         if (interval < 0)
         {
             interval = 1;
@@ -878,7 +659,6 @@ set_swap_interval_gl (ScreenInfo *screen_info)
             g_info ("GLX_EXT_swap_control_tear is missing, syncing to every vblank");
         }
 
-        /* Recorded on the ScreenInfo so vsync_state() reads one place for both renderers */
         screen_info->glx_swap_control = apply_swap_interval (screen_info,
                                                              screen_info->glx_window,
                                                              &interval);
@@ -895,10 +675,6 @@ set_swap_interval_gl (ScreenInfo *screen_info)
     }
 }
 
-/*
- * The config for a depth, looked up once and remembered, including the answer
- * that there is none.
- */
 static XfwmGLDepth *
 depth_config (ScreenInfo *screen_info, gint depth)
 {
@@ -931,7 +707,6 @@ depth_config (ScreenInfo *screen_info, gint depth)
     return entry;
 }
 
-/* There is no entry at all once the table is full, which is not usable either */
 static gboolean
 depth_is_usable (ScreenInfo *screen_info, gint depth)
 {
@@ -940,12 +715,6 @@ depth_is_usable (ScreenInfo *screen_info, gint depth)
     return (dc != NULL && dc->usable);
 }
 
-/*
- * Drivers that offer the rectangle texture target and then do not honour it:
- * binding a window to it is accepted and then samples black, which blacks out
- * the screen. The same windows draw correctly on the 2D target, so they get
- * that one.
- */
 static gboolean
 renderer_needs_2d_target (const char *renderer)
 {
@@ -959,15 +728,6 @@ renderer_needs_2d_target (const char *renderer)
     return renderer_matches_any (renderer, needs_2d);
 }
 
-/*
- * Rectangle textures come first: addressed in pixels, they cannot disagree with
- * the real width of the pixmap, while a normalised GL_TEXTURE_2D relies on the
- * driver mapping 1.0 onto the last texel. Where it pads the allocation instead,
- * the window is drawn slightly stretched and the content wobbles as it resizes.
- *
- * The target picked has to work for opaque and ARGB windows alike, and its
- * shader has to compile: rectangle pixmaps can be offered without sampler2DRect.
- */
 static gboolean
 pick_texture_target (ScreenInfo *screen_info)
 {
@@ -975,11 +735,6 @@ pick_texture_target (ScreenInfo *screen_info)
     gboolean prefer_2d;
     guint i;
 
-    /*
-     * Rectangle textures first, since they are addressed in pixels and so cannot
-     * be stretched by a driver that pads its allocations, except where the
-     * driver cannot be trusted with them.
-     */
     prefer_2d = renderer_needs_2d_target ((const char *) glGetString (GL_RENDERER));
 
     for (i = 0; i < 2; i++)
@@ -1007,7 +762,6 @@ pick_texture_target (ScreenInfo *screen_info)
         data->tex_type = (target == GLX_TEXTURE_2D_EXT) ? GL_TEXTURE_2D
                                                         : GL_TEXTURE_RECTANGLE_ARB;
 
-        /* Opaque and ARGB windows both have to work, they are always around */
         if (!depth_is_usable (screen_info, 24) ||
             !depth_is_usable (screen_info, 32))
         {
@@ -1031,22 +785,11 @@ pick_texture_target (ScreenInfo *screen_info)
     return FALSE;
 }
 
-/*
- * eglGetDisplay() hands every screen of the same X display the same EGLDisplay,
- * and eglTerminate() is not reference counted: terminating for one screen would
- * take the other screens' contexts and images with it. So the users are counted
- * here and the display is only terminated by the last one out.
- */
 static guint egl_display_users = 0;
 
-/* Unbind and drop the surface; the context and everything in it stay */
 static void
 egl_release_surface (XfwmGLData *data)
 {
-    /*
-     * Only if it is ours. Every screen of the display shares the EGLDisplay,
-     * so unbinding blind would take another screen's context off the thread.
-     */
     if (eglGetCurrentContext () == data->egl_context)
     {
         eglMakeCurrent (data->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
@@ -1059,10 +802,6 @@ egl_release_surface (XfwmGLData *data)
     }
 }
 
-/*
- * A window surface on the output window, made current. Shared by the first
- * start and by coming back from a suspend, where the output window is new.
- */
 static gboolean
 egl_attach_output_surface (ScreenInfo *screen_info)
 {
@@ -1078,10 +817,6 @@ egl_attach_output_surface (ScreenInfo *screen_info)
                             data->egl_surface, data->egl_context));
 }
 
-/*
- * Everything EGL holds for this screen. Safe to call on a half built setup,
- * which is how a failed initialisation cleans up after itself.
- */
 static void
 egl_screen_finish (ScreenInfo *screen_info)
 {
@@ -1106,19 +841,12 @@ egl_screen_finish (ScreenInfo *screen_info)
     data->egl_display = EGL_NO_DISPLAY;
 }
 
-/*
- * Bring up EGL on the output window: a desktop GL context, a window surface
- * on the visual the output already has, and the extensions this backend
- * cannot do without. Leaves its context current on success. On failure
- * everything is torn down again and the GLX context is put back.
- */
 static gboolean
 egl_screen_init (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
     Display *dpy = myScreenGetXDisplay (screen_info);
     XWindowAttributes attr;
-    /* Deep visuals sort last, so the list must hold everything offered */
     EGLConfig configs[256];
     EGLConfig config = NULL;
     EGLint n_configs = 0, visual_id, major, minor, i;
@@ -1148,14 +876,12 @@ egl_screen_init (ScreenInfo *screen_info)
         goto failed;
     }
 
-    /* The one way this backend has of reading a window pixmap */
     if (!epoxy_has_egl_extension (data->egl_display, "EGL_KHR_image_pixmap"))
     {
         g_warning ("EGL_KHR_image_pixmap is missing, staying on GLX.");
         goto failed;
     }
 
-    /* The surface sits on the output window, so its visual decides the config */
     if (!XGetWindowAttributes (dpy, screen_info->output, &attr) ||
         !eglChooseConfig (data->egl_display, wanted, configs,
                           (EGLint) G_N_ELEMENTS (configs), &n_configs))
@@ -1197,14 +923,12 @@ egl_screen_init (ScreenInfo *screen_info)
         goto failed;
     }
 
-    /* The GL side of sampling an EGL image, asked with the context current */
     if (!epoxy_has_gl_extension ("GL_OES_EGL_image"))
     {
         g_warning ("GL_OES_EGL_image is missing, staying on GLX.");
         goto failed;
     }
 
-    /* Normally learnt from the GLX context, which does not exist here */
     screen_info->has_ext_arb_sync = epoxy_has_gl_extension ("GL_ARB_sync");
     data->has_buffer_age = epoxy_has_egl_extension (data->egl_display,
                                                     "EGL_EXT_buffer_age");
@@ -1228,7 +952,6 @@ egl_screen_init (ScreenInfo *screen_info)
 
 failed:
     egl_screen_finish (screen_info);
-    /* Whatever was current before eglMakeCurrent() may have been lost */
     if (screen_info->glx_context != None)
     {
         glXMakeCurrent (dpy, screen_info->glx_window, screen_info->glx_context);
@@ -1249,12 +972,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
 
     dpy = myScreenGetXDisplay (screen_info);
 
-    /*
-     * A window is drawn from the pixmap the Composite extension names for it,
-     * and there is nothing else to draw it from here: the XRender path can fall
-     * back to the window drawable itself, a texture cannot. Without this the
-     * binding below would fail on every window, one at a time, forever.
-     */
     if (!screen_info->display_info->have_name_window_pixmap)
     {
         g_warning ("The X server cannot name window pixmaps, GL compositing disabled.");
@@ -1264,28 +981,17 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     data = g_new0 (XfwmGLData, 1);
     screen_info->gl_data = data;
 
-    /*
-     * The same renderer on an EGL context instead of a GLX one. The choice was
-     * made once, in setup_gl(); re-reading the environment here is how the
-     * automatic selection silently initialised the wrong backend on NVIDIA.
-     */
     if (screen_info->use_egl_backend)
     {
         egl_screen_init (screen_info);
 
         if (data->egl_context == EGL_NO_CONTEXT)
         {
-            /* setup_gl() made no GLX context in this mode, so EGL or nothing */
             if (screen_info->glx_context == None)
             {
                 xfwmGLScreenFinish (screen_info);
                 return FALSE;
             }
-            /*
-             * There is a GLX context to fall back on, so carry on with it -
-             * but not while still claiming to be on EGL, or every EGL call
-             * below would be made against a display that was never opened.
-             */
             screen_info->use_egl_backend = FALSE;
         }
     }
@@ -1299,7 +1005,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    /* Asked of whichever context the backend above left current */
     if (epoxy_gl_version () < 20)
     {
         g_warning ("OpenGL 2.0 is required for GL compositing, disabled.");
@@ -1317,11 +1022,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
 
     if (screen_info->use_egl_backend)
     {
-        /*
-         * EGL images always come out on the 2D target, and every depth the
-         * server can hand us is theirs to translate, so nothing has to be
-         * picked per depth here.
-         */
         data->tex_target = GLX_TEXTURE_2D_EXT;
         data->tex_type = GL_TEXTURE_2D;
         data->program_win = link_program (fragment_source_2d);
@@ -1340,23 +1040,10 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    /*
-     * Textures of any size are part of OpenGL 2.0, which is required above, and
-     * everything uploaded here stays within what even the earliest hardware to
-     * offer them can do: no mipmaps and no repeating. So there is nothing left
-     * to check for separately.
-     */
-
     data->u_opacity_win = glGetUniformLocation (data->program_win, "opacity");
     glUseProgram (data->program_win);
     glUniform1i (glGetUniformLocation (data->program_win, "tex"), 0);
 
-    /*
-     * Textures we upload ourselves are always plain 2D: the shadows, the
-     * cursor and the scene the magnifier scales back up. A driver that only
-     * offers the rectangle target for window pixmaps still needs a 2D program
-     * for those, so there is always one.
-     */
     if (data->tex_type == GL_TEXTURE_2D)
     {
         data->program_2d = data->program_win;
@@ -1375,7 +1062,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
         glUniform1i (glGetUniformLocation (data->program_2d, "tex"), 0);
     }
 
-    /* Shadows of windows large enough are drawn straight from a profile */
     data->program_shadow_profile = link_program (fragment_shadow_profile);
     if (data->program_shadow_profile != 0)
     {
@@ -1387,7 +1073,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     }
 
     data->renderer = g_strdup ((const gchar *) glGetString (GL_RENDERER));
-    /* Used wherever a plain black area has to be filled */
     {
         static const guchar black[4] = { 0, 0, 0, 0xff };
 
@@ -1402,20 +1087,10 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
 
     if (!screen_info->use_egl_backend)
     {
-        /* The EGL backend answered this from its own extension list */
         data->has_buffer_age = epoxy_has_glx_extension (dpy, screen_info->screen,
                                                         "GLX_EXT_buffer_age");
     }
 
-    /*
-     * XFWM4_GL_NO_EXT=1: behave as though the driver offered neither
-     * GLX_EXT_buffer_age nor GLX_MESA_copy_sub_buffer, which is the worst case
-     * a GL compositor can be handed. Without the age the swap cannot know what
-     * the buffer it was given still holds, so every frame paints the whole
-     * screen; without the Mesa copy there is no scene buffer to fall back to.
-     * It exists to price that case on hardware that does not have it, which is
-     * the only way to guess at what a driver like the NVIDIA one would do.
-     */
     no_ext = (g_getenv ("XFWM4_GL_NO_EXT") != NULL);
     if (no_ext)
     {
@@ -1423,28 +1098,7 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     }
     data->full_repaint = TRUE;
 
-    /*
-     * Swap by default. Moving fewer pixels through the presentation path
-     * sounds cheaper, and the other three modes do exactly that, but a
-     * whole-screen swap is a page flip the display engine performs for
-     * nothing, while a partial copy is real work the GPU has to do in the
-     * middle of the application's. The other modes stay available through
-     * XFWM4_GL_PRESENT for drivers that behave differently.
-     */
     data->present_mode = GL_PRESENT_SWAP;
-    /*
-     * The scene buffer presents by swapping, so it needs nothing the swap mode
-     * does not have and works on both backends. It is not the default: on
-     * radeonsi it composites less and costs more. Measured against swapping on
-     * the same work, whole benchmark, two runs each: 13.14 W against 13.13 W,
-     * 3.23 s of processor time against 3.00 s, 168.9 fps left to the
-     * application against 174.6, and 96 MB more video memory for the screen
-     * sized texture. During a resize it composites 98 Mpix a second where
-     * swapping composites 115, so the overdraw the buffer age causes is real -
-     * it is just only 17%, and blitting the stale region out of the scene
-     * costs more than compositing it again. Kept for drivers where partial
-     * repaint is dearer than that, which is what the mode exists to price.
-     */
     if (g_strcmp0 (g_getenv ("XFWM4_GL_PRESENT"), "scene") == 0)
     {
         data->present_mode = GL_PRESENT_SCENE;
@@ -1459,22 +1113,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
 
         if (mode == NULL || g_strcmp0 (mode, "auto") == 0)
         {
-            /*
-             * Swap. The persistent-scene path used to be preferred here
-             * because it looked much cheaper for the processor, but that was
-             * read from whole-machine CPU time, which cannot resolve a
-             * compositor at all on this hardware. Measured by package power
-             * instead, against the same screen with compositing switched off,
-             * swapping costs 1.13 W where the scene buffer costs 1.52 W and
-             * XRender costs 1.74 W, and it leaves the application 173.7 fps
-             * where the scene buffer leaves it 163.1. Swapping wins both.
-             *
-             * With one exception. Swapping only paints the damage because the
-             * buffer age says what the buffer we are given still holds;
-             * without that extension every frame paints the whole screen, and
-             * the scene buffer, which owes nothing to the age, is then the
-             * better of the two. No driver we can test on takes this branch.
-             */
             if (data->has_buffer_age || !has_copy_sub_buffer)
             {
                 data->present_mode = GL_PRESENT_SWAP;
@@ -1531,7 +1169,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     }
     data->stats = (g_getenv ("XFWM4_GL_STATS") != NULL);
     data->profile = (g_getenv ("XFWM4_GL_PROFILE") != NULL);
-    /* Timer queries arrived after the GL 2.0 this renderer asks for */
     data->prof_gpu = data->profile &&
                      (epoxy_gl_version () >= 33 ||
                       epoxy_has_gl_extension ("GL_ARB_timer_query"));
@@ -1556,10 +1193,6 @@ xfwmGLScreenInit (ScreenInfo *screen_info)
     return TRUE;
 }
 
-/*
- * The background pixmap belongs to whoever drew the desktop and may already be
- * gone by the time we let go of it, so this carries its own error trap.
- */
 static void
 free_root_texture (ScreenInfo *screen_info)
 {
@@ -1584,7 +1217,6 @@ free_root_texture (ScreenInfo *screen_info)
         myDisplayErrorTrapPush (display_info);
         if ((data->root_texture != 0) && gl_context_is_current (screen_info))
         {
-            /* Releasing acts on the bound texture, see xfwmGLFreeWindowData() */
             glBindTexture (data->root_tex_type, data->root_texture);
             glXReleaseTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT);
             glBindTexture (data->root_tex_type, 0);
@@ -1609,12 +1241,6 @@ free_root_texture (ScreenInfo *screen_info)
     data->root_missing = FALSE;
 }
 
-/*
- * Whoever drew the desktop may paint into the same pixmap again without
- * announcing it, and the contents of a bound texture are undefined once that
- * happens. Damage on the background pixmap is what says the image has to be
- * taken again, the same way a window says it with cw->gl_content_dirty.
- */
 gboolean
 xfwmGLDamageRootPixmap (ScreenInfo *screen_info, Drawable drawable)
 {
@@ -1634,12 +1260,6 @@ xfwmGLDamageRootPixmap (ScreenInfo *screen_info, Drawable drawable)
     return TRUE;
 }
 
-/*
- * Whether damage on the background pixmap can be taken as screen damage as it
- * is: only when one copy of the pixmap covers the screen do its coordinates
- * mean the same as screen coordinates. A smaller background is tiled, so one
- * dirty spot on it shows in many places.
- */
 gboolean
 xfwmGLRootPixmapCoversScreen (ScreenInfo *screen_info)
 {
@@ -1659,7 +1279,6 @@ xfwmGLInvalidateRootTexture (ScreenInfo *screen_info)
 {
     g_return_if_fail (screen_info != NULL);
 
-    /* free_root_texture() copes with a screen that has no GL data */
     free_root_texture (screen_info);
 }
 
@@ -1683,12 +1302,6 @@ free_fbo (ScreenInfo *screen_info)
     data->fbo_filter = 0;
 }
 
-/*
- * The cursor image is only drawn by the magnifier, but it has nothing to do
- * with the frame buffer the magnifier renders into: it does not change with the
- * size of the screen and it is cheap to keep, so it only goes when the
- * magnifier is turned off altogether.
- */
 static void
 free_cursor_texture (ScreenInfo *screen_info)
 {
@@ -1717,11 +1330,6 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
         return;
     }
 
-    /*
-     * Without a context the driver already dropped everything that lived in it,
-     * or is about to when the context goes. The GLX pixmap of the background is
-     * not one of those, it belongs to the X server, so it has to go either way.
-     */
     free_root_texture (screen_info);
 
     if (gl_context_is_current (screen_info))
@@ -1759,7 +1367,6 @@ xfwmGLScreenFinish (ScreenInfo *screen_info)
         }
     }
 
-    /* Terminating the display takes every EGL image and surface with it */
     egl_screen_finish (screen_info);
 
     g_free (data->renderer);
@@ -1779,81 +1386,11 @@ xfwmGLGetRendererName (ScreenInfo *screen_info)
     return (data != NULL) ? data->renderer : NULL;
 }
 
-/*
- * Called after the drawable has been made again following a suspend. The back
- * buffer of a brand new drawable holds nothing, so the next frame is whole.
- */
-void
-xfwmGLScreenReattached (ScreenInfo *screen_info)
-{
-    XfwmGLData *data;
-
-    g_return_if_fail (screen_info != NULL);
-    TRACE ("entering");
-
-    data = gl_data (screen_info);
-    if (data == NULL)
-    {
-        return;
-    }
-
-    /*
-     * The EGL surface sat on the old output window. It is rebuilt before
-     * anything below touches GL, so the context is current for it. Should
-     * the new window refuse a surface, the next paint fails to make the
-     * context current and the screen falls back to XRender from there.
-     */
-    if (screen_info->use_egl_backend)
-    {
-        egl_release_surface (data);
-        if (!egl_attach_output_surface (screen_info))
-        {
-            g_warning ("Cannot rebuild the EGL surface.");
-        }
-    }
-
-    data->full_repaint = TRUE;
-    /*
-     * The screen size or the desktop background may have changed while we were
-     * away, so the background is bound again on the next frame. A size change
-     * never reached xfwmGLScreenSizeChanged() while we were suspended, so a
-     * frame buffer that was too big for the driver may fit the screen now.
-     */
-    data->fbo_failed = FALSE;
-    free_root_texture (screen_info);
-
-    set_swap_interval_gl (screen_info);
-}
-
-/*
- * Called when compositing suspends but the renderer is kept: the output window
- * is about to be destroyed, and an EGL surface must not outlive the window it
- * sits on. The context and everything built in it stay, the GLX equivalent is
- * detach_glx_window() on the compositor side.
- */
-void
-xfwmGLScreenDetached (ScreenInfo *screen_info)
-{
-    XfwmGLData *data;
-
-    g_return_if_fail (screen_info != NULL);
-    TRACE ("entering");
-
-    data = gl_data (screen_info);
-    if (data == NULL || !screen_info->use_egl_backend)
-    {
-        return;
-    }
-
-    egl_release_surface (data);
-}
-
 void
 xfwmGLScreenSizeChanged (ScreenInfo *screen_info)
 {
     g_return_if_fail (screen_info != NULL);
 
-    /* Nothing to drop while suspended, the drawable is gone anyway */
     if (screen_info->gl_data == NULL || !gl_context_is_current (screen_info))
     {
         return;
@@ -1861,7 +1398,6 @@ xfwmGLScreenSizeChanged (ScreenInfo *screen_info)
 
     free_root_texture (screen_info);
     free_fbo (screen_info);
-    /* A frame buffer that was too big for the driver may fit the new size */
     gl_data (screen_info)->fbo_failed = FALSE;
     gl_data (screen_info)->full_repaint = TRUE;
 }
@@ -1881,24 +1417,11 @@ xfwmGLFreeWindowData (CWindow *cw)
     }
     dpy = myScreenGetXDisplay (screen_info);
 
-    /*
-     * The GLX pixmap must go whatever happens, it is tied to an X pixmap that
-     * is about to be freed. Only the texture calls need a current context.
-     */
     if (cw->gl_pixmap != None)
     {
         if (cw->gl_texture_bound && (cw->gl_texture != 0) &&
             gl_context_is_current (screen_info))
         {
-            /*
-             * Releasing acts on whatever texture is bound to the target at the
-             * time, the call names a drawable but not a texture, so this
-             * window's texture has to be made current first. The paint loop
-             * leaves nothing bound, so without this the release lands on
-             * texture zero and does nothing, and the GLX pixmap below is
-             * destroyed with its image still bound to a texture, which the
-             * extension leaves undefined.
-             */
             glBindTexture (gl_data (screen_info)->tex_type, cw->gl_texture);
             glXReleaseTexImageEXT (dpy, cw->gl_pixmap, GLX_FRONT_EXT);
             glBindTexture (gl_data (screen_info)->tex_type, 0);
@@ -1919,7 +1442,6 @@ xfwmGLFreeWindowData (CWindow *cw)
         glDeleteTextures (1, &cw->gl_texture);
         cw->gl_texture = 0;
     }
-    /* The size belonged to the pixmap that just went with the data above */
     cw->gl_pixmap_width = 0;
     cw->gl_pixmap_height = 0;
 }
@@ -1969,11 +1491,6 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     gaussian_size = screen_info->gaussianMap->size;
     shadow_size (screen_info, width, height, &shadow_width, &shadow_height);
 
-    /*
-     * The profile only holds for windows wider and taller than the blur, the
-     * gaussian of a narrow box never saturates. Small windows keep the shadow
-     * the XRender path builds, they are cheap anyway.
-     */
     if ((data->program_shadow_profile != 0) &&
         (shadow_width >= 2 * gaussian_size) &&
         (shadow_height >= 2 * gaussian_size) &&
@@ -1996,7 +1513,6 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
     set_tex_params (GL_TEXTURE_2D, GL_LINEAR);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    /* One byte per pixel, so the stride in bytes is also the stride in pixels */
     glPixelStorei (GL_UNPACK_ROW_LENGTH, image->bytes_per_line);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_ALPHA,
                   image->width, image->height, 0,
@@ -2009,10 +1525,6 @@ xfwmGLUpdateWindowShadow (CWindow *cw, gdouble opacity, gint width, gint height)
     XDestroyImage (image);
 }
 
-/*
- * Build the edge profile from a reference shadow of a large box, so the shape
- * comes from the very same gaussian tables the XRender path uses.
- */
 static gboolean
 build_shadow_profile (ScreenInfo *screen_info)
 {
@@ -2035,7 +1547,6 @@ build_shadow_profile (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    /* A box far wider than the blur, so the middle of the profile saturates */
     box = 4 * gaussian_size;
     image = make_shadow (screen_info, 1.0, box, box);
     if (image == NULL)
@@ -2074,10 +1585,6 @@ build_shadow_profile (ScreenInfo *screen_info)
 
     data->shadow_profile_peak = (gfloat) peak / 255.0f;
 
-    /*
-     * This can happen in the middle of a frame, so put back whatever program
-     * was in use once the ramp is set.
-     */
     {
         GLint current = 0;
 
@@ -2096,11 +1603,6 @@ build_shadow_profile (ScreenInfo *screen_info)
     return TRUE;
 }
 
-/*
- * Nothing is going to change this window's mind about its depth, so skipping
- * it would leave a hole in the screen for good. Hand the whole screen to
- * XRender instead, which can draw any of them.
- */
 static void
 give_up_on_depth (XfwmGLData *data, gint depth)
 {
@@ -2112,30 +1614,6 @@ give_up_on_depth (XfwmGLData *data, gint depth)
     }
 }
 
-/*
- * Binding the image is what makes the X server hand out the storage behind the
- * pixmap, and the drawing that fills it can still be queued on the GPU when the
- * bind returns. Nothing on the GL side waits for that, so the first frame of a
- * new binding samples storage the server has not finished with, and the window
- * comes out black whatever the pixmap holds.
- *
- * Reading one pixel back is a round trip the server can only answer once that
- * drawing has really landed, which is the ordering that is missing. XSync() will
- * not do: it waits for the requests to be processed, and processing one only
- * queues the work behind it.
- *
- * Measured on radeonsi, 60 resizes each: nothing here leaves 1 to 5 black
- * frames, XSync() 4 to 8, glXWaitX() 8 to 13, reading the pixmap before the bind
- * 7 to 20, and reading it after the bind none in 480. So it is not the delay of
- * the round trip that fixes it, and it has to come after the bind.
- *
- * Asking the image to preserve the pixmap's content, which it now does, is a
- * different thing and does not replace this: with the attribute in place and
- * this taken out, 240 resizes leave no black frames at all but ten of them
- * show a band of old content along the edge the resize just exposed. The
- * attribute says what the image starts out holding; only the round trip says
- * the server has finished drawing it.
- */
 static void
 wait_for_pixmap (DisplayInfo *display_info, Pixmap pixmap)
 {
@@ -2177,7 +1655,6 @@ bind_window_texture (CWindow *cw)
                                    cw->name_window_pixmap, preserved_image);
             if (cw->egl_image == NULL)
             {
-                /* Refusals go away, depths do not: treat it as the former */
                 data->retry_paint = TRUE;
 
                 return FALSE;
@@ -2214,14 +1691,6 @@ bind_window_texture (CWindow *cw)
             }
             if (cw->gl_pixmap == None)
             {
-                /*
-                 * The depth is one the driver said it could bind, so this is
-                 * not a window of a kind we cannot draw but a refusal of this
-                 * one pixmap, for want of video memory for instance. Those go
-                 * away, so the frame is dropped and painted again rather than
-                 * handing the screen to XRender for the rest of the session.
-                 * See xfwmGLPaintAll().
-                 */
                 data->retry_paint = TRUE;
 
                 return FALSE;
@@ -2241,22 +1710,6 @@ bind_window_texture (CWindow *cw)
         glBindTexture (data->tex_type, cw->gl_texture);
     }
 
-    /*
-     * Both backends have to say when the window has drawn, and both say it the
-     * same way: whenever repair_win() marked the content dirty. An EGL image
-     * does share the pixmap's storage, but sharing storage is not the same as
-     * sharing what the GPU has already read out of it: once the server writes
-     * to the pixmap the texture built on that image holds undefined pixels
-     * until the image is targeted again, and drivers really do keep the old
-     * ones, in tile sized blocks, which is what the report of stale toolbar
-     * highlights on Mesa was. Targeting again is cheap and only happens for
-     * windows that drew. The ordering against the server that the shared
-     * storage does not give is one eglWaitNative() per frame, in
-     * xfwmGLPaintAll(). A GLX texture guarantees fresh content only across a
-     * release and re-bind, so that pair runs on the same condition. A window
-     * repainted merely because a neighbour changed does neither, and keeps
-     * what it held at the last bind.
-     */
     if (!cw->gl_texture_bound || cw->gl_content_dirty)
     {
         gdouble prof_at = data->profile ? thread_cpu_ms () : 0.0;
@@ -2282,13 +1735,6 @@ bind_window_texture (CWindow *cw)
             data->prof_binds += 1.0;
         }
 
-        /*
-         * Only the first bind of a pixmap needs it, on either backend: the
-         * storage is handed out once, and every later bind of the same one gets
-         * what the server has already finished with. A window is given a new
-         * pixmap on every resize, so this is once a frame while one is being
-         * resized, and never for a window that is only moving or redrawing.
-         */
         if (new_pixmap && data->wait_new_pixmap)
         {
             wait_for_pixmap (display_info, cw->name_window_pixmap);
@@ -2299,16 +1745,6 @@ bind_window_texture (CWindow *cw)
     return TRUE;
 }
 
-/*
- * Draw one textured quad, clipped to every rectangle of the region.
- * Source and destination are in screen pixels, the texture coordinates are
- * worked out from the size of the texture.
- *
- * Texture coordinates run downwards with the screen, which is how a pixmap is
- * laid out. GLX_Y_INVERTED_EXT is not consulted: every driver we can test on
- * answers "do not care" for it, so honouring it would only ever be guesswork,
- * and upstream xfwm4 leaves it alone for the same reason.
- */
 static void
 draw_quad (ScreenInfo *screen_info, GLenum tex_type,
            gint sx, gint sy, gint tex_width, gint tex_height,
@@ -2334,7 +1770,6 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
         data->prof_quads += 1.0;
         data->prof_rects += nrects;
     }
-    /* The measurement mode, see no_paint. Counted, just not drawn. */
     if (data->no_paint)
     {
         return;
@@ -2350,7 +1785,6 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
 
         cairo_region_get_rectangle (clip, i, &r);
 
-        /* Clip the quad to the rectangle, skip it when nothing is left */
         x1 = MAX (dx, r.x);
         y1 = MAX (dy, r.y);
         x2 = MIN (dx + width, r.x + r.width);
@@ -2365,7 +1799,6 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
         vy1 = 1.0f - 2.0f * (gfloat) y1 / (gfloat) screen_info->height;
         vy2 = 1.0f - 2.0f * (gfloat) y2 / (gfloat) screen_info->height;
 
-        /* The texture follows the same clipping, in texture coordinates */
         u1 = (gfloat) (sx + x1 - dx);
         u2 = (gfloat) (sx + x2 - dx);
         v1 = (gfloat) (sy + y1 - dy);
@@ -2390,12 +1823,6 @@ draw_quad (ScreenInfo *screen_info, GLenum tex_type,
     glEnd ();
 }
 
-/*
- * A uniform belongs to one program, so the program and its opacity are always
- * set together. Setting one without the other writes to the wrong program and
- * GL says nothing about it. Every draw site calls this right before drawing,
- * so nothing relies on which program was left current.
- */
 static void
 use_program (GLuint program, GLint u_opacity, gfloat opacity)
 {
@@ -2418,11 +1845,6 @@ draw_window_part (CWindow *cw, gint sx, gint sy, gint dx, gint dy,
                dx, dy, width, height, clip);
 }
 
-/*
- * Paint a window, either its opaque part with blending off, or the whole
- * window blended. Mirrors paint_win() of the XRender path, including the
- * frame drawn separately when the title bar is translucent.
- */
 static gboolean
 paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
 {
@@ -2442,15 +1864,7 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         gint frame_top, frame_bottom, frame_left, frame_right;
         gint frame_width, frame_height, pixmap_width, pixmap_height;
 
-        /*
-         * The size the window is really drawn at, which during a resize is
-         * not the size its attributes claim: the frame quads would sample
-         * far past the edge of a pixmap that is still the old one, and paint
-         * a band of stretched title bar down the side of the window the full
-         * height of it. See window_painted_size().
-         */
         window_painted_size (cw, &pixmap_width, &pixmap_height);
-        /* That size counts the border twice over, these do not */
         frame_width = pixmap_width - 2 * cw->attr.border_width;
         frame_height = pixmap_height - 2 * cw->attr.border_width;
         frame_top = frameTop (cw->c);
@@ -2458,25 +1872,20 @@ paint_window_gl (CWindow *cw, gboolean solid_part, cairo_region_t *clip)
         frame_left = frameLeft (cw->c);
         frame_right = frameRight (cw->c);
 
-        /* The frame is only painted in the blended pass, never as a solid */
         if (!solid_part)
         {
             use_program (data->program_win, data->u_opacity_win,
                          opacity * (gfloat) screen_info->params->frame_opacity / 100.0f);
 
-            /* Top border, the title bar */
             draw_window_part (cw, 0, 0, cw->attr.x, cw->attr.y,
                               frame_width, frame_top, clip);
-            /* Bottom border */
             draw_window_part (cw, 0, frame_height - frame_bottom,
                               cw->attr.x, cw->attr.y + frame_height - frame_bottom,
                               frame_width, frame_bottom, clip);
-            /* Left border */
             draw_window_part (cw, 0, frame_top,
                               cw->attr.x, cw->attr.y + frame_top,
                               frame_left, frame_height - frame_top - frame_bottom,
                               clip);
-            /* Right border */
             draw_window_part (cw, frame_width - frame_right, frame_top,
                               cw->attr.x + frame_width - frame_right,
                               cw->attr.y + frame_top,
@@ -2527,7 +1936,6 @@ paint_shadow_gl (CWindow *cw, cairo_region_t *clip)
     }
     else
     {
-        /* The opacity is already baked into the image we uploaded */
         use_program (data->program_2d, data->u_opacity_2d, 1.0f);
         glBindTexture (GL_TEXTURE_2D, cw->gl_shadow_texture);
     }
@@ -2540,10 +1948,6 @@ paint_shadow_gl (CWindow *cw, cairo_region_t *clip)
     glBindTexture (GL_TEXTURE_2D, 0);
 }
 
-/*
- * Bind the root pixmap as a texture so the desktop background can be drawn
- * where no window covers it. Falls back to black.
- */
 static gboolean
 bind_root_texture (ScreenInfo *screen_info)
 {
@@ -2567,11 +1971,6 @@ bind_root_texture (ScreenInfo *screen_info)
     if (data->root_texture != 0)
     {
         glBindTexture (data->root_tex_type, data->root_texture);
-        /*
-         * Only when the desktop drew into the same pixmap again. Without a
-         * damage handle there is nothing to say when that happened, so the
-         * image is taken again on every frame as it used to be.
-         */
         if (data->root_dirty || data->root_damage == None)
         {
             if (data->root_glx_pixmap != None)
@@ -2582,7 +1981,6 @@ bind_root_texture (ScreenInfo *screen_info)
             }
             else if (data->root_egl_image != NULL)
             {
-                /* Ordered by the per-frame eglWaitNative() in xfwmGLPaintAll() */
                 glEGLImageTargetTexture2DOES (GL_TEXTURE_2D,
                                               data->root_egl_image);
                 data->root_dirty = FALSE;
@@ -2600,17 +1998,11 @@ bind_root_texture (ScreenInfo *screen_info)
     pixmap = root_background_pixmap (screen_info);
     if (pixmap == None)
     {
-        /* Nothing advertises a background, do not ask again every frame */
         data->root_missing = TRUE;
 
         return FALSE;
     }
 
-    /*
-     * Every give up below latches root_missing as well. Retrying a background
-     * that cannot be bound would cost two blocking questions to the X server
-     * on every single frame for the rest of the session.
-     */
     myDisplayErrorTrapPush (display_info);
     if (!XGetGeometry (dpy, pixmap, &root_ret, &x_ret, &y_ret,
                        &width_ret, &height_ret, &border_ret, &depth_ret))
@@ -2629,7 +2021,6 @@ bind_root_texture (ScreenInfo *screen_info)
 
     if (!screen_info->use_egl_backend)
     {
-        /* The background is not always as deep as the screen, so ask the pixmap */
         dc = depth_config (screen_info, (gint) depth_ret);
         if (dc == NULL || !dc->usable)
         {
@@ -2640,12 +2031,6 @@ bind_root_texture (ScreenInfo *screen_info)
         fbconfig = dc->fbconfig;
     }
 
-    /*
-     * A background pixmap smaller than the screen is tiled by the X server, so
-     * it is tiled here too rather than stretched. GL repeats a texture by
-     * itself, one quad for the whole desktop, but only on the 2D target: so a
-     * pattern is bound there, and drawn tile by tile only where it is missing.
-     */
     if (((gint) width_ret < screen_info->width) ||
         ((gint) height_ret < screen_info->height))
     {
@@ -2666,12 +2051,6 @@ bind_root_texture (ScreenInfo *screen_info)
         }
     }
 
-    /*
-     * A pattern needing thousands of tiles would cost more than the frame is
-     * worth, and a stray tiny pixmap must not stall the compositor. Tiles are
-     * counted rather than areas compared: a wide short pattern needs many tiles
-     * for a small area, and an area in pixels overflows on a large screen.
-     */
     tiles_x = screen_info->width / (gint) width_ret + 2;
     tiles_y = screen_info->height / (gint) height_ret + 2;
     if (!data->root_repeat &&
@@ -2733,17 +2112,14 @@ bind_root_texture (ScreenInfo *screen_info)
     }
     if (screen_info->use_egl_backend)
     {
-        /* Ordered by the per-frame eglWaitNative() in xfwmGLPaintAll() */
         glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, data->root_egl_image);
     }
     else
     {
         glXBindTexImageEXT (dpy, data->root_glx_pixmap, GLX_FRONT_EXT, NULL);
     }
-    /* The background is handed out the same way a window is, see the note there */
     wait_for_pixmap (display_info, pixmap);
 
-    /* Watch for a desktop that repaints in place, see xfwmGLDamageRootPixmap() */
     data->root_pixmap = pixmap;
     data->root_dirty = FALSE;
     myDisplayErrorTrapPush (display_info);
@@ -2775,11 +2151,6 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
 
         if (data->root_repeat)
         {
-            /*
-             * One quad for the whole screen, the texture repeats itself. The
-             * pattern is on the 2D target here, see bind_root_texture(), so it
-             * takes the plain 2D program rather than the one for windows.
-             */
             use_program (data->program_2d, data->u_opacity_2d, 1.0f);
             draw_quad (screen_info, GL_TEXTURE_2D,
                        0, 0, tex_width, tex_height,
@@ -2791,12 +2162,6 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
             gint x, y, first_x, first_y;
 
             use_program (data->program_win, data->u_opacity_win, 1.0f);
-            /*
-             * The background covers the screen, or the driver cannot repeat it
-             * and it has to be laid down one tile at a time. Usually that is
-             * one single tile, and only the tiles the repaint can touch are
-             * drawn.
-             */
             cairo_region_get_extents (clip, &area);
             first_x = (area.x / tex_width) * tex_width;
             first_y = (area.y / tex_height) * tex_height;
@@ -2814,7 +2179,6 @@ paint_root_gl (ScreenInfo *screen_info, cairo_region_t *clip)
     }
     else
     {
-        /* No background pixmap, plain black like the XRender path */
         use_program (data->program_2d, data->u_opacity_2d, 1.0f);
         glBindTexture (GL_TEXTURE_2D, data->black_texture);
         draw_quad (screen_info, GL_TEXTURE_2D, 0, 0, 1, 1,
@@ -2860,7 +2224,6 @@ paint_cursor_gl (ScreenInfo *screen_info)
         glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
         if (same_size)
         {
-            /* An animated cursor changes image but not size, keep the storage */
             glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
                              cursor->width, cursor->height,
                              GL_BGRA, GL_UNSIGNED_BYTE, pixels);
@@ -2883,7 +2246,6 @@ paint_cursor_gl (ScreenInfo *screen_info)
         glBindTexture (GL_TEXTURE_2D, data->cursor_texture);
     }
 
-    /* draw_quad() wants a clip, the cursor's own destination clips nothing away */
     rect.x = screen_info->cursorLocation.x;
     rect.y = screen_info->cursorLocation.y;
     rect.width = screen_info->cursorLocation.width;
@@ -2900,16 +2262,11 @@ paint_cursor_gl (ScreenInfo *screen_info)
     cairo_region_destroy (clip);
 }
 
-/*
- * When the magnifier is on the scene is drawn to a texture first, then that
- * texture is drawn back magnified.
- */
 static gboolean
 bind_zoom_fbo (ScreenInfo *screen_info)
 {
     XfwmGLData *data = gl_data (screen_info);
 
-    /* Asking again every frame would build and drop a screen sized texture */
     if (data->fbo_failed)
     {
         return FALSE;
@@ -2968,10 +2325,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     {
         zoom = 1.0;
     }
-    /*
-     * The XRender transform maps destination to source, the offsets are
-     * already in screen pixels.
-     */
     x_offset = XFixedToDouble (screen_info->transform.matrix[0][2]);
     y_offset = XFixedToDouble (screen_info->transform.matrix[1][2]);
 
@@ -2979,7 +2332,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
 
     glDisable (GL_BLEND);
     glBindTexture (GL_TEXTURE_2D, data->fbo_texture);
-    /* The filter only changes when the zoom crosses a threshold */
     if (data->fbo_filter != filter)
     {
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint) filter);
@@ -2989,7 +2341,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     use_program (data->program_2d, data->u_opacity_2d, 1.0f);
 
     {
-        /* The scene texture has its origin at the bottom left */
         gfloat u1 = (gfloat) (x_offset / screen_info->width);
         gfloat u2 = u1 + (gfloat) zoom;
         gfloat v2 = 1.0f - (gfloat) (y_offset / screen_info->height);
@@ -3008,10 +2359,6 @@ draw_zoomed_scene (ScreenInfo *screen_info)
     }
 }
 
-/*
- * Turn the damage the X server gave us into a client side region. This is the
- * one and only region that has to cross the wire each frame.
- */
 static cairo_region_t *
 fetch_damage (Display *dpy, XserverRegion damage)
 {
@@ -3031,7 +2378,6 @@ fetch_damage (Display *dpy, XserverRegion damage)
     return region;
 }
 
-/* The whole screen as a region, the shape of every full repaint */
 static cairo_region_t *
 screen_region (ScreenInfo *screen_info)
 {
@@ -3040,15 +2386,6 @@ screen_region (ScreenInfo *screen_info)
     return cairo_region_create_rectangle (&r);
 }
 
-/*
- * Work out what has to be repainted this frame. With GLX_EXT_buffer_age the
- * damage of the last frames is replayed, otherwise the whole screen is
- * redrawn because the content of the back buffer is undefined after a swap.
- *
- * Says through whole when it painted the screen entire, which full_repaint
- * does not cover: the swap must declare that much as damage or the rest of
- * the buffer it rewrote keeps the previous frame.
- */
 static cairo_region_t *
 get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
                   gboolean *whole)
@@ -3061,19 +2398,11 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
 
     *whole = FALSE;
 
-    /*
-     * The frame buffer object never loses its content, so it only ever owes
-     * this frame's damage. The back buffer age says nothing about it.
-     */
     if ((data->present_mode == GL_PRESENT_FBO) && !data->full_repaint)
     {
         return cairo_region_copy (damage);
     }
 
-    /*
-     * In copy mode the age stays at zero, a copy leaves the back buffer
-     * undefined, so the query is not even asked and the whole screen paints.
-     */
     if (((data->present_mode == GL_PRESENT_SWAP) ||
          (data->present_mode == GL_PRESENT_SCENE)) &&
         data->has_buffer_age && !data->full_repaint)
@@ -3103,7 +2432,6 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
         data->prof_age_hist[MIN (age, GL_PROF_AGE_BUCKETS - 1)] += 1.0;
         if (age > GL_DAMAGE_HISTORY)
         {
-            /* The buffer is older than the history, so the screen is repainted */
             data->prof_age_over += 1.0;
         }
         else if (age == 0)
@@ -3112,7 +2440,6 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
         }
     }
 
-    /* A full repaint leaves the age at zero, it never asks the driver */
     if (age == 0 || age > GL_DAMAGE_HISTORY)
     {
         region = screen_region (screen_info);
@@ -3123,19 +2450,12 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
         gboolean complete = TRUE;
 
         region = cairo_region_copy (damage);
-        /* Add back what the older frames in the buffer never saw */
         for (i = 0; i < age - 1; i++)
         {
             guint slot = (data->damage_index + GL_DAMAGE_HISTORY - i - 1) % GL_DAMAGE_HISTORY;
 
             if (data->damage_history[slot] == NULL)
             {
-                /*
-                 * A frame that early in the session never recorded anything,
-                 * so what this buffer is missing cannot be known. Skipping the
-                 * slot would quietly paint too little and leave stale pixels,
-                 * so the screen is painted whole instead.
-                 */
                 complete = FALSE;
                 break;
             }
@@ -3153,11 +2473,6 @@ get_paint_region (ScreenInfo *screen_info, cairo_region_t *damage,
     return region;
 }
 
-/*
- * Only frames that reach the screen may advance the history, otherwise the
- * buffer age of the next frames points at the wrong entries and areas keep
- * stale pixels. Takes the region over, the caller must not touch it again.
- */
 static void
 record_damage (ScreenInfo *screen_info, cairo_region_t *damage)
 {
@@ -3171,12 +2486,6 @@ record_damage (ScreenInfo *screen_info, cairo_region_t *damage)
     data->damage_index = (data->damage_index + 1) % GL_DAMAGE_HISTORY;
 }
 
-/*
- * Swap through EGL, handing the damage to the driver where it takes it. The
- * damage says what changed against the frame on the screen, so a frame that
- * had to be painted whole because its buffer held nothing, or whose visible
- * content moved for other reasons, the magnifier, presents whole.
- */
 static void
 egl_swap (ScreenInfo *screen_info, cairo_region_t *frame_damage,
           gboolean whole)
@@ -3194,14 +2503,12 @@ egl_swap (ScreenInfo *screen_info, cairo_region_t *frame_damage,
         return;
     }
 
-    /* Too many pieces are handed to the driver as their bounding box */
     if (nrects > GL_MAX_PRESENT_RECTS)
     {
         cairo_rectangle_int_t r;
 
         cairo_region_get_extents (frame_damage, &r);
         rects[0] = r.x;
-        /* EGL counts the damage from the bottom left */
         rects[1] = screen_info->height - r.y - r.height;
         rects[2] = r.width;
         rects[3] = r.height;
@@ -3215,7 +2522,6 @@ egl_swap (ScreenInfo *screen_info, cairo_region_t *frame_damage,
 
             cairo_region_get_rectangle (frame_damage, i, &r);
             rects[i * 4 + 0] = r.x;
-            /* EGL counts the damage from the bottom left */
             rects[i * 4 + 1] = screen_info->height - r.y - r.height;
             rects[i * 4 + 2] = r.width;
             rects[i * 4 + 3] = r.height;
@@ -3226,12 +2532,6 @@ egl_swap (ScreenInfo *screen_info, cairo_region_t *frame_damage,
                                 rects, nrects);
 }
 
-/*
- * Whether the last frame was dropped because a window could not be bound. The
- * dropped frame took that repaint's damage with it, so the compositor has to be
- * told to ask for another one or nothing would ever paint the screen again.
- * Answering clears it.
- */
 gboolean
 xfwmGLTakeRetryPaint (ScreenInfo *screen_info)
 {
@@ -3249,11 +2549,6 @@ xfwmGLTakeRetryPaint (ScreenInfo *screen_info)
     return TRUE;
 }
 
-/*
- * This thread's own processor time, in milliseconds. Only for XFWM4_GL_PROFILE:
- * the driver runs a submission thread of its own, and the process wide clock
- * cannot tell its work from ours.
- */
 static gdouble
 thread_cpu_ms (void)
 {
@@ -3277,10 +2572,6 @@ thread_cpu_ms (void)
         }                                                       \
     } G_STMT_END
 
-/*
- * Start timing the graphics card on this frame, and collect whatever earlier
- * frames have finished. Only for XFWM4_GL_PROFILE.
- */
 static void
 prof_gpu_begin (XfwmGLData *data)
 {
@@ -3312,7 +2603,6 @@ prof_gpu_begin (XfwmGLData *data)
         }
     }
 
-    /* Every query still in flight means this frame simply goes unmeasured */
     data->prof_query_active = -1;
     for (i = 0; i < GL_PROF_QUERIES; i++)
     {
@@ -3350,11 +2640,6 @@ xfwmGLNoteFenceWait (ScreenInfo *screen_info)
     }
 }
 
-/*
- * XFWM4_GL_STATS and XFWM4_GL_PROFILE: count this paint, and every 5 seconds
- * print what the counters say and start them over. Kept out of the paint
- * function, which only calls it when the stats were asked for.
- */
 static void
 stats_note_paint (ScreenInfo *screen_info, cairo_region_t *present_region,
                   gint64 prof_wall)
@@ -3501,11 +2786,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     display_info = screen_info->display_info;
     dpy = myScreenGetXDisplay (screen_info);
 
-    /*
-     * Ours is nearly always current already, and a redundant MakeCurrent is
-     * not free: the driver validates it and may flush. Both getters answer
-     * on the client side.
-     */
     if (screen_info->use_egl_backend)
     {
         if (!gl_context_is_current (screen_info) &&
@@ -3532,11 +2812,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         prof_wall = g_get_monotonic_time ();
     }
 
-    /*
-     * Without buffer age the history is never replayed and the whole screen
-     * is painted anyway, see get_paint_region(), so the damage does not have
-     * to cross the wire at all.
-     */
     frame_damage = (data->has_buffer_age ||
                     data->present_mode != GL_PRESENT_SWAP ||
                     data->stats)
@@ -3545,7 +2820,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     if (cairo_region_is_empty (paint_region))
     {
-        /* Nothing reaches the screen, so nothing is recorded either */
         cairo_region_destroy (paint_region);
         if (frame_damage != NULL)
         {
@@ -3556,12 +2830,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         return TRUE;
     }
 
-    /*
-     * What the front buffer is owed, taken before the passes eat the paint
-     * region and before full_repaint is cleared. Copy mode paints the whole
-     * screen but only the damage has to reach the front buffer; a full repaint
-     * owes it everything, the front holds nothing usable either.
-     */
     present_region = NULL;
     if ((data->present_mode == GL_PRESENT_FBO))
     {
@@ -3569,14 +2837,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     }
     else if (data->present_mode == GL_PRESENT_SCENE)
     {
-        /*
-         * Two different regions here, and that is the whole point of this
-         * mode. The buffer about to be swapped in is a few frames old, so it
-         * is owed everything that changed since, which is what the paint
-         * region worked out from the buffer age: that much has to be blitted
-         * into it out of the scene. The scene itself only ever loses the
-         * pixels that changed this frame, so that is all that is composited.
-         */
         present_region = paint_region;
         paint_region = (!data->full_repaint && frame_damage != NULL)
                        ? cairo_region_copy (frame_damage)
@@ -3619,7 +2879,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         }
     }
 
-
     zoomed = screen_info->zoomed;
     if ((zoomed || (data->present_mode == GL_PRESENT_FBO) ||
          (data->present_mode == GL_PRESENT_SCENE)) &&
@@ -3629,11 +2888,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         if ((data->present_mode == GL_PRESENT_FBO) ||
             (data->present_mode == GL_PRESENT_SCENE))
         {
-            /*
-             * No frame buffer object, no experiment: back to swapping for the
-             * rest of the session. This frame painted only the damage into a
-             * back buffer that never got it, so it is dropped and asked again.
-             */
             g_warning ("No frame buffer object, presenting with swaps instead.");
             data->present_mode = GL_PRESENT_SWAP;
             data->full_repaint = TRUE;
@@ -3651,12 +2905,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     }
     if (!screen_info->zoomed)
     {
-        /*
-         * The magnifier holds a texture the size of the screen, so give it
-         * back as soon as the magnifier is off. The XRender path frees its
-         * own buffer the same way. The FBO experiment keeps the scene in that
-         * texture, so there it stays.
-         */
         if (data->fbo != 0 && (data->present_mode != GL_PRESENT_FBO) &&
             (data->present_mode != GL_PRESENT_SCENE))
         {
@@ -3665,10 +2913,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         free_cursor_texture (screen_info);
     }
 
-    /*
-     * The magnifier redraws the whole back buffer from the scene texture, so
-     * the whole screen has to reach the front, whatever the damage was.
-     */
     if (zoomed && present_region != NULL)
     {
         cairo_region_destroy (present_region);
@@ -3679,16 +2923,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     if (screen_info->use_egl_backend)
     {
-        /*
-         * EGL orders nothing against the server by itself: without this,
-         * NVIDIA samples window pixmaps the server is still rendering into,
-         * and blocks of old content survive inside the new. Everything this
-         * frame draws was rendered before the damage above was fetched, so
-         * one wait here covers every window and the desktop background. A
-         * frame that only samples content already waited for, a pure move
-         * or a stacking change, skips it: the same flags tell the binds
-         * below whether anything has to be taken again.
-         */
         gboolean fresh = data->root_dirty ||
                          (!data->root_missing && data->root_texture == 0) ||
                          (data->root_egl_image != NULL &&
@@ -3715,10 +2949,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     glUseProgram (data->program_win);
     glActiveTexture (GL_TEXTURE0);
 
-    /*
-     * First pass, top to bottom: draw the opaque windows and take what they
-     * cover out of the region left to paint.
-     */
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         cairo_region_t *shape;
@@ -3726,14 +2956,12 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         cw = (CWindow *) list->data;
 
-        /* Whatever was left over from the last frame says nothing about this one */
         if (cw->gl_paint_clip != NULL)
         {
             cairo_region_destroy (cw->gl_paint_clip);
             cw->gl_paint_clip = NULL;
         }
 
-        /* The same windows the XRender path paints, by the same macros */
         if (!WIN_IS_VISIBLE(cw) || !WIN_IS_DAMAGED(cw) ||
             !WIN_IS_REDIRECTED(cw) || !WIN_IS_ON_SCREEN(cw))
         {
@@ -3741,12 +2969,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             continue;
         }
 
-        /*
-         * Keep the extents up to date. They are what the damage machinery uses
-         * to work out the area a window is leaving behind when it moves or
-         * resizes, so without this the vacated area is never repainted. Builds
-         * the shadow of the window as a side effect.
-         */
         if (cw->extents == None)
         {
             cw->extents = win_extents (cw);
@@ -3755,18 +2977,11 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         shape = window_shape (cw);
         opaque_window = WIN_IS_OPAQUE(cw);
 
-
-
         if (opaque_window)
         {
             gboolean painted = TRUE;
             cairo_rectangle_int_t bounds;
 
-            /*
-             * A cheap extents test first: a window entirely outside the region
-             * left to paint contributes nothing, so the copy and intersection
-             * would only be thrown away.
-             */
             cairo_region_get_extents (shape, &bounds);
             if (cairo_region_contains_rectangle (paint_region, &bounds) != CAIRO_REGION_OVERLAP_OUT)
             {
@@ -3782,20 +2997,10 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
             if (!painted)
             {
-                /*
-                 * We could not bind this window, so it is not on screen and
-                 * must not hide what is below it either.
-                 */
                 cw->skipped = TRUE;
                 continue;
             }
 
-            /*
-             * Nothing below shows through an opaque window. A window with a
-             * translucent frame only covers its client area, and only the part
-             * of it the window actually has: taking away more than was just
-             * painted leaves whatever the back buffer held.
-             */
             if (WIN_HAS_TRANSLUCENT_FRAME(cw))
             {
                 cairo_rectangle_int_t client;
@@ -3812,27 +3017,12 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             }
         }
 
-        /*
-         * What is still unpainted below this window, for the second pass. Taken
-         * after the area it drew solid is claimed, so the blended pass does not
-         * cover it again, but before its merely opaque region is taken out,
-         * where the window itself still has to be drawn. Only the windows that
-         * pass works on keep a copy.
-         */
         if ((cw->shadow_width > 0) || !opaque_window ||
             WIN_HAS_TRANSLUCENT_FRAME(cw))
         {
             cairo_rectangle_int_t blended;
             gboolean any = FALSE;
 
-            /*
-             * Everything that pass draws lies inside the shadow rectangle or
-             * inside the window, so a window with neither of them anywhere
-             * near what is left to paint has no work there. Worth the two
-             * rectangle tests: the copy below is of a region that covers most
-             * of the screen early in the pass, and on a busy desktop most
-             * windows are nowhere near the damage.
-             */
             if (cw->shadow_width > 0)
             {
                 blended.x = cw->attr.x + cw->shadow_dx;
@@ -3886,20 +3076,15 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     PROF_MARK (prof_pass1);
 
-    /* The background shows wherever no opaque window is left */
     paint_root_gl (screen_info, paint_region);
 
     PROF_MARK (prof_root);
 
-    /*
-     * Second pass, bottom to top: shadows and everything that is blended.
-     */
     for (list = g_list_last (screen_info->cwindows); list; list = g_list_previous (list))
     {
         cairo_region_t *shape;
 
         cw = (CWindow *) list->data;
-        /* The first pass leaves a clip behind only where this pass has work */
         if (cw->gl_paint_clip == NULL)
         {
             continue;
@@ -3911,12 +3096,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         {
             cairo_rectangle_int_t sr;
 
-            /*
-             * Start from the shadow rectangle rather than from the whole clip.
-             * The quad is limited to it anyway, so the result is the same, but
-             * the subtraction then works on a handful of rectangles instead of
-             * on a region that can cover the screen.
-             */
             sr.x = cw->attr.x + cw->shadow_dx;
             sr.y = cw->attr.y + cw->shadow_dy;
             sr.width = cw->shadow_width;
@@ -3935,7 +3114,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
         if (!WIN_IS_OPAQUE(cw) || WIN_HAS_TRANSLUCENT_FRAME(cw))
         {
-            /* The last use of the clip this frame, so consume it in place */
             cairo_region_intersect (cw->gl_paint_clip, shape);
             if (!cairo_region_is_empty (cw->gl_paint_clip))
             {
@@ -3952,12 +3130,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         cw->gl_paint_clip = NULL;
     }
 
-    /*
-     * The real pointer is hidden for as long as the magnifier is on, so the
-     * cursor is painted whenever it is, even where the frame buffer is missing
-     * and the scene ends up not magnified: otherwise there would be no pointer
-     * on the screen at all.
-     */
     if (screen_info->zoomed && screen_info->cursor_is_zoomed)
     {
         paint_cursor_gl (screen_info);
@@ -3977,14 +3149,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     glUseProgram (0);
     glBindTexture (data->tex_type, 0);
 
-    /*
-     * A window could not be bound, so the screen has a hole where it should be
-     * and this frame must not reach the screen. A colour depth this GPU cannot
-     * bind would leave that hole there for the rest of the session, so the
-     * screen goes back to XRender, which can draw any of them. A pixmap the
-     * driver merely refused this once only costs the frame: the whole screen is
-     * painted again, by which time it may have the memory it just refused us.
-     */
     if (data->give_up || data->retry_paint)
     {
         if (data->retry_paint && !data->give_up &&
@@ -3995,7 +3159,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
                        GL_MAX_BIND_RETRIES + 1);
             data->give_up = TRUE;
         }
-        /* None of this frame was shown, so the next one owes the whole screen */
         data->full_repaint = TRUE;
         if (frame_damage != NULL)
         {
@@ -4014,7 +3177,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
 
     if (data->present_mode == GL_PRESENT_SWAP)
     {
-        /* The magnifier drew the whole back buffer, so a swap presents it */
         if (screen_info->use_egl_backend)
         {
             egl_swap (screen_info, frame_damage,
@@ -4027,12 +3189,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     }
     else if (data->present_mode == GL_PRESENT_SCENE)
     {
-        /*
-         * The scene is in the texture and the back buffer is stale, so what
-         * the back buffer is missing is blitted out of the scene before the
-         * swap. The magnifier has already drawn the whole back buffer from
-         * the same texture, so then there is nothing to blit.
-         */
         if (!zoomed)
         {
             cairo_rectangle_int_t r;
@@ -4055,7 +3211,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
                 gint gl_y;
 
                 cairo_region_get_rectangle (present_region, i, &r);
-                /* The blit counts y from the bottom left */
                 gl_y = screen_info->height - r.y - r.height;
                 glBlitFramebuffer (r.x, gl_y, r.x + r.width, gl_y + r.height,
                                    r.x, gl_y, r.x + r.width, gl_y + r.height,
@@ -4080,11 +3235,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         gboolean from_fbo = (data->present_mode == GL_PRESENT_FBO) && !zoomed;
         gint i, nrects;
 
-        /*
-         * The scene lives in the texture, so the pieces the front buffer is
-         * owed are blitted out of it into the back buffer, where the copy
-         * reads. The magnifier already drew the whole back buffer itself.
-         */
         if (from_fbo)
         {
             glBindFramebuffer (GL_READ_FRAMEBUFFER, data->fbo);
@@ -4105,7 +3255,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
             gint gl_y;
 
             cairo_region_get_rectangle (present_region, i, &r);
-            /* Both the blit and the copy count y from the bottom left */
             gl_y = screen_info->height - r.y - r.height;
 
             if (from_fbo)
@@ -4124,14 +3273,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         }
     }
 
-    /*
-     * The history holds what the scene changed each frame, and only frames
-     * that reach the screen advance it. What was painted is not that: a
-     * repaint mostly redraws pixels exactly as they were, and a history that
-     * recorded it would replay ever growing regions until every frame painted
-     * the whole screen for the rest of the session. Recording takes the
-     * region over, so it has to come after the present above read it.
-     */
     if (frame_damage != NULL && ((data->present_mode == GL_PRESENT_SWAP) ||
                                  (data->present_mode == GL_PRESENT_SCENE)))
     {
@@ -4139,7 +3280,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
     }
     else if (frame_damage != NULL)
     {
-        /* The other modes never replay the history, see get_paint_region() */
         cairo_region_destroy (frame_damage);
     }
     PROF_MARK (prof_present);
@@ -4154,10 +3294,6 @@ xfwmGLPaintAll (ScreenInfo *screen_info, XserverRegion damage)
         cairo_region_destroy (present_region);
     }
 
-    /*
-     * Let the repaint loop know when the GPU is done with this frame, it waits
-     * on that fence before painting the next one.
-     */
     if (screen_info->has_ext_arb_sync)
     {
 #if defined (glDeleteSync)

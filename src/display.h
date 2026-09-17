@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xfwm4    - (c) 2002-2022 Olivier Fourdan
 
  */
@@ -306,7 +305,7 @@ struct _DisplayInfo
     XfwmDevices *devices;
     GSList *screens;
     GSList *clients;
-    GHashTable *window_table; /* client and frame window -> Client */
+    GHashTable *window_table;
 
     gboolean have_shape;
     gboolean have_render;

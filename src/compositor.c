@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xcompmgr - (c) 2003 Keith Packard
         metacity - (c) 2003, 2004 Red Hat, Inc.
         xfwm4    - (c) 2005-2021 Olivier Fourdan
@@ -385,10 +384,6 @@ presum_gaussian (ScreenInfo *screen_info)
     }
 }
 
-/*
- * How big the shadow of a window of that size comes out, blur included. The GL
- * renderer needs the same answer without building the image.
- */
 void
 shadow_size (ScreenInfo *screen_info, gint width, gint height,
              gint *shadow_width, gint *shadow_height)
@@ -668,7 +663,6 @@ translate_to_client_region (CWindow *cw, XserverRegion region)
 
     if (!client_area (cw, &x, &y, &width, &height))
     {
-        /* No frame, so the region is relative to the window itself */
         x = cw->attr.x + cw->attr.border_width;
         y = cw->attr.y + cw->attr.border_width;
     }
@@ -676,11 +670,6 @@ translate_to_client_region (CWindow *cw, XserverRegion region)
     XFixesTranslateRegion (display_info->dpy, region, x, y);
 }
 
-/*
- * Where the client window itself sits, with the decorations taken off. Returns
- * FALSE for a window with no frame, and then fills in the whole window. Both
- * renderers work this out from here so the two cannot drift apart.
- */
 gboolean
 client_area (CWindow *cw, gint *x, gint *y, gint *width, gint *height)
 {
@@ -690,12 +679,6 @@ client_area (CWindow *cw, gint *x, gint *y, gint *width, gint *height)
     {
         Client *c = cw->c;
 
-        /*
-         * Where the frame sits comes from cw->attr, not from the client: the
-         * client moves as soon as the window manager decides to, while cw->attr
-         * catches up when the X server confirms, and that is where both
-         * renderers draw. Mixing the two misplaces the client area.
-         */
         *x = cw->attr.x + cw->attr.border_width + frameLeft (c);
         *y = cw->attr.y + cw->attr.border_width + frameTop (c);
         *width = MAX (cw->attr.width - frameLeft (c) - frameRight (c), 0);
@@ -757,7 +740,6 @@ border_size (CWindow *cw)
         return None;
     }
     myDisplayErrorTrapPush (display_info);
-    /* Nothing to clip when there is no picture, which is the GL renderer */
     if (cw->picture != None)
     {
         XFixesSetPictureClipRegion (display_info->dpy, cw->picture, 0, 0, border);
@@ -777,10 +759,6 @@ border_size (CWindow *cw)
     return border;
 }
 
-/*
- * Drop the shadow of a window, whichever renderer built it. The size going
- * back to zero is what says the window has no shadow any more.
- */
 static void
 drop_win_shadow (CWindow *cw)
 {
@@ -798,7 +776,6 @@ drop_win_shadow (CWindow *cw)
     cw->shadow_height = 0;
 }
 
-/* The cached shape regions, always freed as a pair */
 static void
 free_win_size_regions (CWindow *cw)
 {
@@ -828,7 +805,6 @@ free_win_data (CWindow *cw, gboolean delete)
 
     myDisplayErrorTrapPush (display_info);
 #ifdef HAVE_EPOXY
-    /* The GLX pixmap has to go before the pixmap it is bound to */
     xfwmGLFreeWindowData (cw);
 #endif /* HAVE_EPOXY */
 #if HAVE_NAME_WINDOW_PIXMAP
@@ -915,10 +891,6 @@ free_win_data (CWindow *cw, gboolean delete)
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
-/*
- * The pixmap the desktop background lives in, as advertised by whatever drew
- * it. None when nothing advertises one.
- */
 Pixmap
 root_background_pixmap (ScreenInfo *screen_info)
 {
@@ -1171,7 +1143,6 @@ check_gl_error (void)
     return clean;
 }
 
-/* Whether GL_RENDERER matches one of the names, case insensitively */
 gboolean
 renderer_matches_any (const char *renderer, const char *names[])
 {
@@ -1188,11 +1159,6 @@ renderer_matches_any (const char *renderer, const char *names[])
     return FALSE;
 }
 
-/*
- * Some drivers present the XRender buffer better through XPresent than through
- * GLX. This says nothing about whether GL itself is usable, so it must not stop
- * the GL renderer from starting, only pick the other way of presenting.
- */
 static gboolean
 prefer_xpresent_renderer (ScreenInfo *screen_info)
 {
@@ -1209,7 +1175,6 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
     };
     const char *glRenderer;
 
-    /* Only worth declining GLX if XPresent is really there to take over */
     if (!screen_info->display_info->have_present)
     {
         return FALSE;
@@ -1232,16 +1197,6 @@ prefer_xpresent_renderer (ScreenInfo *screen_info)
     return FALSE;
 }
 
-/*
- * Whether this machine looks like it can render with a GPU at all.
- *
- * The first GLX call maps the driver and its compiler into us, tens of
- * megabytes that are never given back, so the question is answered from cheap
- * signs instead, and strictly on purpose: a wrong yes costs that memory
- * forever, a wrong no only costs falling back to XRender. Setups showing one
- * sign but not the other (containers hiding /dev/dri, drivers speaking
- * neither DRI2 nor DRI3) are knowingly refused.
- */
 static gboolean
 acceleration_is_available (ScreenInfo *screen_info)
 {
@@ -1253,7 +1208,6 @@ acceleration_is_available (ScreenInfo *screen_info)
 
     g_return_val_if_fail (screen_info != NULL, FALSE);
 
-    /* Software rendering was asked for, so there is nothing to look for */
     if (g_getenv ("LIBGL_ALWAYS_SOFTWARE") != NULL)
     {
         g_info ("Software rendering was requested, staying on XRender");
@@ -1261,10 +1215,6 @@ acceleration_is_available (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    /*
-     * Modern X servers register DRI3 whether or not the screen can actually
-     * use it, so the extension alone proves nothing: both signs are required.
-     */
     dpy = myScreenGetXDisplay (screen_info);
     if (!XQueryExtension (dpy, "DRI3", &op, &event, &error) &&
         !XQueryExtension (dpy, "DRI2", &op, &event, &error))
@@ -1274,11 +1224,6 @@ acceleration_is_available (ScreenInfo *screen_info)
         return FALSE;
     }
 
-    /*
-     * The kernel makes a render node only for a card that can render. Whether
-     * we may open it is not asked: under DRI3 the X server opens the card for
-     * us, so rendering works even with no rights to the node.
-     */
     have_node = FALSE;
     dir = g_dir_open ("/dev/dri", 0, NULL);
     if (dir != NULL)
@@ -1302,12 +1247,6 @@ acceleration_is_available (ScreenInfo *screen_info)
     return have_node;
 }
 
-/*
- * Whether the GL renderer is wanted on this screen. compositorManageScreen()
- * and setup_gl() both ask here, so the overlay gets a GL visual exactly when
- * the renderer is going to start. One that already gave up would give up again,
- * so the GL stack is not loaded twice.
- */
 static gboolean
 want_gl_renderer (ScreenInfo *screen_info)
 {
@@ -1316,10 +1255,6 @@ want_gl_renderer (ScreenInfo *screen_info)
            acceleration_is_available (screen_info);
 }
 
-/*
- * Hand back to the system what the GL stack took from the heap and let go of
- * again. The C library keeps freed memory for itself unless asked.
- */
 static void
 release_unused_heap (void)
 {
@@ -1328,13 +1263,6 @@ release_unused_heap (void)
 #endif
 }
 
-/*
- * Renderers we do not draw with: these all draw on the CPU, so they would be
- * slower than XRender and cost the memory of a whole GL stack on top.
- *
- * The paravirtual renderer of a virtual machine is not one of them, as it
- * passes the drawing to the graphics card of the host.
- */
 static gboolean
 renderer_is_blacklisted (const char *renderer)
 {
@@ -1404,12 +1332,6 @@ check_gl_extensions (ScreenInfo *screen_info)
     return TRUE;
 }
 
-/*
- * Whether a config comes without a depth buffer, a stencil buffer and
- * multisampling. Nothing here draws with any of them, and the drawable is the
- * whole screen, so each one the config carries is another screen sized
- * allocation the driver has to keep.
- */
 static gboolean
 config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
 {
@@ -1426,10 +1348,6 @@ config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
     {
         return FALSE;
     }
-    /*
-     * Multisampling only became part of GLX in 1.4 and 1.3 is enough to run
-     * here, so a server that cannot answer this has none of it to report.
-     */
     if ((glXGetFBConfigAttrib (dpy, config, GLX_SAMPLE_BUFFERS, &value) == Success) &&
         (value != 0))
     {
@@ -1439,11 +1357,6 @@ config_has_no_extra_buffers (ScreenInfo *screen_info, GLXFBConfig config)
     return TRUE;
 }
 
-/*
- * Whether a pixmap can be bound to a texture on this config, which is what the
- * XRender path needs to hand its buffer to GLX. The same conditions
- * choose_glx_settings() applies when it is asked for a config that can.
- */
 static gboolean
 config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
 {
@@ -1460,7 +1373,6 @@ config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
     {
         return FALSE;
     }
-    /* Ten bit colour is turned away there, so it is of no use here either */
     if ((glXGetFBConfigAttrib (dpy, config, GLX_RED_SIZE, &value) == Success) &&
         (value > 8))
     {
@@ -1480,12 +1392,6 @@ config_can_bind_pixmaps (ScreenInfo *screen_info, GLXFBConfig config)
     return FALSE;
 }
 
-/*
- * The three things a GLX context needs, in an order that loads nothing until it
- * has to: the screen check is free, the first GLX call is not. init_glx() and
- * pick_gl_visual() both ask here so they cannot disagree. A caller merely
- * probing keeps quiet.
- */
 static gboolean
 glx_available (ScreenInfo *screen_info, gboolean verbose)
 {
@@ -1525,18 +1431,6 @@ glx_available (ScreenInfo *screen_info, gboolean verbose)
     return TRUE;
 }
 
-/*
- * Pick the visual for the window the compositor draws into.
- *
- * The visual decides which GLX config the window can have, and the config
- * decides which buffers it gets. The screen's own visual usually carries a
- * depth and a stencil buffer, tens of megabytes of graphics memory for buffers
- * never touched here, so a visual without them is looked for instead.
- *
- * Only visuals laid out like the screen's are taken, so the pixel format stays
- * the same and nothing else has to know. Returns NULL when there is no such
- * visual, or when the screen's own already is one.
- */
 static Visual *
 pick_gl_visual (ScreenInfo *screen_info)
 {
@@ -1561,7 +1455,6 @@ pick_gl_visual (ScreenInfo *screen_info)
 
     g_return_val_if_fail (screen_info != NULL, NULL);
 
-    /* A visual picked here is of no use to anyone if it never gets a context */
     if (!glx_available (screen_info, FALSE))
     {
         return NULL;
@@ -1582,12 +1475,6 @@ pick_gl_visual (ScreenInfo *screen_info)
         return NULL;
     }
 
-    /*
-     * The first pass only takes a config the XRender path could present through
-     * too, so choose_glx_settings() cannot come up empty for this visual and
-     * give up on GLX for the session. The second pass takes one only the GL
-     * renderer can use.
-     */
     for (pass = 0; (pass < 2) && (visual == NULL); pass++)
     {
         for (i = 0; i < n_configs; i++)
@@ -1615,14 +1502,8 @@ pick_gl_visual (ScreenInfo *screen_info)
                           (config_vi->red_mask == screen_vi->red_mask) &&
                           (config_vi->green_mask == screen_vi->green_mask) &&
                           (config_vi->blue_mask == screen_vi->blue_mask);
-            /*
-             * The visual of the screen needs none of this. Where one of its
-             * own configs will do, the first pass of choose_glx_settings()
-             * lands on that config by itself.
-             */
             if (same_format && (config_vi->visualid != screen_vi->visualid))
             {
-                /* Owned by the display, it outlives the XVisualInfo around it */
                 visual = config_vi->visual;
             }
             XFree (config_vi);
@@ -1647,11 +1528,6 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
         GLX_X_RENDERABLE,  True,
         GLX_DOUBLEBUFFER,  True,
         GLX_CONFIG_CAVEAT, GLX_NONE,
-        /*
-         * Zero is not a minimum but a preference, so this asks for a config
-         * with no depth or stencil buffer at all rather than turning away the
-         * ones that have none. See config_has_no_extra_buffers().
-         */
         GLX_DEPTH_SIZE,    0,
         GLX_STENCIL_SIZE,  0,
         GLX_RED_SIZE,      1,
@@ -1673,12 +1549,6 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
     g_return_val_if_fail (screen_info != NULL, FALSE);
     TRACE ("entering");
 
-    /*
-     * Binding a pixmap as a texture is what the XRender path needs to hand its
-     * buffer to GLX. The GL renderer looks up its own config for every colour
-     * depth it meets, so all it wants here is a window it can draw into, and
-     * asking for more would turn it away on screens where it works perfectly.
-     */
     if (!need_tfp)
     {
         visual_attribs[1] = GLX_WINDOW_BIT;
@@ -1695,20 +1565,9 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
     }
 
     fb_match = FALSE;
-    /*
-     * The config has to go with the visual of the window it will be used on,
-     * which is not the visual of the screen when one without the buffers we
-     * never use was found. See pick_gl_visual().
-     */
     xvisual_id = XVisualIDFromVisual ((screen_info->gl_visual != NULL)
                                       ? screen_info->gl_visual
                                       : screen_info->visual);
-    /*
-     * The first pass only takes a config carrying none of the buffers we
-     * never use, the second takes any that fits: that is what lands on a
-     * plain config where there is one and still works where there is none,
-     * the same two passes pick_gl_visual() walks.
-     */
     for (pass = 0; (pass < 2) && !fb_match; pass++)
     {
         for (i = 0; i < n_configs; i++)
@@ -1737,12 +1596,6 @@ choose_glx_settings (ScreenInfo *screen_info, gboolean need_tfp)
 
             if (need_tfp)
             {
-                /*
-                 * Whether a pixmap can be bound at all is asked the same way
-                 * pick_gl_visual() asks it, so the two cannot disagree. Which
-                 * target and format to bind with is read off the accepted
-                 * config below.
-                 */
                 if (!config_can_bind_pixmaps (screen_info, configs[i]))
                 {
                     DBG ("%i/%i: cannot bind pixmaps as textures, skipped", i + 1, n_configs);
@@ -1821,11 +1674,6 @@ free_glx_data (ScreenInfo *screen_info)
     display_info = screen_info->display_info;
     myDisplayErrorTrapPush (display_info);
 
-    /*
-     * The fence lives in the context and dies with it below. Deleting it by
-     * hand would be a GL call with no current context on the paths that come
-     * through here detached, and epoxy ends the process over those.
-     */
     screen_info->gl_sync = 0;
     screen_info->use_egl_backend = FALSE;
 
@@ -1845,11 +1693,6 @@ free_glx_data (ScreenInfo *screen_info)
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
-/*
- * How the GL renderer dies, wherever that happens: what it built goes first,
- * then the GLX data under it, then the flag saying it draws. Every path that
- * turns it off comes through here, so none of them can forget a piece.
- */
 static void
 shutdown_gl_render (ScreenInfo *screen_info)
 {
@@ -1859,70 +1702,12 @@ shutdown_gl_render (ScreenInfo *screen_info)
     free_glx_data (screen_info);
     screen_info->use_gl_render = FALSE;
 
-    /*
-     * XRender is about to take the screen. While the GL renderer had it, no
-     * window was given a picture and so border_size() never set a clip region
-     * on one; the areas it cached are correct as regions but the pictures they
-     * belong to do not exist yet. Throwing them away makes the XRender path
-     * build both together, in the order it expects.
-     */
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         CWindow *cw = (CWindow *) list->data;
 
         free_win_size_regions (cw);
     }
-}
-
-/*
- * The overlay window is released whenever compositing stops, so the GLX
- * drawable made on it has to go with it. The context, the shaders and the
- * textures that live in it can stay, which is what makes suspending and
- * resuming cheap.
- */
-static void
-detach_glx_window (ScreenInfo *screen_info)
-{
-    Display *dpy = myScreenGetXDisplay (screen_info);
-
-    g_return_if_fail (screen_info != NULL);
-    TRACE ("entering");
-
-    glXMakeCurrent (dpy, None, NULL);
-    if (screen_info->glx_window != None)
-    {
-        glXDestroyWindow (dpy, screen_info->glx_window);
-        screen_info->glx_window = None;
-    }
-}
-
-static gboolean
-attach_glx_window (ScreenInfo *screen_info)
-{
-    Display *dpy = myScreenGetXDisplay (screen_info);
-
-    g_return_val_if_fail (screen_info != NULL, FALSE);
-    g_return_val_if_fail (screen_info->glx_context != None, FALSE);
-    TRACE ("entering");
-
-    screen_info->glx_window = glXCreateWindow (dpy, screen_info->glx_fbconfig,
-                                               screen_info->output, NULL);
-    if (screen_info->glx_window == None)
-    {
-        g_warning ("Could not create GLX window.");
-        return FALSE;
-    }
-
-    if (!glXMakeCurrent (dpy, screen_info->glx_window, screen_info->glx_context))
-    {
-        g_warning ("Could not make GL context current.");
-        glXDestroyWindow (dpy, screen_info->glx_window);
-        screen_info->glx_window = None;
-
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 static gboolean
@@ -1996,7 +1781,6 @@ init_glx (ScreenInfo *screen_info, gboolean need_tfp)
 
     glLoadIdentity();
 
-    /* There is no depth buffer to clear, see choose_glx_settings() */
     glClear(GL_COLOR_BUFFER_BIT);
 
     /* Swap control methods available */
@@ -2138,11 +1922,6 @@ fence_destroy (ScreenInfo *screen_info, gushort buffer)
 #endif /* HAVE_XSYNC */
 }
 
-/*
- * How many screen refreshes a finished frame waits for, as the vblank mode asks
- * for it: none, every one, or -1 for "every one unless the frame is late". Both
- * renderers read this, so the setting cannot mean two different things.
- */
 gint
 wanted_swap_interval (ScreenInfo *screen_info)
 {
@@ -2159,11 +1938,6 @@ wanted_swap_interval (ScreenInfo *screen_info)
     }
 }
 
-/*
- * Apply the interval on whichever swap control the driver offers, preferring
- * the EXT one as the only one that understands adaptive sync. Hands back the
- * interval as really set, clamp included, and whether any control took it.
- */
 gboolean
 apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
                      gint *interval)
@@ -2182,7 +1956,6 @@ apply_swap_interval (ScreenInfo *screen_info, GLXDrawable drawable,
 #if defined (glXSwapIntervalMESA)
     if (screen_info->has_mesa_swap_control)
     {
-        /* GLX_MESA_swap_control knows nothing about negative intervals */
         *interval = (*interval < 0) ? 1 : *interval;
         glXSwapIntervalMESA ((guint) *interval);
         return TRUE;
@@ -2201,7 +1974,6 @@ set_swap_interval (ScreenInfo *screen_info, gushort buffer)
 {
     gint interval = wanted_swap_interval (screen_info);
 
-    /* Recorded so vsync_state() reports what really happened */
     screen_info->glx_swap_control =
         apply_swap_interval (screen_info, screen_info->glx_drawable[buffer],
                              &interval);
@@ -2259,11 +2031,6 @@ bind_glx_texture (ScreenInfo *screen_info, gushort buffer)
     {
         create_glx_drawable (screen_info, buffer);
         set_swap_interval (screen_info, buffer);
-        /*
-         * The drawable only exists once there is a frame to present, which is
-         * long after the compositor started and said what it was using. Now
-         * that a swap interval has really been applied, say it again.
-         */
         set_render_backend_property (screen_info);
     }
     TRACE ("(re)Binding GLX pixmap 0x%lx to texture 0x%x",
@@ -2496,11 +2263,6 @@ present_flip (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
 }
 #endif /* HAVE_PRESENT_EXTENSION */
 
-/*
- * Make sure the window has the shadow it is supposed to have, and none if it
- * should not have one. Whichever renderer is active builds it, the size ends
- * up in shadow_width and shadow_height either way.
- */
 static void
 ensure_win_shadow (CWindow *cw)
 {
@@ -2542,7 +2304,6 @@ ensure_win_shadow (CWindow *cw)
 
         if (cw->shadow_width > 0)
         {
-            /* Already built and still the right one */
             return;
         }
 
@@ -2556,11 +2317,6 @@ ensure_win_shadow (CWindow *cw)
 #ifdef HAVE_EPOXY
         if (screen_info->use_gl_render)
         {
-            /*
-             * Nothing to answer: on failure the shadow stays unbuilt and
-             * cw->shadow_width stays zero, which is what brings us back here
-             * on the next repaint.
-             */
             xfwmGLUpdateWindowShadow (cw, shadow_opacity, width, height);
         }
         else
@@ -2670,12 +2426,6 @@ get_window_format (CWindow *cw)
 }
 
 #if HAVE_NAME_WINDOW_PIXMAP
-/*
- * The pixmap the Composite extension names for a window, made on first use.
- * Both renderers draw the window from it, so they share the failure handling:
- * the XID was picked on our side before the request could fail, so on failure
- * it names nothing and keeping it would poison every later user.
- */
 Pixmap
 ensure_name_window_pixmap (CWindow *cw)
 {
@@ -2690,12 +2440,6 @@ ensure_name_window_pixmap (CWindow *cw)
             cw->name_window_pixmap = None;
         }
 #ifdef HAVE_EPOXY
-        /*
-         * The size this pixmap really has, asked of the server once per
-         * naming: the GL renderer draws with it, because the window's
-         * attributes can already be a resize step ahead of the pixmap.
-         * Nothing else reads it, so only the GL renderer pays the question.
-         */
         cw->gl_pixmap_width = 0;
         cw->gl_pixmap_height = 0;
         if (cw->screen_info->use_gl_render && cw->name_window_pixmap != None)
@@ -2761,6 +2505,33 @@ get_window_picture (CWindow *cw)
 }
 
 static XserverRegion
+region_to_server (ScreenInfo *screen_info, cairo_region_t *region)
+{
+    DisplayInfo *display_info;
+    XRectangle *rects;
+    XserverRegion server;
+    gint i, count;
+
+    display_info = screen_info->display_info;
+    count = cairo_region_num_rectangles (region);
+    rects = g_new (XRectangle, count);
+    for (i = 0; i < count; i++)
+    {
+        cairo_rectangle_int_t rect;
+
+        cairo_region_get_rectangle (region, i, &rect);
+        rects[i].x = rect.x;
+        rects[i].y = rect.y;
+        rects[i].width = rect.width;
+        rects[i].height = rect.height;
+    }
+    server = XFixesCreateRegion (display_info->dpy, rects, count);
+    g_free (rects);
+
+    return server;
+}
+
+static XserverRegion
 get_screen_region (ScreenInfo *screen_info)
 {
     DisplayInfo *display_info;
@@ -2781,7 +2552,46 @@ get_screen_region (ScreenInfo *screen_info)
         region = XFixesCreateRegion (display_info->dpy, NULL, 0);
     }
 
+    if (screen_info->direct_region != NULL &&
+        !cairo_region_is_empty (screen_info->direct_region))
+    {
+        XserverRegion hole;
+
+        hole = region_to_server (screen_info, screen_info->direct_region);
+        XFixesSubtractRegion (display_info->dpy, region, region, hole);
+        XFixesDestroyRegion (display_info->dpy, hole);
+    }
+
     return region;
+}
+
+static void
+set_direct_hole (ScreenInfo *screen_info)
+{
+#if HAVE_OVERLAYS
+    DisplayInfo *display_info;
+    XserverRegion shape;
+
+    display_info = screen_info->display_info;
+    if (!display_info->have_overlays || screen_info->overlay == None)
+    {
+        return;
+    }
+
+    shape = None;
+    if (!cairo_region_is_empty (screen_info->direct_region))
+    {
+        if (screen_info->screenRegion == None)
+        {
+            screen_info->screenRegion = get_screen_region (screen_info);
+        }
+        shape = screen_info->screenRegion;
+    }
+    XFixesSetWindowShapeRegion (display_info->dpy, screen_info->overlay,
+                                ShapeBounding, 0, 0, shape);
+#else
+    (void) screen_info;
+#endif /* HAVE_OVERLAYS */
 }
 
 static void
@@ -2804,16 +2614,6 @@ unredirect_win (CWindow *cw)
 
         free_win_data (cw, FALSE);
         cw->redirected = FALSE;
-        screen_info->wins_unredirected++;
-        TRACE ("window 0x%lx unredirected, wins_unredirected is %i",
-               cw->id, screen_info->wins_unredirected);
-#if HAVE_OVERLAYS
-        if ((screen_info->wins_unredirected == 1) && (display_info->have_overlays))
-        {
-            TRACE ("unmapping overlay window");
-            XUnmapWindow (display_info->dpy, screen_info->overlay);
-        }
-#endif /* HAVE_OVERLAYS */
     }
 }
 
@@ -3033,21 +2833,14 @@ is_region_empty (Display *dpy, XserverRegion region)
     return (nrects == 0 || bounds.width == 0 || bounds.height == 0);
 }
 
-/*
- * Whether frames end up synced to the screen, as it turned out at runtime
- * rather than as it was asked for: the vblank mode may want something the
- * driver cannot do.
- */
 static const gchar *
 vsync_state (ScreenInfo *screen_info)
 {
 #ifdef HAVE_EPOXY
     if (screen_info->use_gl_render || screen_info->use_glx)
     {
-        /* What apply_swap_interval() recorded when it last applied the mode */
         if (!screen_info->glx_swap_control)
         {
-            /* No swap control at all, so nothing is holding frames back */
             return "off";
         }
         if (screen_info->glx_swap_interval < 0)
@@ -3062,7 +2855,6 @@ vsync_state (ScreenInfo *screen_info)
 #ifdef HAVE_PRESENT_EXTENSION
     if (screen_info->use_present)
     {
-        /* XPresent flips on the vblank */
         return "on";
     }
 #endif /* HAVE_PRESENT_EXTENSION */
@@ -3070,11 +2862,6 @@ vsync_state (ScreenInfo *screen_info)
     return "off";
 }
 
-/*
- * Advertise the renderer on the root window, the settings dialog reads it to
- * tell the user what is actually in use. Kept out of xfconf on purpose, this
- * is runtime state and not a preference.
- */
 static void
 set_render_backend_property (ScreenInfo *screen_info)
 {
@@ -3101,11 +2888,6 @@ set_render_backend_property (ScreenInfo *screen_info)
 
     if (renderer != NULL)
     {
-        /*
-         * Which way OpenGL is talking to the driver, not which card it found:
-         * the card is in xfce4-about, and a tool reading this wants to know
-         * what the compositor is doing.
-         */
         value = g_strdup_printf ("opengl %s",
                                  screen_info->use_egl_backend ? "egl" : "glx");
     }
@@ -3122,17 +2904,9 @@ set_render_backend_property (ScreenInfo *screen_info)
                        XFWM4_VSYNC, vsync_state (screen_info));
 }
 
-
 static void setup_presentation (ScreenInfo *screen_info);
 
 #ifdef HAVE_EPOXY
-/*
- * The GL renderer gave up on this screen for good. Hand the windows back,
- * tear the renderer down and pick a new way of putting frames on the screen,
- * or the session tears from here on. This is the path that is supposed to
- * keep the session alive, not end it, so everything that lets go of drawables
- * the driver may already have taken away runs under a trap.
- */
 static void
 abandon_gl_render (ScreenInfo *screen_info)
 {
@@ -3143,11 +2917,6 @@ abandon_gl_render (ScreenInfo *screen_info)
 
     myDisplayErrorTrapPush (display_info);
 
-    /*
-     * Hand the windows back: their GL resources have to go, their extents
-     * have to be worked out again so the other renderer builds their
-     * shadows, and the context we were drawing with is of no use now.
-     */
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         CWindow *cw = (CWindow *) list->data;
@@ -3164,13 +2933,8 @@ abandon_gl_render (ScreenInfo *screen_info)
 
     shutdown_gl_render (screen_info);
     myDisplayErrorTrapPopIgnored (display_info);
-    /* This path lets go of more than either start up failure does */
     release_unused_heap ();
 
-    /*
-     * Remember it, or every later restart of the compositor would load the
-     * GL stack again, fail on the same window and fall back again.
-     */
     screen_info->gl_render_failed = TRUE;
 
     setup_presentation (screen_info);
@@ -3208,13 +2972,8 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
         {
             return;
         }
-        /* The GL backend gave up, fall back to XRender for good */
         abandon_gl_render (screen_info);
 
-        /*
-         * The other renderer has drawn none of this screen yet, so this first
-         * frame has to cover it rather than the area that happened to change.
-         */
         repaint_whole_screen = TRUE;
     }
 #endif /* HAVE_EPOXY */
@@ -3225,11 +2984,6 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     if (screen_info->rootPixmap[buffer] == None)
     {
         screen_info->rootPixmap[buffer] = create_root_pixmap (screen_info);
-        /*
-         * A buffer nothing has ever been drawn into holds plain black, and
-         * XPresent puts the whole of it on the screen, so it has to be filled
-         * in full rather than only where the damage is.
-         */
         repaint_whole_screen = TRUE;
 #ifdef HAVE_EPOXY
         if (screen_info->use_glx)
@@ -3265,11 +3019,6 @@ paint_all (ScreenInfo *screen_info, XserverRegion region, gushort buffer)
     paint_region = XFixesCreateRegion (dpy, NULL, 0);
     XFixesCopyRegion (dpy, paint_region, region);
 
-    /*
-     * What gets drawn and what gets put on the screen are the same area, but
-     * the painting below eats its way through paint_region, so the area is
-     * kept here as well.
-     */
     copy_region = region;
 
     if (repaint_whole_screen)
@@ -3557,7 +3306,6 @@ repair_screen (ScreenInfo *screen_info)
          if (status != GL_SIGNALED)
          {
              DBG ("Waiting for GL pipeline");
-             /* Checks for itself that the GL renderer is profiling */
              xfwmGLNoteFenceWait (screen_info);
              return (screen_info->allDamage != None);
          }
@@ -3585,12 +3333,6 @@ repair_screen (ScreenInfo *screen_info)
         remove_timeouts (screen_info);
         paint_all (screen_info, damage, screen_info->current_buffer);
 
-        /*
-         * XFWM4_PAINT_STATS: how many screens a second each renderer actually
-         * paints. The GL renderer counts its own, but comparing its rate with
-         * XRender's needs one counter that does not care which is in use.
-         * The counters live on the screen, every screen paints its own rate.
-         */
         {
             static gint want = -1;
 
@@ -3639,12 +3381,6 @@ repair_screen (ScreenInfo *screen_info)
         screen_info->allDamage = None;
 
 #ifdef HAVE_EPOXY
-        /*
-         * The GL renderer dropped that frame because a window could not be
-         * bound, and the damage it was painting went with it. Ask for the whole
-         * screen again, or nothing would bring us back here. Only after
-         * allDamage is cleared above, otherwise this is thrown away with it.
-         */
         if (screen_info->use_gl_render && xfwmGLTakeRetryPaint (screen_info))
         {
             damage_screen (screen_info);
@@ -3717,12 +3453,6 @@ add_damage (ScreenInfo *screen_info, XserverRegion damage)
         return;
     }
 
-    /*
-     * Nothing repaints while the compositor is stopped, and starting it again
-     * begins with regions of its own and a repaint of the whole screen, so
-     * anything kept here would only be leaked. The GL renderer watching the
-     * desktop background is one way to get here during a suspend.
-     */
     if (!screen_info->compositor_active)
     {
         XFixesDestroyRegion (screen_info->display_info->dpy, damage);
@@ -3740,6 +3470,13 @@ add_damage (ScreenInfo *screen_info, XserverRegion damage)
                            damage,
                            damage,
                            screen_info->screenRegion);
+    if (!cairo_region_is_empty (screen_info->direct_region) &&
+        is_region_empty (display_info->dpy, damage))
+    {
+        XFixesDestroyRegion (display_info->dpy, damage);
+
+        return;
+    }
     if (screen_info->allDamage != None)
     {
         XFixesUnionRegion (display_info->dpy,
@@ -3779,15 +3516,6 @@ fix_region (CWindow *cw, XserverRegion region)
         }
         else if (WIN_IS_OPAQUE(cw2) && WIN_IS_VISIBLE(cw2))
         {
-            /*
-             * Make sure the window's areas are up-to-date... The picture is
-             * only wanted because border_size() sets a clip region on it, and
-             * the GL renderer never draws with an XRender picture, so under it
-             * this would build one per window and keep rebuilding it every
-             * time a window is resized. shutdown_gl_render() throws the cached
-             * areas away so the XRender path rebuilds them against a real
-             * picture if it ever takes over.
-             */
             if (cw2->picture == None && !screen_info->use_gl_render)
             {
                 cw2->picture = get_window_picture (cw2);
@@ -3835,7 +3563,6 @@ repair_win (CWindow *cw, XRectangle *r)
     }
 
 #ifdef HAVE_EPOXY
-    /* The window drew something, so its texture has to be bound again */
     cw->gl_content_dirty = TRUE;
 #endif /* HAVE_EPOXY */
 
@@ -3876,12 +3603,6 @@ damage_screen (ScreenInfo *screen_info)
     add_damage (screen_info, region);
 }
 
-/*
- * A window is not painted until it is marked damaged, and one just added is
- * not. On a resume the windows rebuilt are already drawn, and the damage
- * saying so went out while there was no compositor to take it. A window that
- * sits still would keep what was under it until something made it draw.
- */
 static void
 mark_all_windows_damaged (ScreenInfo *screen_info)
 {
@@ -3948,7 +3669,6 @@ determine_mode (CWindow *cw)
 
     screen_info = cw->screen_info;
     display_info = screen_info->display_info;
-    format = NULL;
 
     if (cw->alphaPict)
     {
@@ -4043,21 +3763,18 @@ redirect_win (CWindow *cw)
     free_win_data (cw, FALSE);
     cw->redirected = TRUE;
     cw->damaged = WIN_IS_VIEWABLE(cw);
-    screen_info->wins_unredirected--;
-    TRACE ("window 0x%lx redirected, wins_unredirected is %i",
-           cw->id, screen_info->wins_unredirected);
+}
 
-    if (!screen_info->wins_unredirected)
-    {
-#if HAVE_OVERLAYS
-        if (display_info->have_overlays)
-        {
-            TRACE ("remapping overlay window");
-            XMapWindow (display_info->dpy, screen_info->overlay);
-        }
-#endif /* HAVE_OVERLAYS */
-        damage_screen (screen_info);
-    }
+static gboolean
+owns_screen (CWindow *cw)
+{
+    Client *c;
+
+    c = cw->c;
+    return cw->screen_info->params->suspend_compositing_fullscreen &&
+           (c != NULL) && (c == clientGetFocus ()) &&
+           FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN) &&
+           (cw->bypass_compositor != 2);
 }
 
 static gboolean
@@ -4067,17 +3784,15 @@ can_draw_direct (CWindow *cw)
 
     screen_info = cw->screen_info;
 
-    if (!WIN_HAS_DAMAGE(cw) || !WIN_IS_NATIVE_OPAQUE(cw) || WIN_IS_SHAPED(cw))
-    {
-        return FALSE;
-    }
-
     /* For NET_WM_BYPASS_COMPOSITOR, 0 indicates no preference, 1 hints
      * the compositor to disabling compositing.
      */
-    return (cw->bypass_compositor == 1) ||
-           (screen_info->params->unredirect_overlays &&
-            WIN_IS_OVERRIDE(cw) && cw->bypass_compositor == 0);
+    return WIN_HAS_DAMAGE(cw) && !WIN_IS_SHAPED(cw) &&
+           (owns_screen (cw) ||
+            (WIN_IS_NATIVE_OPAQUE(cw) &&
+             ((cw->bypass_compositor == 1) ||
+              (screen_info->params->unredirect_overlays &&
+               WIN_IS_OVERRIDE(cw) && cw->bypass_compositor == 0))));
 }
 
 static void
@@ -4095,8 +3810,8 @@ direct_windows (ScreenInfo *screen_info)
     GList *list;
     GList *direct;
     cairo_region_t *covered;
+    cairo_region_t *painted;
     gboolean fullscreen;
-    gboolean blocked;
 
     if (screen_info->zoomed || screen_info->adding_windows)
     {
@@ -4116,9 +3831,9 @@ direct_windows (ScreenInfo *screen_info)
     }
 
     direct = NULL;
-    blocked = FALSE;
     covered = cairo_region_create ();
-    for (list = screen_info->cwindows; list && !blocked; list = g_list_next (list))
+    painted = cairo_region_create ();
+    for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         CWindow *cw = (CWindow *) list->data;
         cairo_rectangle_int_t rect;
@@ -4134,25 +3849,52 @@ direct_windows (ScreenInfo *screen_info)
             continue;
         }
 
-        if (can_draw_direct (cw))
+        if (can_draw_direct (cw) &&
+            cairo_region_contains_rectangle (painted, &rect) == CAIRO_REGION_OVERLAP_OUT)
         {
             direct = g_list_prepend (direct, cw);
             cairo_region_union_rectangle (covered, &rect);
         }
         else
         {
-            blocked = TRUE;
+            cairo_region_union_rectangle (painted, &rect);
         }
     }
     cairo_region_destroy (covered);
-
-    if (blocked)
-    {
-        g_list_free (direct);
-        direct = NULL;
-    }
+    cairo_region_destroy (painted);
 
     return direct;
+}
+
+static void
+set_direct_region (ScreenInfo *screen_info, cairo_region_t *region)
+{
+    DisplayInfo *display_info;
+    cairo_region_t *vacated;
+
+    if (cairo_region_equal (screen_info->direct_region, region))
+    {
+        return;
+    }
+
+    display_info = screen_info->display_info;
+    vacated = cairo_region_copy (screen_info->direct_region);
+    cairo_region_subtract (vacated, region);
+    cairo_region_destroy (screen_info->direct_region);
+    screen_info->direct_region = cairo_region_copy (region);
+
+    if (screen_info->screenRegion != None)
+    {
+        XFixesDestroyRegion (display_info->dpy, screen_info->screenRegion);
+        screen_info->screenRegion = None;
+    }
+    set_direct_hole (screen_info);
+
+    if (!cairo_region_is_empty (vacated))
+    {
+        add_damage (screen_info, region_to_server (screen_info, vacated));
+    }
+    cairo_region_destroy (vacated);
 }
 
 static void
@@ -4160,8 +3902,24 @@ update_unredirected (ScreenInfo *screen_info)
 {
     GList *list;
     GList *direct;
+    cairo_region_t *region;
+    cairo_region_t *kept;
 
     direct = direct_windows (screen_info);
+    region = cairo_region_create ();
+    for (list = direct; list; list = g_list_next (list))
+    {
+        cairo_rectangle_int_t rect;
+
+        window_rect ((CWindow *) list->data, &rect);
+        cairo_region_union_rectangle (region, &rect);
+    }
+
+    kept = cairo_region_copy (region);
+    cairo_region_intersect (kept, screen_info->direct_region);
+    set_direct_region (screen_info, kept);
+    cairo_region_destroy (kept);
+
     for (list = screen_info->cwindows; list; list = g_list_next (list))
     {
         CWindow *cw = (CWindow *) list->data;
@@ -4175,6 +3933,9 @@ update_unredirected (ScreenInfo *screen_info)
             redirect_win (cw);
         }
     }
+
+    set_direct_region (screen_info, region);
+    cairo_region_destroy (region);
     g_list_free (direct);
 }
 
@@ -4274,11 +4035,6 @@ update_opaque_region (CWindow *cw, Window id)
 
     nrects = getOpaqueRegionRects (display_info, id, &rects);
 #ifdef HAVE_EPOXY
-    /*
-     * Hand the rectangles to the GL backend rather than let it read the same
-     * property a second time. Only the opaque region changed, the shape of the
-     * window is a separate fact and its cache is left alone.
-     */
     xfwmGLSetOpaqueRects (cw, rects, (gint) nrects);
 #endif /* HAVE_EPOXY */
     if (nrects)
@@ -4443,7 +4199,6 @@ add_win (DisplayInfo *display_info, Window id, Client *c)
     {
         update_opaque_region (new, id);
     }
-    /* The application sets this on its own window, not on the frame */
     getBypassCompositor (display_info, (c != NULL) ? c->window : id,
                          &new->bypass_compositor);
     init_opacity (new);
@@ -4546,13 +4301,11 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
         cw->extents = None;
     }
 
-    /* The border counts towards the size of the pixmap behind the window */
     if ((cw->attr.width != width) || (cw->attr.height != height) ||
         (cw->attr.border_width != bw))
     {
 #if HAVE_NAME_WINDOW_PIXMAP
 #ifdef HAVE_EPOXY
-        /* The GLX pixmap wraps the pixmap below, it cannot outlive it */
         xfwmGLFreeWindowData (cw);
 #endif /* HAVE_EPOXY */
         if (cw->name_window_pixmap)
@@ -4583,10 +4336,6 @@ resize_win (CWindow *cw, gint x, gint y, gint width, gint height, gint bw)
         free_win_size_regions (cw);
 
 #ifdef HAVE_EPOXY
-        /*
-         * A window that only moved covers the same shape somewhere else, so the
-         * cached regions are shifted. Anything else has to be worked out again.
-         */
         if ((cw->attr.width == width) && (cw->attr.height == height) &&
             (cw->attr.border_width == bw))
         {
@@ -4864,10 +4613,6 @@ compositorHandleDamage (DisplayInfo *display_info, XDamageNotifyEvent *ev)
     }
 
 #ifdef HAVE_EPOXY
-    /*
-     * Not a window: the GL renderer also watches the desktop background
-     * pixmap, so that a desktop repainting in place is picked up.
-     */
     if (cw == NULL)
     {
         GSList *list;
@@ -4886,17 +4631,11 @@ compositorHandleDamage (DisplayInfo *display_info, XDamageNotifyEvent *ev)
 
                 if (xfwmGLRootPixmapCoversScreen (screen_info))
                 {
-                    /*
-                     * One copy of the pixmap covers the screen, so its
-                     * coordinates are screen coordinates and only the area
-                     * that changed has to be drawn again.
-                     */
                     /* parts region will be destroyed by add_damage () */
                     add_damage (screen_info, parts);
                 }
                 else
                 {
-                    /* A smaller background is tiled, one dirty spot is many */
                     XFixesDestroyRegion (display_info->dpy, parts);
                     damage_screen (screen_info);
                 }
@@ -4930,12 +4669,6 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
         {
             ScreenInfo *screen_info = myDisplayGetScreenFromRoot (display_info, ev->window);
 
-            /*
-             * Whichever renderer is running has the old background pixmap
-             * bound, and the pixmap is about to be freed by whoever set the
-             * new one. The XRender path keeps it in rootTile, the GL path as a
-             * texture, and only one of the two exists at a time.
-             */
             if ((screen_info) && (screen_info->compositor_active))
             {
                 myDisplayErrorTrapPush (display_info);
@@ -5019,32 +4752,15 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
 
         TRACE ("NET_WM_BYPASS_COMPOSITOR changed for id 0x%lx", ev->window);
 
-        /*
-         * The property sits on the client window while the compositor tracks
-         * the frame, so the client has to be resolved first.
-         */
         c = myDisplayGetClientFromWindow (display_info, ev->window, SEARCH_WINDOW);
         cw = find_cwindow_in_display (display_info,
                                       (c != NULL) ? c->frame : ev->window);
 
         if (is_on_compositor (cw))
         {
-            /*
-             * A deleted property has to fall back to the default, and the
-             * reader leaves the value alone when there is nothing to read.
-             */
             cw->bypass_compositor = 0;
             getBypassCompositor (display_info, ev->window, &cw->bypass_compositor);
             update_unredirected (cw->screen_info);
-        }
-
-        /*
-         * The hint decides whether compositing is suspended for a fullscreen
-         * window, so a new value has to be acted on and not merely stored.
-         */
-        if (c != NULL)
-        {
-            compositorUpdateFullscreenSuspend (c->screen_info);
         }
     }
     else if (ev->atom == display_info->atoms[NET_WM_OPAQUE_REGION])
@@ -5411,12 +5127,6 @@ compositorScaleWindowPixmap (CWindow *cw, guint *width, guint *height)
     srcPicture = cw->picture;
     if (!srcPicture && WIN_IS_VISIBLE(cw) && WIN_IS_REDIRECTED(cw))
     {
-        /*
-         * The GL renderer draws from a texture and never builds one of these,
-         * so there is nothing to scale down yet. Building it on demand keeps
-         * previews working with either renderer and costs nothing until one is
-         * asked for.
-         */
         cw->picture = get_window_picture (cw);
         srcPicture = cw->picture;
     }
@@ -5926,53 +5636,6 @@ compositorInitDisplay (DisplayInfo *display_info)
 }
 
 #if defined(HAVE_COMPOSITOR) && defined(HAVE_EPOXY)
-/*
- * Coming back from a suspend only the drawable is missing, the context and
- * everything built in it are still there. Returns FALSE when there is nothing
- * to come back to.
- */
-static gboolean
-resume_gl (ScreenInfo *screen_info)
-{
-    /* The EGL backend has no GLX context; its surface is rebuilt below */
-    if (!screen_info->use_gl_render || screen_info->gl_data == NULL ||
-        (screen_info->glx_context == None && !screen_info->use_egl_backend))
-    {
-        return FALSE;
-    }
-
-    if (!screen_info->params->use_gl_compositing)
-    {
-        /* Turned off while we were away */
-        shutdown_gl_render (screen_info);
-
-        return FALSE;
-    }
-
-    if (!screen_info->use_egl_backend && !attach_glx_window (screen_info))
-    {
-        shutdown_gl_render (screen_info);
-
-        return FALSE;
-    }
-
-    xfwmGLScreenReattached (screen_info);
-    /* The GL renderer drives the screen, nothing else presents */
-    screen_info->use_glx = FALSE;
-
-    return TRUE;
-}
-
-/* Build the GL side from nothing, for whichever of the two paths wants it */
-/*
- * Which GL backend a screen should use. XFWM4_GL_BACKEND=egl or =glx forces
- * the answer; with nothing forced, EGL. It is the cheapest backend on the
- * processor on every stack measured (NVIDIA proprietary, AMD radeonsi, zink
- * on NVK), on the NVIDIA driver it is also the one that presents without the
- * scanout misalignment GLX flips suffer at 4K, and every artifact check is
- * clean on all three. Where EGL cannot start at all, setup_gl() falls back
- * to the GLX renderer.
- */
 static gboolean
 gl_backend_wants_egl (void)
 {
@@ -5994,11 +5657,6 @@ setup_gl (ScreenInfo *screen_info)
         return;
     }
 
-    /*
-     * Neither path may touch GLX where nothing can render: the first GLX call
-     * costs the memory of the whole GL stack (see acceleration_is_available()).
-     * The check is cheap, so asking it again beats threading the answer here.
-     */
     if (!acceleration_is_available (screen_info))
     {
         screen_info->use_glx = FALSE;
@@ -6013,13 +5671,6 @@ setup_gl (ScreenInfo *screen_info)
     screen_info->gl_sync = 0;
     screen_info->use_egl_backend = FALSE;
 
-    /*
-     * The EGL backend: GLX must not put a drawable on the output window the
-     * EGL surface is about to sit on, the two fight over its buffers, so in
-     * this mode GLX is not initialised first. If EGL fails to start, forced
-     * or not, the GLX renderer below is the fallback: whoever asked for EGL
-     * asked for GL compositing, and GLX is the closest thing on offer.
-     */
     if (want_gl_render && screen_info->gl_prefer_egl)
     {
         gboolean saved_use_glx = screen_info->use_glx;
@@ -6034,22 +5685,12 @@ setup_gl (ScreenInfo *screen_info)
         }
         g_warning ("The EGL backend did not start, trying GLX.");
         screen_info->use_egl_backend = FALSE;
-        /* Not asked again: the next setup would only fail the same way */
         screen_info->gl_prefer_egl = FALSE;
-        /*
-         * Whatever the vblank mode wanted from GLX before this branch took
-         * it away is wanted again now that everything below is GLX.
-         */
         screen_info->use_glx = saved_use_glx;
     }
 
     if (!init_glx (screen_info, TRUE))
     {
-        /*
-         * No config that can bind a pixmap as a texture, so the XRender path
-         * cannot be presented through GLX. The GL renderer asks for far less,
-         * give it a config of its own before giving up on it too.
-         */
         screen_info->use_glx = FALSE;
 
         if (!want_gl_render || !init_glx (screen_info, FALSE))
@@ -6064,10 +5705,6 @@ setup_gl (ScreenInfo *screen_info)
     {
         screen_info->use_gl_render = xfwmGLScreenInit (screen_info);
     }
-    /*
-     * Presenting the XRender buffer through GLX is only wanted when the vblank
-     * mode asks for it and the GL renderer is not the one driving the screen.
-     */
     screen_info->use_glx = screen_info->use_glx && !screen_info->use_gl_render;
 
     if (screen_info->use_glx &&
@@ -6079,18 +5716,12 @@ setup_gl (ScreenInfo *screen_info)
 
     if (!screen_info->use_glx && !screen_info->use_gl_render)
     {
-        /* Nobody ended up needing the context we just made */
         free_glx_data (screen_info);
         release_unused_heap ();
     }
 }
-#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
+#endif
 
-/*
- * Pick how finished frames reach the screen. The GL renderer swaps its own
- * buffers, so this only has to choose for the XRender path, and it has to be
- * possible to run again if the GL renderer gives up halfway through a session.
- */
 static void
 setup_presentation (ScreenInfo *screen_info)
 {
@@ -6108,11 +5739,6 @@ setup_presentation (ScreenInfo *screen_info)
 #endif /* HAVE_EPOXY */
 
 #ifdef HAVE_PRESENT_EXTENSION
-    /*
-     * Adaptive vsync needs GLX, so when GLX is not there it falls back to
-     * behaving like auto, which is what it says it does. Asking for glx or
-     * xpresent by name is asking for that one and nothing else.
-     */
     screen_info->use_present = display_info->have_present &&
 #ifdef HAVE_EPOXY
                                !screen_info->use_glx &&
@@ -6172,15 +5798,8 @@ compositorManageScreen (ScreenInfo *screen_info)
 
     screen_info->output = screen_info->xroot;
 #ifdef HAVE_EPOXY
-    /* Nothing is drawn into a window of our own yet, see pick_gl_visual() */
     screen_info->gl_visual = NULL;
     screen_info->gl_colormap = None;
-    /*
-     * Decided once for the life of the screen: the overlay visual picked
-     * below and setup_gl() must agree on the backend, and a decision taken
-     * twice can disagree. Cleared by setup_gl() when EGL failed to start,
-     * so a later suspend and resume does not fail the same way again.
-     */
     screen_info->gl_prefer_egl = gl_backend_wants_egl ();
 #endif /* HAVE_EPOXY */
 #if HAVE_OVERLAYS
@@ -6192,11 +5811,6 @@ compositorManageScreen (ScreenInfo *screen_info)
             XserverRegion region;
             XSetWindowAttributes attributes;
 
-            /*
-             * Not mapped yet. This window covers the screen and nothing below
-             * it reaches the eye once it is up, so it goes up at the end,
-             * when there is a renderer able to paint it. See further down.
-             */
             region = XFixesCreateRegion (display_info->dpy, NULL, 0);
             XFixesSetWindowShapeRegion (display_info->dpy, screen_info->overlay,
                                         ShapeBounding, 0, 0, 0);
@@ -6208,16 +5822,6 @@ compositorManageScreen (ScreenInfo *screen_info)
             unsigned long valuemask = 0;
 
 #ifdef HAVE_EPOXY
-            /*
-             * Only when the GL renderer is the one that is going to draw. The
-             * lookup loads the GL stack, which setup_gl() is about to do anyway
-             * under the very same conditions, and which is far too expensive to
-             * do for a screen that will never use it.
-             */
-            /*
-             * The EGL backend keeps the screen's own visual: the visual
-             * picked here is GLX's, and EGL offers no config for it.
-             */
             if (want_gl_renderer (screen_info) &&
                 !screen_info->gl_prefer_egl)
             {
@@ -6226,7 +5830,6 @@ compositorManageScreen (ScreenInfo *screen_info)
 
             if (screen_info->gl_visual != NULL)
             {
-                /* A window whose visual is not its parent's needs a colormap of its own */
                 screen_info->gl_colormap = XCreateColormap (display_info->dpy,
                                                             screen_info->xroot,
                                                             screen_info->gl_visual,
@@ -6243,19 +5846,9 @@ compositorManageScreen (ScreenInfo *screen_info)
                                                        0, 0, screen_info->width, screen_info->height, 0, screen_info->depth,
                                                        InputOutput, visual, valuemask, &attributes);
 #ifdef HAVE_EPOXY
-            /*
-             * Only a visual of our own can be refused. Where none was picked
-             * the call above asked for the screen's, so there is nothing left
-             * to fall back to and nothing to say about it.
-             */
             if ((myDisplayErrorTrapPop (display_info) != Success) &&
                 (screen_info->gl_visual != NULL))
             {
-                /*
-                 * The server would not have the visual we picked. Nothing is
-                 * lost by asking for the screen's own again, which is what
-                 * every version before this one used.
-                 */
                 g_info ("The server refused the visual picked for the overlay, "
                         "using the visual of the screen");
                 if (screen_info->gl_colormap != None)
@@ -6286,10 +5879,6 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_OVERLAYS */
     DBG ("Window used for output: 0x%lx (%s)", screen_info->output, display_info->have_overlays ? "overlay" : "root");
 
-    /*
-     * The format of the window we draw into, which is laid out like the screen
-     * whichever visual it ended up with, see pick_gl_visual().
-     */
     visual_format = XRenderFindVisualFormat (display_info->dpy,
 #ifdef HAVE_EPOXY
                                              (screen_info->gl_visual != NULL)
@@ -6329,10 +5918,10 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->rootTile = None;
     screen_info->allDamage = None;
     screen_info->prevDamage = None;
+    screen_info->direct_region = cairo_region_create ();
     screen_info->screenRegion = get_screen_region (screen_info);
     screen_info->cwindows = NULL;
     screen_info->cwindow_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-    screen_info->wins_unredirected = 0;
     screen_info->adding_windows = FALSE;
     screen_info->compositor_timeout_id = 0;
     screen_info->zoomed = FALSE;
@@ -6346,10 +5935,6 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->zoomBuffer = None;
     screen_info->use_n_buffers = 1;
 #ifdef HAVE_EPOXY
-    /*
-     * Nothing has applied a swap interval on this run yet, and what the last
-     * one applied says nothing about this one. See vsync_state ().
-     */
     screen_info->glx_swap_control = FALSE;
     screen_info->glx_swap_interval = 0;
 #endif /* HAVE_EPOXY */
@@ -6368,11 +5953,6 @@ compositorManageScreen (ScreenInfo *screen_info)
     TRACE ("manual compositing enabled");
 
 #ifdef HAVE_EPOXY
-    /*
-     * The GL renderer needs a GLX context whatever the vblank mode is, while
-     * the XRender path only uses GLX to present its buffer in sync with the
-     * screen, which relies on XSync fences.
-     */
     screen_info->use_glx = (screen_info->vblank_mode == VBLANK_AUTO ||
                             screen_info->vblank_mode == VBLANK_GLX ||
                             screen_info->vblank_mode == VBLANK_ADAPTIVE);
@@ -6380,25 +5960,13 @@ compositorManageScreen (ScreenInfo *screen_info)
     screen_info->use_glx &= display_info->have_xsync;
 #endif /* HAVE_XSYNC */
 
-    if (!resume_gl (screen_info))
-    {
-        setup_gl (screen_info);
-    }
+    setup_gl (screen_info);
 #else /* HAVE_EPOXY */
     screen_info->use_glx = FALSE;
 #endif /* HAVE_EPOXY */
 
     setup_presentation (screen_info);
 
-    /*
-     * The point of no return, and it is here on purpose. From the redirect on,
-     * the screen shows what this compositor paints and nothing else; and the
-     * overlay above covers the screen whether anything paints it or not. Doing
-     * either of them before the renderer exists means the desktop is blank for
-     * as long as the graphics stack takes to start - and stays blank, with no
-     * way back, if it fails or hangs in there. Everything above this line
-     * leaves the session as it was.
-     */
 #if HAVE_OVERLAYS
     if (display_info->have_overlays && screen_info->overlay != None)
     {
@@ -6409,7 +5977,6 @@ compositorManageScreen (ScreenInfo *screen_info)
                                   CompositeRedirectManual);
     screen_info->compositor_active = TRUE;
 
-    /* The renderer and the presentation are both settled by now */
     set_render_backend_property (screen_info);
 
     XFixesSelectCursorInput (display_info->dpy,
@@ -6424,29 +5991,8 @@ compositorManageScreen (ScreenInfo *screen_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
-/*
- * Compositing that is only paused for a fullscreen window keeps its GL context
- * and everything built in it, and the screen is not active while that lasts.
- * This is how that held state is let go of without the compositor running.
- */
 static void
-release_retained_gl (ScreenInfo *screen_info)
-{
-#if defined(HAVE_COMPOSITOR) && defined(HAVE_EPOXY)
-    if (screen_info->compositor_active || !screen_info->use_gl_render)
-    {
-        return;
-    }
-
-    TRACE ("dropping the GL renderer held over a suspend");
-    shutdown_gl_render (screen_info);
-#else
-    (void) screen_info;
-#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
-}
-
-static void
-unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
+unmanage_screen (ScreenInfo *screen_info)
 {
 #ifdef HAVE_COMPOSITOR
     DisplayInfo *display_info;
@@ -6464,11 +6010,6 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
 
     if (!screen_info->compositor_active)
     {
-        if (!keep_gl)
-        {
-            release_retained_gl (screen_info);
-            compositorSetCMSelection (screen_info, None);
-        }
         TRACE ("compositor not active on screen %i", screen_info->screen);
         return;
     }
@@ -6491,18 +6032,7 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
     screen_info->cwindows = NULL;
 
 #ifdef HAVE_EPOXY
-    if (screen_info->use_gl_render && keep_gl)
-    {
-        /*
-         * Only stopping for as long as a fullscreen window has focus, so the
-         * context, the shaders and the shadow profile are kept and just the
-         * drawable is dropped. use_gl_render stays set to say so. Each
-         * backend has its own drawable to drop, the other call is a no-op.
-         */
-        detach_glx_window (screen_info);
-        xfwmGLScreenDetached (screen_info);
-    }
-    else if (screen_info->use_gl_render)
+    if (screen_info->use_gl_render)
     {
         shutdown_gl_render (screen_info);
     }
@@ -6605,7 +6135,6 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
 #endif /* HAVE_OVERLAYS */
 
 #ifdef HAVE_EPOXY
-    /* The window it belonged to is gone, see pick_gl_visual() */
     if (screen_info->gl_colormap != None)
     {
         XFreeColormap (display_info->dpy, screen_info->gl_colormap);
@@ -6615,7 +6144,8 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
 #endif /* HAVE_EPOXY */
 
     screen_info->gaussianSize = -1;
-    screen_info->wins_unredirected = 0;
+    cairo_region_destroy (screen_info->direct_region);
+    screen_info->direct_region = NULL;
 
     if (screen_info->zoomed)
     {
@@ -6626,10 +6156,7 @@ unmanage_screen (ScreenInfo *screen_info, gboolean keep_gl)
                                     CompositeRedirectManual);
     screen_info->output = screen_info->xroot;
 
-    if (!keep_gl)
-    {
-        compositorSetCMSelection (screen_info, None);
-    }
+    compositorSetCMSelection (screen_info, None);
 
     myDisplayErrorTrapPopIgnored (display_info);
 #endif /* HAVE_COMPOSITOR */
@@ -6673,7 +6200,7 @@ compositorAddAllWindows (ScreenInfo *screen_info)
 }
 
 static gboolean
-activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
+activate_screen (ScreenInfo *screen_info, gboolean active)
 {
 #ifdef HAVE_COMPOSITOR
     DisplayInfo *display_info;
@@ -6689,16 +6216,6 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
 
     if (screen_info->compositor_active == active)
     {
-        /*
-         * Already stopped, but a stop that keeps the GL context may have been
-         * followed by a reason to let it go, the user turning compositing off
-         * for instance. Nothing else would ever get to it.
-         */
-        if (!active && !keep_gl)
-        {
-            unmanage_screen (screen_info, keep_gl);
-        }
-
         return FALSE;
     }
 
@@ -6710,7 +6227,7 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
     }
     else
     {
-        unmanage_screen (screen_info, keep_gl);
+        unmanage_screen (screen_info);
     }
 
     return TRUE;
@@ -6722,13 +6239,9 @@ activate_screen (ScreenInfo *screen_info, gboolean active, gboolean keep_gl)
 gboolean
 compositorActivateScreen (ScreenInfo *screen_info, gboolean active)
 {
-    return activate_screen (screen_info, active, FALSE);
+    return activate_screen (screen_info, active);
 }
 
-/*
- * Give the GL renderer another chance. Turning the setting off and on again is
- * how a user says the reason it gave up may have gone away.
- */
 void
 compositorResetGLRenderer (ScreenInfo *screen_info)
 {
@@ -6736,80 +6249,25 @@ compositorResetGLRenderer (ScreenInfo *screen_info)
     g_return_if_fail (screen_info != NULL);
 
     screen_info->gl_render_failed = FALSE;
-#endif /* HAVE_COMPOSITOR && HAVE_EPOXY */
+#endif
 }
 
 void
-compositorUpdateFullscreenSuspend (ScreenInfo *screen_info)
+compositorUpdateUnredirected (DisplayInfo *display_info)
 {
 #ifdef HAVE_COMPOSITOR
-    DisplayInfo *display_info;
-    ScreenInfo *screen;
-    Client *c;
     GSList *list;
-    gboolean active;
 
-    g_return_if_fail (screen_info != NULL);
-    TRACE ("entering");
+    g_return_if_fail (display_info != NULL);
 
-    display_info = screen_info->display_info;
-    c = clientGetFocus ();
     for (list = display_info->screens; list; list = g_slist_next (list))
     {
-        screen = (ScreenInfo *) list->data;
-        gboolean suspend;
+        ScreenInfo *screen = (ScreenInfo *) list->data;
 
-        suspend = screen->params->suspend_compositing_fullscreen &&
-                  (c != NULL) && (c->screen_info == screen) &&
-                  FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN);
-
-        if (suspend)
+        if (screen->compositor_active)
         {
-            CWindow *cw = find_cwindow_in_screen (screen, c->frame);
-            guint32 bypass = 0;
-
-            /*
-             * _NET_WM_BYPASS_COMPOSITOR of 2 means the window wants compositing
-             * kept whatever happens. While compositing is stopped there are no
-             * windows to ask, so the hint is read off the client: otherwise
-             * moving between fullscreen windows could never start it again.
-             */
-            if (cw != NULL)
-            {
-                bypass = cw->bypass_compositor;
-            }
-            else
-            {
-                getBypassCompositor (display_info, c->window, &bypass);
-            }
-
-            if (bypass == 2)
-            {
-                suspend = FALSE;
-            }
+            update_unredirected (screen);
         }
-
-        active = screen->params->use_compositing && !suspend;
-
-        /*
-         * Keep the GL context and everything in it while a fullscreen window
-         * has focus, this is a short stop. When the user turned compositing
-         * off it is not, so let it all go.
-         */
-        activate_screen (screen, active, screen->params->use_compositing);
-    }
-#endif /* HAVE_COMPOSITOR */
-}
-
-void
-compositorUpdateUnredirected (ScreenInfo *screen_info)
-{
-#ifdef HAVE_COMPOSITOR
-    g_return_if_fail (screen_info != NULL);
-
-    if (screen_info->compositor_active)
-    {
-        update_unredirected (screen_info);
     }
 #endif /* HAVE_COMPOSITOR */
 }
@@ -6818,7 +6276,7 @@ void
 compositorUnmanageScreen (ScreenInfo *screen_info)
 {
 #ifdef HAVE_COMPOSITOR
-    unmanage_screen (screen_info, FALSE);
+    unmanage_screen (screen_info);
 #endif /* HAVE_COMPOSITOR */
 }
 
@@ -6844,6 +6302,7 @@ compositorUpdateScreenSize (ScreenInfo *screen_info)
     {
         XResizeWindow (display_info->dpy, screen_info->overlay, screen_info->width, screen_info->height);
         XResizeWindow (display_info->dpy, screen_info->root_overlay, screen_info->width, screen_info->height);
+        set_direct_hole (screen_info);
     }
 #endif
     if (screen_info->zoomBuffer)
@@ -6944,11 +6403,6 @@ compositorRebuildScreen (ScreenInfo *screen_info)
 #endif /* HAVE_COMPOSITOR */
 }
 
-/*
- * The one place a vblank mode name is turned into a mode, for the command
- * line and the settings alike. Returns VBLANK_ERROR for a name that is not
- * recognized, the caller decides whether that is worth telling the user.
- */
 vblankMode
 compositorParseVblankMode (const gchar *vblank_setting)
 {

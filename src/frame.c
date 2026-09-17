@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2015 Olivier Fourdan
 
@@ -675,7 +674,6 @@ frameSetShape (Client * c, int state, FramePixmap * frame_pix, int button_x[BUTT
 
         if (xfwmWindowVisible (&c->corners[CORNER_TOP_LEFT]))
         {
-
             XShapeCombineShape (display_info->dpy, screen_info->shape_win, ShapeBounding, 0, 0,
                                 MYWINDOW_XWINDOW (c->corners[CORNER_TOP_LEFT]), ShapeBounding, ShapeUnion);
         }
@@ -738,12 +736,6 @@ frameSetShape (Client * c, int state, FramePixmap * frame_pix, int button_x[BUTT
     myDisplayErrorTrapPopIgnored (display_info);
 }
 
-/*
- * Whether the frame of a window is drawn as the active one. That is not the
- * same question as whether it has focus: a window asking for attention is
- * drawn active while it blinks. Anything that has to agree with how the frame
- * looks, hovering over a button for one, asks here.
- */
 int
 frameGetState (Client * c)
 {
@@ -764,22 +756,6 @@ frameGetState (Client * c)
     return INACTIVE;
 }
 
-/*
- * The frame's own background, under everything the frame holds. It is only
- * ever seen in the strip a resize has just given the frame, in the moment
- * before the border window that covers that strip is moved into it: with no
- * background the strip keeps whatever the screen had there, which reads as the
- * border blinking out on every step of a resize. Wearing the border's own tile
- * it looks like the border that is about to arrive. Set before the frame
- * changes size, see clientConfigureWindows(), and dropped again as soon as the
- * border windows are back in place, at the end of frameDrawWin().
- *
- * A window of a depth the screen does not share, an ARGB one on a screen that
- * is not, keeps no background: a background pixmap has to be of the window's
- * own depth, and the theme's tiles are all of the screen's. Those windows still
- * blink on a resize step, which is the price of not carrying a second copy of
- * every tile.
- */
 void
 frameSetBackground (Client * c)
 {
@@ -798,11 +774,6 @@ frameSetBackground (Client * c)
         return;
     }
 
-    /*
-     * The stretch tile first, the way frameDecorationRight() picks the width
-     * the border is going to have. A theme that ships only the stretch variant
-     * would otherwise get no background at all, and go on blinking.
-     */
     state = frameGetState (c);
     tile = &screen_info->sides_stretch[SIDE_RIGHT][state];
     if (xfwmPixmapNone (tile))
@@ -1187,18 +1158,6 @@ frameDrawWin (Client * c)
         frameSetShape (c, 0, NULL, 0);
     }
 
-    /*
-     * Take the tile away again. A background stays with the window until it is
-     * changed, and the server paints it over every area the frame is given -
-     * including the whole of the frame the first time it is mapped, which is
-     * the client's area too, before the client has drawn anything there. That
-     * showed the border's pattern striped across the whole of a window that was
-     * still opening, for as long as the application took to paint, so the
-     * busier the machine the longer it stayed. The tile is only wanted for the
-     * one resize step it was set for, and that step has now drawn. Most of the
-     * draws that come through here are a focus or a title change that never set
-     * it, so the flag keeps the request on the resize path.
-     */
     if (c->frame_background)
     {
         XSetWindowBackgroundPixmap (display_info->dpy, c->frame, None);

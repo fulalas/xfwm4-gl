@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2022 Olivier Fourdan
 
@@ -108,7 +107,6 @@ clientCheckSize (Client * c, int size, int base, int min, int max, int incr, gbo
         && !(FLAG_TEST_ALL (c->flags, CLIENT_FLAG_MAXIMIZED)
              && (c->screen_info->params->borderless_maximize)))
     {
-
         if (!source_is_application && (c->size->flags & PResizeInc) && (incr))
         {
             int a;
@@ -265,7 +263,6 @@ clientSetHandle(MoveResizeData *passdata, int handle)
 static void
 clientConstrainRatio (Client * c, int handle)
 {
-
     g_return_if_fail (c != NULL);
     TRACE ("client \"%s\" (0x%lx)", c->name, c->window);
 
@@ -393,7 +390,6 @@ clientFindClosestEdgeX (Client *c, int edge_pos)
                   && FLAG_TEST (c2->flags, CLIENT_FLAG_HAS_STRUT)
                   && FLAG_TEST (c2->xfwm_flags, XFWM_FLAG_VISIBLE))))
         {
-
             if (clientCheckOverlap (c->y - frameExtentTop (c) - 1, c->y + c->height + frameExtentBottom (c) + 1, c2->y - frameExtentTop (c) - 1, c2->y + c2->height + frameExtentBottom (c) + 1))
             {
                 if (abs (c2->x - frameExtentLeft (c2) - edge_pos) < abs (closest - edge_pos))
@@ -440,7 +436,6 @@ clientFindClosestEdgeY (Client *c, int edge_pos)
                   && FLAG_TEST (c2->flags, CLIENT_FLAG_HAS_STRUT)
                   && FLAG_TEST (c2->xfwm_flags, XFWM_FLAG_VISIBLE))))
         {
-
             if (clientCheckOverlap (c->x - frameExtentLeft (c) - 1, c->x + c->width + frameExtentRight (c) + 1, c2->x - frameExtentLeft (c) - 1, c2->x + c2->width + frameExtentRight (c) + 1))
             {
                 if (abs (c2->y - frameExtentTop(c2) - edge_pos) < abs (closest - edge_pos))
@@ -1576,7 +1571,6 @@ clientResizeEventFilter (XfwmEvent *event, gpointer data)
 
             /* Attempt to snap the right edge to something. -Cliff */
             c->width = clientFindClosestEdgeX (c, c->x + c->width + frameExtentRight (c)) - c->x - frameExtentRight (c);
-
         }
         if (!FLAG_TEST (c->flags, CLIENT_FLAG_SHADED))
         {
@@ -1799,10 +1793,6 @@ clientResize (Client * c, int handle, XfwmEventButton *event)
     FLAG_SET (c->xfwm_flags, XFWM_FLAG_MOVING_RESIZING);
 
 #ifdef HAVE_XSYNC
-    /* A client dropped for being slow last time starts this resize with
-       another chance, so one slow frame does not cost it its resize sync
-       for as long as it lives
-     */
     clientXSyncEnable (c);
 #endif /* HAVE_XSYNC */
 
@@ -1818,10 +1808,6 @@ clientResize (Client * c, int handle, XfwmEventButton *event)
     FLAG_UNSET (c->xfwm_flags, XFWM_FLAG_MOVING_RESIZING);
 
 #ifdef HAVE_XSYNC
-    /* The resize is over, so there is no frame left to wait for. Dropping
-       the timeout here keeps a client that simply had nothing more to draw
-       from being reported late and losing its resize sync for good.
-     */
     clientXSyncClearTimeout (c);
 #endif /* HAVE_XSYNC */
 

@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2015 Olivier Fourdan,
                        2008 Jannis Pohlmann
@@ -238,7 +237,6 @@ loadXfconfData (ScreenInfo *screen_info, Settings *rc)
         }
         g_free(property_name);
     }
-
 }
 
 static int
@@ -281,7 +279,6 @@ getThemeName (ScreenInfo *screen_info, Settings *rc)
 static void
 loadTheme (ScreenInfo *screen_info, Settings *rc)
 {
-
     static const char *side_names[] = {
         "left",
         "right",
@@ -940,7 +937,6 @@ loadSettings (ScreenInfo *screen_info)
     {
         vblankMode vblank_mode = compositorParseVblankMode (value);
 
-        /* An unknown name in the settings falls back to auto */
         compositorSetVblankMode (screen_info,
                                  (vblank_mode == VBLANK_ERROR) ? VBLANK_AUTO
                                                                : vblank_mode);
@@ -1006,7 +1002,6 @@ unloadTheme (ScreenInfo *screen_info)
         screen_info->tabwin_provider = NULL;
     }
 }
-
 
 static void
 unloadKeyBindings (ScreenInfo *screen_info)
@@ -1442,7 +1437,7 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 else if (!strcmp (name, "suspend_compositing_fullscreen"))
                 {
                     screen_info->params->suspend_compositing_fullscreen = g_value_get_boolean (value);
-                    compositorUpdateFullscreenSuspend (screen_info);
+                    compositorUpdateUnredirected (screen_info->display_info);
                 }
                 else if (!strcmp (name, "tile_on_move"))
                 {
@@ -1455,20 +1450,19 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 else if (!strcmp (name, "unredirect_overlays"))
                 {
                     screen_info->params->unredirect_overlays = g_value_get_boolean (value);
-                    compositorUpdateUnredirected (screen_info);
+                    compositorUpdateUnredirected (screen_info->display_info);
                 }
                 else if (!strcmp (name, "use_gl_compositing"))
                 {
                     screen_info->params->use_gl_compositing = g_value_get_boolean (value);
-                    /* The backend is picked when the compositor starts */
                     compositorResetGLRenderer (screen_info);
                     compositorActivateScreen (screen_info, FALSE);
-                    compositorUpdateFullscreenSuspend (screen_info);
+                    compositorActivateScreen (screen_info, screen_info->params->use_compositing);
                 }
                 else if (!strcmp (name, "use_compositing"))
                 {
                     screen_info->params->use_compositing = g_value_get_boolean (value);
-                    compositorUpdateFullscreenSuspend (screen_info);
+                    compositorActivateScreen (screen_info, screen_info->params->use_compositing);
                 }
                 else if (!strcmp (name, "wrap_layout"))
                 {
@@ -1501,7 +1495,6 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
         }
     }
 }
-
 
 static gboolean
 keymap_reload (gpointer data)

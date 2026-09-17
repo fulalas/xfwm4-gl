@@ -810,7 +810,7 @@ clientUpdateFullscreenState (Client * c)
                         frameRight (c),
                         frameBottom (c));
     clientSetNetState (c);
-    compositorUpdateFullscreenSuspend (screen_info);
+    compositorUpdateUnredirected (screen_info->display_info);
 }
 
 void

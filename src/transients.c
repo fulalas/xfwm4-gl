@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
  */
@@ -32,13 +31,6 @@
 #include "stacking.h"
 #include "transients.h"
 
-/*
- * The parent/child relation is cached in c->parent, so that asking about
- * transients is a pointer compare instead of a walk over all the clients.
- * Only direct transients have a parent: a transient for group is related
- * to its group members, which is a cheap test on its own.
- */
-
 static void
 clientUpdateTransientRelation (Client * c)
 {
@@ -52,16 +44,6 @@ clientUpdateTransientRelation (Client * c)
         return;
     }
 
-    /*
-     * An application may point WM_TRANSIENT_FOR at its own child, refuse
-     * the link or we would end up with a loop. This is the only place that
-     * sets parent, and refusing here is what keeps every walk up the chain
-     * finite. Two windows naming each other keep the first link only, so
-     * the family is seen from the child but not from the parent.
-     *
-     * The relation compares client windows, so look for the window alone,
-     * not the frame like clientGetTransient() does.
-     */
     if (clientCheckTransientWindow (c, c->transient_for))
     {
         c->parent = myScreenGetClientFromWindow (c->screen_info,
@@ -69,7 +51,6 @@ clientUpdateTransientRelation (Client * c)
     }
 }
 
-/* Set WM_TRANSIENT_FOR, keeping the cached relation in step with it */
 void
 clientSetTransientFor (Client * c, Window w)
 {
@@ -81,10 +62,6 @@ clientSetTransientFor (Client * c, Window w)
     clientUpdateTransientRelation (c);
 }
 
-/* The client is now managed, link it and adopt the transients waiting for
-   it. Must run once the client is in the ring, that is what makes a parent
-   findable.
- */
 void
 clientAttachTransients (Client * c)
 {
@@ -108,10 +85,6 @@ clientAttachTransients (Client * c)
     }
 }
 
-/* The client is going away, orphan its children. Must run while it is
-   still in the ring, but after it can no longer be looked up, or the
-   orphans below would just find it again.
- */
 void
 clientDetachTransients (Client * c)
 {
@@ -133,10 +106,6 @@ clientDetachTransients (Client * c)
     }
     c->parent = NULL;
 
-    /* A link refused earlier because it would have closed a loop may be
-       fine now that this client is out of the way, so let every transient
-       still without a parent have another go
-     */
     for (c2 = screen_info->clients, i = 0; i < screen_info->client_count; c2 = c2->next, i++)
     {
         if ((c2 != c) && (c2->parent == NULL))
@@ -409,7 +378,6 @@ clientTransientOrModalHasAncestor (Client * c, guint ws)
         }
     }
     return FALSE;
-
 }
 
 Client *
@@ -450,7 +418,6 @@ clientGetTransientFor (Client * c)
     first_parent = c;
     for (c2 = c->parent; c2 != NULL; c2 = c2->parent)
     {
-        /* Do not cross a layer boundary */
         if (c->win_layer > c2->win_layer)
         {
             break;
@@ -461,7 +428,6 @@ clientGetTransientFor (Client * c)
     return first_parent;
 }
 
-/* The stamp marks the clients already collected in the list being built */
 static unsigned long transient_stamp = 0;
 
 static gboolean
@@ -470,9 +436,6 @@ clientIsStamped (Client * c)
     return (c->transient_stamp == transient_stamp);
 }
 
-/* Same test as clientIsTransientFor(), against the whole list at once.
-   "head" is the client the list was asked for, the first of it.
- */
 static gboolean
 clientIsTransientForListed (Client * c, Client * head)
 {
@@ -481,19 +444,9 @@ clientIsTransientForListed (Client * c, Client * head)
         return ((c->parent != NULL) && clientIsStamped (c->parent));
     }
 
-    /*
-     * A transient for group can only be transient for a client with no
-     * transient_for of its own, and head is the only one of those that
-     * ever gets in the list: every other member got in because it has a
-     * transient_for. So one test against head is enough.
-     */
     return clientIsTransientFor (c, head);
 }
 
-/* Build a GList of clients that have a transient or modal relationship.
-   A modal is always a transient too, see clientIsModalFor(), so there is
-   one list for both.
- */
 GList *
 clientListTransientOrModal (Client * c)
 {
@@ -509,9 +462,6 @@ clientListTransientOrModal (Client * c)
     transient_stamp++;
     c->transient_stamp = transient_stamp;
 
-    /* Walk the stack bottom up, so that a client is stamped before the
-       transients sitting above it are tested.
-     */
     screen_info = c->screen_info;
     for (list = screen_info->windows_stack; list; list = g_list_next (list))
     {
@@ -542,9 +492,6 @@ clientCheckTransientWindow (Client *c, Window w)
         return TRUE;
     }
 
-    /* Walk up from that window: if we meet c on the way, or a client that
-       is already transient for c, the window is one of c's own transients
-     */
     for (c2 = myScreenGetClientFromWindow (c->screen_info, w, SEARCH_WINDOW); c2; c2 = c2->parent)
     {
         if ((c2 == c) || clientIsTransientFor (c2, c))

@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2022 Olivier Fourdan
 
@@ -342,7 +341,6 @@ clientUpdateAllFrames (ScreenInfo *screen_info, int mask)
         {
             frameQueueDraw (c, TRUE);
         }
-
     }
 }
 
@@ -666,38 +664,6 @@ clientConfigureWindows (Client *c, unsigned long mask, unsigned short flags)
     growing = (c->width > c->applied_geometry.width) ||
               (c->height > c->applied_geometry.height);
 
-    /*
-     * The border and the title are windows of their own, living inside the
-     * frame, and drawing the frame puts them where the new size wants them.
-     * That cannot be done before the frame itself moves and resizes: the new
-     * places are measured from a frame edge that is not there yet, so the
-     * border either lands outside the frame and is clipped away, or lands at
-     * the right offset from the wrong origin and is seen to jump. It is done
-     * after the geometry below, and the strip it is a moment late for is
-     * covered by the frame's own background, which carries the border's own
-     * pattern. See frameDrawWin().
-     */
-
-    /*
-     * The frame and the client inside it are two windows and take two
-     * requests, so between them the screen holds one of the two sizes with the
-     * other still to come. Which one goes first decides whether that shows.
-     *
-     * The one that is about to be the bigger goes first, so that the strip
-     * they disagree over is always covered by something that belongs there.
-     * Growing, the client leads: its extra pixels are clipped by the frame
-     * that has not grown yet, and when the frame does grow, the client is
-     * already filling it. Shrinking, the frame leads: it closes over the
-     * client's extra pixels, which the client then gives up. The border can
-     * never be lost either way, because the decoration is stacked above the
-     * client - see clientFrame().
-     */
-    /*
-     * The frame keeps the border's tile as its background, so the strip it
-     * gains for the one moment before the border window is moved into it looks
-     * like the border rather than like whatever was on the screen. It has to
-     * be in place before the frame changes size. See frameSetBackground().
-     */
     if (redraw)
     {
         frameSetBackground (c);
@@ -1936,16 +1902,6 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     valuemask = CWEventMask|CWBitGravity|CWWinGravity;
     attributes.event_mask = (FRAME_EVENT_MASK | POINTER_EVENT_MASK);
     attributes.win_gravity = StaticGravity;
-    /*
-     * The frame's own pixels stay with the frame, not with the screen. The two
-     * are the same thing whenever the frame only changes size, and they differ
-     * when a step moves it as well - dragging the top left corner does that
-     * every frame. Static gravity then leaves the pixels where they were on
-     * the screen while the frame has moved off them, so everything the frame
-     * holds, border and bottom edge included, is seen displaced by that step
-     * until each piece has repainted itself. That is a whole window jumping
-     * back and forth for a frame at a time, all through such a resize.
-     */
     attributes.bit_gravity = NorthWestGravity;
 
 #ifdef HAVE_RENDER
@@ -2046,10 +2002,6 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
         &c->sides[SIDE_TOP], NoEventMask,
         myDisplayGetCursorResize(screen_info->display_info, CORNER_COUNT + SIDE_TOP));
 
-    /*
-     * The pieces along the right and bottom edges are pinned to those edges,
-     * so a resize of the frame takes them with it. See xfwmWindowSetGravity().
-     */
     xfwmWindowSetGravity (&c->sides[SIDE_RIGHT], NorthEastGravity);
     xfwmWindowSetGravity (&c->sides[SIDE_BOTTOM], SouthWestGravity);
     xfwmWindowSetGravity (&c->corners[CORNER_TOP_RIGHT], NorthEastGravity);
@@ -2063,17 +2015,6 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
     }
     clientUpdateIconPix (c);
 
-    /*
-     * The decoration above the window, keeping the order the pieces were
-     * created in. A resize takes two requests, the frame's and the client's,
-     * and for the moment between them one of the two is the wrong size. With
-     * the client on top, a client that is briefly too big paints over the
-     * border and the border is gone for that frame; with the border on top,
-     * whichever of the two is briefly wrong is hidden behind the piece that is
-     * already where it belongs, and nothing is seen at all. The pieces only
-     * ever cover the border and the title, never the client's own area, so
-     * nothing changes once the resize has settled.
-     */
     for (i = 0; i < SIDE_COUNT; i++)
     {
         if (i != SIDE_TOP)
@@ -2146,7 +2087,6 @@ clientFrame (DisplayInfo *display_info, Window w, gboolean recapture)
         clientCreateXSyncAlarm (c);
     }
 #endif /* HAVE_XSYNC */
-
 
     DBG ("client \"%s\" (0x%lx) is now managed", c->name, c->window);
     DBG ("client_count=%d", screen_info->client_count);
@@ -3766,7 +3706,6 @@ clientMoveToMonitorByDirectionTarget (Client *c, gint key, GdkMonitor **current_
         {
             candidate_monitors = g_list_insert_sorted (candidate_monitors, props, (GCompareFunc) moveToMonitorPropertiesComp);
         }
-
     }
     if (candidate_monitors == NULL)
     {
@@ -3920,7 +3859,6 @@ clientToggleTile (Client *c, tilePositionType tile)
                            TRUE);
     }
 }
-
 
 static void
 clientRecomputeTileSize (Client *c)
@@ -4451,12 +4389,6 @@ clientGetButtonPixmap (Client *c, int button, int state)
     return &screen_info->buttons[button][state];
 }
 
-/*
- * Whether hovering this button is worth remembering. The pointer being on a
- * button says nothing about how the frame is drawn, so the hover is recorded
- * even for a theme with only one prelight image: the window can be focused
- * without the pointer moving, with no crossing event to put it right.
- */
 gboolean
 clientCanPrelight (Client *c, int button)
 {
@@ -4480,10 +4412,6 @@ clientGetButtonState (Client *c, int button, int state)
         return (state);
     }
 
-    /*
-     * clientGetButtonPixmap() always hands back an entry, an empty one when the
-     * theme ships no image for that state, so the entry itself has to be tested.
-     */
     if ((c->button_status[button] == BUTTON_STATE_PRESSED) &&
         !xfwmPixmapNone (clientGetButtonPixmap (c, button, PRESSED)))
     {

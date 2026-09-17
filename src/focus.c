@@ -540,7 +540,7 @@ clientUpdateFocus (ScreenInfo *screen_info, Client * c, unsigned short flags)
     }
     clientSetNetActiveWindow (screen_info, c, 0);
     pending_focus = NULL;
-    compositorUpdateFullscreenSuspend (screen_info);
+    compositorUpdateUnredirected (screen_info->display_info);
 }
 
 void
@@ -629,7 +629,7 @@ clientSetFocus (ScreenInfo *screen_info, Client *c, guint32 timestamp, unsigned 
         client_focus = NULL;
         clientFocusNone (screen_info, c2, timestamp);
         clientClearDelayedFocus ();
-        compositorUpdateFullscreenSuspend (screen_info);
+        compositorUpdateUnredirected (screen_info->display_info);
     }
 }
 

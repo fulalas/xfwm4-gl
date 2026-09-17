@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         oroborus - (c) 2001 Ken Lynch
         xfwm4    - (c) 2002-2011 Olivier Fourdan
 
@@ -98,12 +97,6 @@
 #endif
 
 #ifndef CLIENT_XSYNC_TIMEOUT
-/*
- * How long a resize waits for the client to draw the frame it was asked
- * for. Past this we stop waiting for it, so it has to stay short enough
- * that a slow client cannot make the drag feel stuck: 100ms is already
- * six frames at 60Hz.
- */
 #define CLIENT_XSYNC_TIMEOUT            100  /* ms */
 #endif
 
@@ -306,8 +299,8 @@ struct _Client
     XClassHint class;
     Client *next;
     Client *prev;
-    Client *parent;                  /* client this one is transient for */
-    unsigned long transient_stamp;   /* used to walk the transient tree */
+    Client *parent;
+    unsigned long transient_stamp;
     PropMwmHints *mwm_hints;
     netWindowType type;
     gint x;
@@ -348,7 +341,6 @@ struct _Client
     guint icon_timeout_id;
     /* Timout for asynchronous frame update */
     guint frame_timeout_id;
-    /* The frame is wearing the border tile, see frameSetBackground() */
     gboolean frame_background;
     /* Timout to manage blinking decorations for urgent windows */
     guint blink_timeout_id;

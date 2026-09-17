@@ -166,7 +166,6 @@ cb_borderless_maximize_button_toggled (GtkToggleButton *toggle, GtkWidget *title
 #define RENDER_BACKEND_PROP     "_XFWM4_RENDER_BACKEND"
 #define VSYNC_PROP              "_XFWM4_VSYNC"
 
-/* Looked up once, the filter below sees every root window event */
 static Atom render_backend_atom = None;
 static Atom vsync_atom = None;
 
@@ -220,11 +219,6 @@ update_render_backend_label (GtkWidget *label)
     root = GDK_WINDOW_XID (gdk_get_default_root_window ());
     intern_backend_atoms (dpy);
 
-    /*
-     * The window manager puts what it settled on on the root window: which
-     * renderer, and how it talks to the driver. Not the card - xfce4-about
-     * already reports the hardware and knows how to enumerate it properly.
-     */
     backend = read_root_string (dpy, root, render_backend_atom);
     vsync = read_root_string (dpy, root, vsync_atom);
 
@@ -270,7 +264,6 @@ update_render_backend_label (GtkWidget *label)
     }
     else
     {
-        /* Nothing is advertised, so nothing is compositing right now */
         text = g_strdup (_("(currently off)"));
     }
 
@@ -374,7 +367,6 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     GtkWidget *move_opacity_scale = GTK_WIDGET (gtk_builder_get_object (builder, "move_opacity_scale"));
     GtkWidget *popup_opacity_scale = GTK_WIDGET (gtk_builder_get_object (builder, "popup_opacity_scale"));
     GtkWidget *resize_opacity_scale = GTK_WIDGET (gtk_builder_get_object (builder, "resize_opacity_scale"));
-
 
     /* Fill combo-box */
     list_store = gtk_list_store_new (1, G_TYPE_STRING);

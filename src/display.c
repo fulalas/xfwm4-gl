@@ -15,7 +15,6 @@
         Foundation, Inc., Inc., 51 Franklin Street, Fifth Floor, Boston,
         MA 02110-1301, USA.
 
-
         xfwm4    - (c) 2002-2022 Olivier Fourdan
 
  */
@@ -496,7 +495,6 @@ myDisplayGetCursorResize (DisplayInfo *display, guint list)
     return display->resize_cursor [list];
 }
 
-
 void
 myDisplayGrabServer (DisplayInfo *display)
 {
@@ -570,10 +568,6 @@ myDisplayGetClientFromWindow (DisplayInfo *display, Window w, unsigned short mod
         {
             return (c);
         }
-        /* The table holds every client and frame window, so not finding it
-           there is the answer, unless we are also looking for something
-           else: buttons and the user time window are not in the table.
-         */
         if (!(mode & ~(SEARCH_WINDOW | SEARCH_FRAME)))
         {
             TRACE ("no client found");

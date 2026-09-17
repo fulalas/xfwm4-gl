@@ -34,36 +34,16 @@
 
 #ifdef HAVE_EPOXY
 
-/*
- * Set up the GL renderer on a screen whose GLX context is already current.
- * Returns FALSE if the driver lacks anything required, in which case the
- * caller must keep using the XRender path.
- */
 gboolean         xfwmGLScreenInit               (ScreenInfo *);
 void             xfwmGLScreenFinish             (ScreenInfo *);
 
-/*
- * Paint the whole screen from the window textures. Returns FALSE when the
- * frame could not be painted, the caller then falls back to XRender.
- */
 gboolean         xfwmGLPaintAll                 (ScreenInfo *,
                                                  XserverRegion);
 
-/*
- * Whether that frame was dropped for a window that could not be bound, and so
- * has to be painted again. Answering clears it.
- */
 gboolean         xfwmGLTakeRetryPaint           (ScreenInfo *);
 
-/*
- * The repaint loop found the fence of the last frame still unsignalled and
- * gave up this turn. Counted for XFWM4_GL_PROFILE, which reports how many of
- * those turns each painted frame costs.
- */
 void             xfwmGLNoteFenceWait            (ScreenInfo *);
 
-void             xfwmGLScreenDetached           (ScreenInfo *);
-void             xfwmGLScreenReattached         (ScreenInfo *);
 void             xfwmGLScreenSizeChanged        (ScreenInfo *);
 void             xfwmGLFreeWindowData           (CWindow *);
 void             xfwmGLInvalidateWindowRegions  (CWindow *);
@@ -88,4 +68,4 @@ void             xfwmGLUpdateWindowShadow       (CWindow *,
 
 #endif /* HAVE_COMPOSITOR */
 
-#endif /* INC_COMPOSITOR_GL_H */
+#endif
