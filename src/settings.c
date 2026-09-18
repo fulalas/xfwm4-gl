@@ -928,7 +928,7 @@ loadSettings (ScreenInfo *screen_info)
 
     if (screen_info->workspace_count == 0)
     {
-        workspaceSetCount (screen_info, (guint) getIntValue ("workspace_count", rc));
+        workspaceSetCount (screen_info, getIntValue ("workspace_count", rc));
 
         value = getStringValue ("vblank_mode", rc);
         if (value)
@@ -1114,7 +1114,7 @@ initSettings (ScreenInfo *screen_info)
     }
     if (getHint (display_info, screen_info->xroot, NET_NUMBER_OF_DESKTOPS, &val))
     {
-        workspaceSetCount (screen_info, (guint) val);
+        workspaceSetCount (screen_info, (gint) val);
     }
 
     if (getUTF8StringList (display_info, screen_info->xroot, NET_DESKTOP_NAMES, &names, &i))
@@ -1231,7 +1231,7 @@ cb_xfwm4_channel_property_changed(XfconfChannel *channel, const gchar *property_
                 }
                 else if (!strcmp (name, "workspace_count"))
                 {
-                    workspaceSetCount(screen_info, (guint) g_value_get_int (value));
+                    workspaceSetCount(screen_info, g_value_get_int (value));
                 }
                 else if (!strcmp (name, "frame_opacity"))
                 {

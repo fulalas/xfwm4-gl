@@ -3825,6 +3825,10 @@ redirect_win (CWindow *cw)
 
     myDisplayErrorTrapPush (display_info);
     XCompositeRedirectWindow (display_info->dpy, cw->id, CompositeRedirectManual);
+    if (cw->damage)
+    {
+        XDamageSubtract (display_info->dpy, cw->damage, None, None);
+    }
     myDisplayErrorTrapPopIgnored (display_info);
 
     free_win_data (cw, FALSE);

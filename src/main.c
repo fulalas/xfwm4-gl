@@ -195,6 +195,7 @@ setupHandler (gboolean install)
         {
             g_source_remove (source_ids[i]);
             source_ids[i] = 0;
+            signal (signals[i], SIG_DFL);
         }
     }
 }

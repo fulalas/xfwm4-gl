@@ -520,11 +520,11 @@ handleKeyPress (DisplayInfo *display_info, XfwmEventKey *event)
             break;
         case KEY_ADD_WORKSPACE:
             status = EVENT_FILTER_REMOVE;
-            workspaceSetCount (ev_screen_info, ev_screen_info->workspace_count + 1);
+            workspaceSetCount (ev_screen_info, (gint) ev_screen_info->workspace_count + 1);
             break;
         case KEY_DEL_WORKSPACE:
             status = EVENT_FILTER_REMOVE;
-            workspaceSetCount (ev_screen_info, ev_screen_info->workspace_count - 1);
+            workspaceSetCount (ev_screen_info, (gint) ev_screen_info->workspace_count - 1);
             break;
         case KEY_ADD_ADJACENT_WORKSPACE:
             workspaceInsert (ev_screen_info, ev_screen_info->current_ws + 1);
@@ -1988,7 +1988,7 @@ handleClientMessage (DisplayInfo *display_info, XClientMessageEvent * ev)
             TRACE ("root has received a win_workspace_count event");
             if ((ev->data.l[0] > 0) && (ev->data.l[0] != (long) screen_info->workspace_count))
             {
-                workspaceSetCount (screen_info, (guint) ev->data.l[0]);
+                workspaceSetCount (screen_info, (gint) ev->data.l[0]);
                 getDesktopLayout(display_info, screen_info->xroot, screen_info->workspace_count, &screen_info->desktop_layout);
             }
         }

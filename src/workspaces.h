@@ -54,7 +54,7 @@ void                    workspaceSetNames                       (ScreenInfo *,
                                                                  gchar **,
                                                                  int);
 void                    workspaceSetCount                       (ScreenInfo *,
-                                                                 guint);
+                                                                 gint);
 void                    workspaceUpdateArea                     (ScreenInfo *);
 
 void                    workspaceInsert                         (ScreenInfo *,

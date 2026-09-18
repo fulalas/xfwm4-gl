@@ -421,17 +421,18 @@ workspaceSetNames (ScreenInfo * screen_info, gchar **names, int items)
 }
 
 void
-workspaceSetCount (ScreenInfo * screen_info, guint count)
+workspaceSetCount (ScreenInfo * screen_info, gint value)
 {
     DisplayInfo *display_info;
     Client *c;
     GList *list;
+    guint count;
 
     g_return_if_fail (screen_info != NULL);
 
-    TRACE ("count %u", count);
+    TRACE ("count %i", value);
 
-    count = CLAMP (count, 1, WORKSPACE_COUNT_MAX);
+    count = (guint) CLAMP (value, 1, WORKSPACE_COUNT_MAX);
     if (count == screen_info->workspace_count)
     {
         return;
@@ -472,7 +473,7 @@ workspaceInsert (ScreenInfo * screen_info, guint position)
     TRACE ("position %u", position);
 
     count = screen_info->workspace_count;
-    workspaceSetCount(screen_info, count + 1);
+    workspaceSetCount(screen_info, (gint) count + 1);
 
     if (position > count)
     {
@@ -513,7 +514,7 @@ workspaceDelete (ScreenInfo * screen_info, guint position)
         }
     }
 
-    workspaceSetCount(screen_info, count - 1);
+    workspaceSetCount(screen_info, (gint) count - 1);
 }
 
 void
