@@ -80,5 +80,15 @@ void                     clientClearDelayedFocus                (void);
 void                     clientAddDelayedFocus                  (Client *,
                                                                  guint32);
 Client                  *clientGetDelayedFocus                  (void);
+void                     clientFocusAndRaiseOnClick             (Client *,
+                                                                 guint32);
+void                     clientClearDeferredClick               (void);
+void                     clientDeferClick                       (Client *,
+                                                                 guint32,
+                                                                 guint);
+void                     clientActivateDeferredClick            (Client *,
+                                                                 guint32,
+                                                                 guint,
+                                                                 gboolean);
 
 #endif /* INC_FOCUS_H */

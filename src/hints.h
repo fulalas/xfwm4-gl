@@ -74,6 +74,7 @@
 #define WM_PROTOCOLS_DELETE_WINDOW              (1L<<1)
 #define WM_PROTOCOLS_CONTEXT_HELP               (1L<<2)
 #define WM_PROTOCOLS_PING                       (1L<<3)
+#define WM_PROTOCOLS_ACTIVATE_ON_CLICK          (1L<<4)
 
 #define WIN_LAYER_DESKTOP                       0
 #define WIN_LAYER_BELOW                         2

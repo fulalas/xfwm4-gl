@@ -174,6 +174,10 @@ getWMProtocols (DisplayInfo *display_info, Window w)
             {
                 flags |= WM_PROTOCOLS_PING;
             }
+            if (*ap == display_info->atoms[GTK_ACTIVATE_ON_CLICK])
+            {
+                flags |= WM_PROTOCOLS_ACTIVATE_ON_CLICK;
+            }
         }
     }
     else
@@ -430,6 +434,7 @@ setNetSupportedHint (DisplayInfo *display_info, Window root, Window check_win)
     atoms[i++] = display_info->atoms[GTK_FRAME_EXTENTS];
     atoms[i++] = display_info->atoms[GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED];
     atoms[i++] = display_info->atoms[GTK_SHOW_WINDOW_MENU];
+    atoms[i++] = display_info->atoms[GTK_ACTIVATE_ON_CLICK];
 #ifdef HAVE_LIBSTARTUP_NOTIFICATION
     atoms[i++] = display_info->atoms[NET_STARTUP_ID];
 #endif

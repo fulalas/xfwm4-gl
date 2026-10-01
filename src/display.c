@@ -66,6 +66,7 @@ myDisplayInitAtoms (DisplayInfo *display_info)
     static const char *atom_names[] = {
         "COMPOSITING_MANAGER",
         "_GTK_FRAME_EXTENTS",
+        "_GTK_ACTIVATE_ON_CLICK",
         "_GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED",
         "_GTK_SHOW_WINDOW_MENU",
         "KWM_WIN_ICON",

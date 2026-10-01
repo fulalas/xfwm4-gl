@@ -900,6 +900,7 @@ handleButtonPress (DisplayInfo *display_info, XfwmEventButton *event)
 
     TRACE ("entering");
 
+    clientClearDeferredClick ();
     replay = FALSE;
     c = myDisplayGetClientFromWindow (display_info, event->meta.window,
                                       SEARCH_FRAME | SEARCH_WINDOW);
@@ -947,15 +948,7 @@ handleButtonPress (DisplayInfo *display_info, XfwmEventButton *event)
         {
             if (event->button <= Button3)
             {
-                if (!(c->type & WINDOW_TYPE_DONT_FOCUS))
-                {
-                    clientSetFocus (screen_info, c, event->time, NO_FOCUS_FLAG);
-                }
-                if (screen_info->params->raise_on_click)
-                {
-                    clientClearDelayedRaise ();
-                    clientRaise (c, None);
-                }
+                clientFocusAndRaiseOnClick (c, event->time);
                 clientButtonPress (c, win, event);
             }
         }
@@ -977,15 +970,7 @@ handleButtonPress (DisplayInfo *display_info, XfwmEventButton *event)
                 }
                 else if (tclick != XFWM_BUTTON_UNDEFINED)
                 {
-                    if (!(c->type & WINDOW_TYPE_DONT_FOCUS))
-                    {
-                        clientSetFocus (screen_info, c, event->time, NO_FOCUS_FLAG);
-                    }
-                    if (screen_info->params->raise_on_click)
-                    {
-                        clientClearDelayedRaise ();
-                        clientRaise (c, None);
-                    }
+                    clientFocusAndRaiseOnClick (c, event->time);
                     xfwm_device_button_update_window (event, event->root);
                     if (screen_info->button_handler_id)
                     {
@@ -1035,15 +1020,15 @@ handleButtonPress (DisplayInfo *display_info, XfwmEventButton *event)
             if (((screen_info->params->raise_with_any_button) && (c->type & WINDOW_REGULAR_FOCUSABLE))
                     || (event->button == Button1))
             {
-                if (!(c->type & WINDOW_TYPE_DONT_FOCUS))
+                if (!FLAG_TEST (c->wm_flags, WM_FLAG_ACTIVATE_ON_CLICK) || (event->subwindow != None) ||
+                    (event->button > Button3) || (c == clientGetFocus ()) ||
+                    (c->type & WINDOW_TYPE_DONT_FOCUS))
                 {
-                    clientSetFocus (screen_info, c, event->time, NO_FOCUS_FLAG);
+                    clientFocusAndRaiseOnClick (c, event->time);
                 }
-                if ((screen_info->params->raise_on_click) ||
-                    !FLAG_TEST (c->xfwm_flags, XFWM_FLAG_HAS_BORDER))
+                else
                 {
-                    clientClearDelayedRaise ();
-                    clientRaise (c, None);
+                    clientDeferClick (c, event->time, event->button);
                 }
             }
         }
@@ -1920,6 +1905,11 @@ handleClientMessage (DisplayInfo *display_info, XClientMessageEvent * ev)
         {
             TRACE ("client \"%s\" (0x%lx) has received a NET_WM_DESKTOP event", c->name, c->window);
             clientUpdateNetWmDesktop (c, ev);
+        }
+        else if ((ev->message_type == display_info->atoms[GTK_ACTIVATE_ON_CLICK]) && (ev->format == 32))
+        {
+            clientActivateDeferredClick (c, (guint32) ev->data.l[0], (guint) ev->data.l[1],
+                                         (gboolean) ev->data.l[2]);
         }
         else if ((ev->message_type == display_info->atoms[NET_CLOSE_WINDOW]) && (ev->format == 32))
         {

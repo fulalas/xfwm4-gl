@@ -1313,6 +1313,9 @@ clientGetWMProtocols (Client *c)
     FLAG_SET (c->wm_flags,
         (wm_protocols_flags & WM_PROTOCOLS_PING) ?
         WM_FLAG_PING : 0);
+    FLAG_SET (c->wm_flags,
+        (wm_protocols_flags & WM_PROTOCOLS_ACTIVATE_ON_CLICK) ?
+        WM_FLAG_ACTIVATE_ON_CLICK : 0);
 }
 
 static void

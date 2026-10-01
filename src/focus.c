@@ -62,6 +62,14 @@ static Client *user_focus    = NULL;
 static Client *delayed_focus = NULL;
 static guint focus_timeout   = 0;
 
+static struct
+{
+    Window window;
+    guint32 time;
+    guint button;
+    guint timeout_id;
+} deferred_click = { None, 0, 0, 0 };
+
 #if 0
 static void
 clientDumpList (ScreenInfo *screen_info)
@@ -813,4 +821,88 @@ Client *
 clientGetDelayedFocus (void)
 {
     return delayed_focus;
+}
+
+void
+clientFocusAndRaiseOnClick (Client *c, guint32 timestamp)
+{
+    if (!(c->type & WINDOW_TYPE_DONT_FOCUS))
+    {
+        clientSetFocus (c->screen_info, c, timestamp, NO_FOCUS_FLAG);
+    }
+    if ((c->screen_info->params->raise_on_click) ||
+        !FLAG_TEST (c->xfwm_flags, XFWM_FLAG_HAS_BORDER))
+    {
+        clientClearDelayedRaise ();
+        clientRaise (c, None);
+    }
+}
+
+static void
+cancelDeferredClickTimeout (void)
+{
+    if (deferred_click.timeout_id)
+    {
+        g_source_remove (deferred_click.timeout_id);
+        deferred_click.timeout_id = 0;
+    }
+}
+
+static void
+activateDeferredClick (Client *c, guint32 timestamp)
+{
+    if (FLAG_TEST (c->xfwm_flags, XFWM_FLAG_VISIBLE) && !FLAG_TEST (c->flags, CLIENT_FLAG_ICONIFIED))
+    {
+        clientFocusAndRaiseOnClick (c, timestamp);
+    }
+}
+
+void
+clientClearDeferredClick (void)
+{
+    cancelDeferredClickTimeout ();
+    deferred_click.window = None;
+}
+
+static gboolean
+deferred_click_timeout_cb (gpointer data)
+{
+    Client *c;
+
+    deferred_click.timeout_id = 0;
+    c = myDisplayGetClientFromWindow ((DisplayInfo *) data, deferred_click.window, SEARCH_WINDOW);
+    deferred_click.window = None;
+    if (c)
+    {
+        activateDeferredClick (c, deferred_click.time);
+    }
+    return FALSE;
+}
+
+void
+clientDeferClick (Client *c, guint32 timestamp, guint button)
+{
+    deferred_click.window = c->window;
+    deferred_click.time = timestamp;
+    deferred_click.button = button;
+    deferred_click.timeout_id =
+        g_timeout_add (CLIENT_DEFERRED_CLICK_TIMEOUT, deferred_click_timeout_cb,
+                       c->screen_info->display_info);
+}
+
+void
+clientActivateDeferredClick (Client *c, guint32 timestamp, guint button, gboolean on_release)
+{
+    if ((c->window != deferred_click.window) || (button != deferred_click.button) ||
+        TIMESTAMP_IS_BEFORE (timestamp, deferred_click.time))
+    {
+        return;
+    }
+    if (on_release)
+    {
+        cancelDeferredClickTimeout ();
+        return;
+    }
+    clientClearDeferredClick ();
+    activateDeferredClick (c, timestamp);
 }

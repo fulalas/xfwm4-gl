@@ -108,6 +108,10 @@
 #define CLIENT_PING_TIMEOUT             3000 /* ms */
 #endif
 
+#ifndef CLIENT_DEFERRED_CLICK_TIMEOUT
+#define CLIENT_DEFERRED_CLICK_TIMEOUT   500
+#endif
+
 #ifndef MAX_BLINK_ITERATIONS
 #define MAX_BLINK_ITERATIONS            5
 #endif
@@ -173,6 +177,7 @@
 #define WM_FLAG_CONTEXT_HELP            (1L<<3)
 #define WM_FLAG_URGENT                  (1L<<4)
 #define WM_FLAG_PING                    (1L<<5)
+#define WM_FLAG_ACTIVATE_ON_CLICK       (1L<<6)
 
 #define XFWM_FLAG_INITIAL_VALUES        XFWM_FLAG_HAS_BORDER | \
                                         XFWM_FLAG_HAS_MENU | \
