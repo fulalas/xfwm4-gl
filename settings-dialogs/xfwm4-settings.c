@@ -875,7 +875,6 @@ main (int    argc,
   GtkWidget    *dialog;
   GtkWidget    *plug;
   GError       *error = NULL;
-  const gchar  *wm_name;
 
   xfce_textdomain (GETTEXT_PACKAGE, LOCALEDIR, "UTF-8");
 
@@ -897,12 +896,8 @@ main (int    argc,
       return EXIT_SUCCESS;
     }
 
-  wm_name = gdk_x11_screen_get_window_manager_name (gdk_screen_get_default ());
-  if (G_UNLIKELY (g_ascii_strcasecmp (wm_name, "Xfwm4")))
-    {
-      g_print ("These settings cannot work with your current window manager (%s)\n", wm_name);
-      return EXIT_FAILURE;
-    }
+  if (G_UNLIKELY (!xfwm_window_manager_is_supported ()))
+    return EXIT_FAILURE;
 
   if (G_UNLIKELY (!xfconf_init (&error)))
     {
@@ -924,14 +919,13 @@ main (int    argc,
       return EXIT_FAILURE;
     }
 
-  if (G_UNLIKELY (opt_socket_id == 0))
+  xfwm_hide_from_session ();
+
+  if (G_UNLIKELY (opt_socket_id == 0) || !xfwm_is_x11_session ())
     {
       dialog = xfwm_settings_create_dialog (settings);
       gtk_widget_show (dialog);
       g_signal_connect (dialog, "response", G_CALLBACK (xfwm_settings_response), NULL);
-
-      /* To prevent the settings dialog to be saved in the session */
-      gdk_x11_set_sm_client_id ("FAKE ID");
 
       gtk_main ();
 
@@ -941,9 +935,6 @@ main (int    argc,
     {
       plug = xfwm_settings_create_plug (settings, opt_socket_id);
       g_signal_connect (plug, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
-
-      /* To prevent the settings dialog to be saved in the session */
-      gdk_x11_set_sm_client_id ("FAKE ID");
 
       /* Stop startup notification */
       gdk_notify_startup_complete ();

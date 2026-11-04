@@ -238,3 +238,34 @@ xfwm_is_default_screen (GdkScreen *screen)
 {
   return gdk_x11_screen_get_screen_number (screen) == gdk_x11_get_default_screen();
 }
+
+
+gboolean
+xfwm_is_x11_session (void)
+{
+  return GDK_IS_X11_DISPLAY (gdk_display_get_default ());
+}
+
+gboolean
+xfwm_window_manager_is_supported (void)
+{
+  const gchar *wm_name;
+
+  if (!xfwm_is_x11_session ())
+    return TRUE;
+
+  wm_name = gdk_x11_screen_get_window_manager_name (gdk_screen_get_default ());
+  if (wm_name != NULL && g_ascii_strcasecmp (wm_name, "Xfwm4") != 0)
+    {
+      g_print ("These settings cannot work with your current window manager (%s)\n", wm_name);
+      return FALSE;
+    }
+  return TRUE;
+}
+
+void
+xfwm_hide_from_session (void)
+{
+  if (xfwm_is_x11_session ())
+    gdk_x11_set_sm_client_id ("FAKE ID");
+}

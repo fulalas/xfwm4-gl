@@ -49,4 +49,10 @@ gchar            *xfwm_make_display_name                (GdkScreen    *screen);
 
 gboolean          xfwm_is_default_screen                (GdkScreen    *screen);
 
+gboolean          xfwm_is_x11_session                   (void);
+
+gboolean          xfwm_window_manager_is_supported      (void);
+
+void              xfwm_hide_from_session                (void);
+
 #endif /* !__COMMON_H__ */

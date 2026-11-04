@@ -571,6 +571,7 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                             G_TYPE_BOOLEAN,
                             (GObject *)unredirect_overlays_check, "active");
 
+    if (xfwm_is_x11_session ())
     {
         GdkWindow *root_window = gdk_get_default_root_window ();
 
@@ -578,6 +579,11 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                                gdk_window_get_events (root_window) | GDK_PROPERTY_CHANGE_MASK);
         gdk_window_add_filter (root_window, render_backend_filter, render_backend_label);
         update_render_backend_label (render_backend_label);
+    }
+    else
+    {
+        gtk_widget_set_no_show_all (render_backend_label, TRUE);
+        gtk_widget_hide (render_backend_label);
     }
     xfconf_g_property_bind (xfwm4_channel,
                             "/general/cycle_preview",
@@ -661,7 +667,6 @@ main (int argc, gchar **argv)
     GtkWidget *plug_child;
     GtkBuilder *builder;
     GError *cli_error = NULL;
-    const gchar  *wm_name;
 
     xfce_textdomain (GETTEXT_PACKAGE, LOCALEDIR, "UTF-8");
 
@@ -675,12 +680,8 @@ main (int argc, gchar **argv)
         }
     }
 
-    wm_name = gdk_x11_screen_get_window_manager_name (gdk_screen_get_default ());
-    if (G_UNLIKELY (g_ascii_strcasecmp (wm_name, "Xfwm4")))
-    {
-        g_print ("These settings cannot work with your current window manager (%s)\n", wm_name);
+    if (G_UNLIKELY (!xfwm_window_manager_is_supported ()))
         return 1;
-    }
 
     if (opt_version)
     {
@@ -701,14 +702,13 @@ main (int argc, gchar **argv)
     {
         wm_tweaks_dialog_configure_widgets (builder);
 
-        if (opt_socket_id == 0)
+        xfwm_hide_from_session ();
+
+        if (opt_socket_id == 0 || !xfwm_is_x11_session ())
         {
             dialog = GTK_WIDGET (gtk_builder_get_object (builder, "main-dialog"));
             gtk_widget_show (dialog);
             g_signal_connect (dialog, "response", G_CALLBACK (wm_tweaks_dialog_response), NULL);
-
-            /* To prevent the settings dialog to be saved in the session */
-            gdk_x11_set_sm_client_id ("FAKE ID");
 
             gtk_main ();
 
@@ -725,9 +725,6 @@ main (int argc, gchar **argv)
             plug_child = GTK_WIDGET (gtk_builder_get_object (builder, "plug-child"));
             xfwm_widget_reparent (plug_child, plug);
             gtk_widget_show (plug_child);
-
-            /* To prevent the settings dialog to be saved in the session */
-            gdk_x11_set_sm_client_id ("FAKE ID");
 
             /* Stop startup notification */
             gdk_notify_startup_complete ();

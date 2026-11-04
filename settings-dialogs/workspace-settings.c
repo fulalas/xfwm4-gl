@@ -47,6 +47,7 @@
 
 #define WORKSPACE_NAMES_PROP       "/general/workspace_names"
 #define WORKSPACE_COUNT_PROP       "/general/workspace_count"
+#define DEFAULT_WORKSPACE_COUNT    4
 
 static gint opt_socket_id = 0;
 static gboolean opt_version = FALSE;
@@ -62,6 +63,8 @@ enum
 static WnckScreen *
 get_default_wnck_screen(void)
 {
+    if (!xfwm_is_x11_session ())
+        return NULL;
 #if WNCK_CHECK_VERSION(43, 0, 0)
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 #endif
@@ -72,11 +75,21 @@ get_default_wnck_screen(void)
 
 }
 
+static gint
+get_workspace_count(void)
+{
+    WnckScreen *screen = get_default_wnck_screen();
+
+    if (screen != NULL)
+        return wnck_screen_get_workspace_count(screen);
+
+    return xfconf_channel_get_int(xfconf_channel_get(WORKSPACES_CHANNEL), WORKSPACE_COUNT_PROP, DEFAULT_WORKSPACE_COUNT);
+}
+
 static void
 workspace_names_update_xfconf(gint workspace,
                               const gchar *new_name)
 {
-    WnckScreen *screen = get_default_wnck_screen();
     XfconfChannel *channel;
     gchar **names;
     gboolean do_update_xfconf = TRUE;
@@ -86,7 +99,7 @@ workspace_names_update_xfconf(gint workspace,
 
     if(!names) {
         /* the property doesn't exist; let's build one from scratch */
-        gint i, n_workspaces = wnck_screen_get_workspace_count(screen);
+        gint i, n_workspaces = get_workspace_count();
 
         names = g_new0 (gchar *, n_workspaces + 1);
         for(i = 0; i < n_workspaces; ++i) {
@@ -98,7 +111,7 @@ workspace_names_update_xfconf(gint workspace,
         names[n_workspaces] = NULL;
     } else {
         gint i, prop_len = g_strv_length(names);
-        gint n_workspaces = wnck_screen_get_workspace_count(screen);
+        gint n_workspaces = get_workspace_count();
 
         if(prop_len < n_workspaces) {
             /* the property exists, but it's smaller than the current
@@ -166,25 +179,30 @@ xfconf_workspace_names_update(GPtrArray *names,
                               GtkTreeView *treeview)
 {
     GtkTreeModel *model = gtk_tree_view_get_model(treeview);
-    WnckScreen *screen = get_default_wnck_screen();
     guint i, n_workspaces;
     GtkTreePath *path;
     GtkTreeIter iter;
 
     g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
 
-    n_workspaces = wnck_screen_get_workspace_count(screen);
-    for(i = 0; i < n_workspaces && i < names->len; ++i) {
-        GValue *val = g_ptr_array_index(names, i);
+    n_workspaces = get_workspace_count();
+    for(i = 0; i < n_workspaces; ++i) {
+        gchar *default_name = NULL;
         const gchar *new_name;
 
-        if(!G_VALUE_HOLDS_STRING(val)) {
-            g_warning("(workspace names) Expected string but got %s for item %d",
-                      G_VALUE_TYPE_NAME(val), i);
-            continue;
-        }
+        if(names != NULL && i < names->len) {
+            GValue *val = g_ptr_array_index(names, i);
 
-        new_name = g_value_get_string(val);
+            if(!G_VALUE_HOLDS_STRING(val)) {
+                g_warning("(workspace names) Expected string but got %s for item %d",
+                          G_VALUE_TYPE_NAME(val), i);
+                continue;
+            }
+            new_name = g_value_get_string(val);
+        } else {
+            default_name = g_strdup_printf(_("Workspace %d"), i + 1);
+            new_name = default_name;
+        }
         if(new_name == NULL)
             new_name = "";
 
@@ -212,6 +230,7 @@ xfconf_workspace_names_update(GPtrArray *names,
         }
 
         gtk_tree_path_free(path);
+        g_free(default_name);
     }
 
     /* if workspaces got destroyed, we need to remove them from the treeview */
@@ -252,15 +271,6 @@ xfconf_workspace_names_changed(XfconfChannel *channel,
 
 
 static void
-xfconf_workspace_count_changed(XfconfChannel *channel,
-                               const gchar *property,
-                               const GValue *value,
-                               WnckScreen *screen)
-{
-    wnck_screen_change_workspace_count(screen, g_value_get_int(value));
-}
-
-static void
 workspace_dialog_count_changed(GtkTreeView *treeview)
 {
     GPtrArray *names;
@@ -269,11 +279,23 @@ workspace_dialog_count_changed(GtkTreeView *treeview)
     channel = xfconf_channel_get(WORKSPACES_CHANNEL);
 
     names = xfconf_channel_get_arrayv (channel, WORKSPACE_NAMES_PROP);
+    xfconf_workspace_names_update(names, treeview);
     if(names != NULL)
-    {
-        xfconf_workspace_names_update(names, treeview);
         xfconf_array_free(names);
-    }
+}
+
+static void
+xfconf_workspace_count_changed(XfconfChannel *channel,
+                               const gchar *property,
+                               const GValue *value,
+                               GtkTreeView *treeview)
+{
+    WnckScreen *screen = get_default_wnck_screen();
+
+    if (screen != NULL)
+        wnck_screen_change_workspace_count(screen, g_value_get_int(value));
+    else
+        workspace_dialog_count_changed(treeview);
 }
 
 
@@ -313,22 +335,23 @@ workspace_dialog_setup_names_treeview(GtkBuilder *builder,
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), col);
 
     screen = get_default_wnck_screen();
-    wnck_screen_force_update (screen);
+    if (screen != NULL)
+    {
+        wnck_screen_force_update (screen);
+        g_signal_connect_swapped(G_OBJECT(screen), "workspace-created",
+                                 G_CALLBACK (workspace_dialog_count_changed), treeview);
+        g_signal_connect_swapped(G_OBJECT(screen), "workspace-destroyed",
+                                 G_CALLBACK (workspace_dialog_count_changed), treeview);
+    }
 
     workspace_dialog_count_changed (GTK_TREE_VIEW (treeview));
-
-    /* watch ws count changes */
-    g_signal_connect_swapped(G_OBJECT(screen), "workspace-created",
-                             G_CALLBACK (workspace_dialog_count_changed), treeview);
-    g_signal_connect_swapped(G_OBJECT(screen), "workspace-destroyed",
-                             G_CALLBACK (workspace_dialog_count_changed), treeview);
 
     g_signal_connect(G_OBJECT(channel),
                      "property-changed::" WORKSPACE_NAMES_PROP,
                      G_CALLBACK(xfconf_workspace_names_changed), treeview);
     g_signal_connect(G_OBJECT(channel),
                      "property-changed::" WORKSPACE_COUNT_PROP,
-                     G_CALLBACK(xfconf_workspace_count_changed), screen);
+                     G_CALLBACK(xfconf_workspace_count_changed), treeview);
 }
 
 
@@ -475,13 +498,12 @@ main(int argc, gchar **argv)
 
     workspace_dialog_configure_widgets (builder, channel);
 
-    if(opt_socket_id == 0) {
+    xfwm_hide_from_session ();
+
+    if(opt_socket_id == 0 || !xfwm_is_x11_session ()) {
         dialog = GTK_WIDGET (gtk_builder_get_object (builder, "main-dialog"));
         gtk_widget_show (dialog);
         g_signal_connect (dialog, "response", G_CALLBACK (workspace_dialog_response), NULL);
-
-        /* To prevent the settings dialog to be saved in the session */
-        gdk_x11_set_sm_client_id ("FAKE ID");
 
         gtk_main ();
 
@@ -496,9 +518,6 @@ main(int argc, gchar **argv)
         plug_child = GTK_WIDGET (gtk_builder_get_object (builder, "plug-child"));
         xfwm_widget_reparent (plug_child, plug);
         gtk_widget_show (plug_child);
-
-        /* To prevent the settings dialog to be saved in the session */
-        gdk_x11_set_sm_client_id ("FAKE ID");
 
         /* Stop startup notification */
         gdk_notify_startup_complete ();
