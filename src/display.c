@@ -168,7 +168,8 @@ myDisplayInitAtoms (DisplayInfo *display_info)
         "XFWM4_TIMESTAMP_PROP",
         "_XROOTPMAP_ID",
         "_XSETROOT_ID",
-        "_GTK_READ_RCFILES"
+        "_GTK_READ_RCFILES",
+        "XFree86_has_VT"
     };
 
     g_assert (ATOM_COUNT == G_N_ELEMENTS (atom_names));

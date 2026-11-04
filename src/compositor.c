@@ -3341,6 +3341,11 @@ repair_screen (ScreenInfo *screen_info)
         return FALSE;
     }
 
+    if (screen_info->vt_inactive)
+    {
+        return FALSE;
+    }
+
 #ifdef HAVE_PRESENT_EXTENSION
     /*
      * We do not paint the screen because we are waiting for
@@ -3491,7 +3496,7 @@ add_damage (ScreenInfo *screen_info, XserverRegion damage,
         return;
     }
 
-    if (!screen_info->compositor_active)
+    if (!screen_info->compositor_active || screen_info->vt_inactive)
     {
         XFixesDestroyRegion (screen_info->display_info->dpy, damage);
 
@@ -3667,6 +3672,45 @@ damage_screen (ScreenInfo *screen_info)
     region = get_screen_region (screen_info);
     /* region will be freed by add_damage () */
     add_damage (screen_info, region, NULL);
+}
+
+static gboolean
+read_vt_inactive (ScreenInfo *screen_info)
+{
+    DisplayInfo *display_info = screen_info->display_info;
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char *data = NULL;
+    gboolean inactive = FALSE;
+
+    myDisplayErrorTrapPush (display_info);
+    if (XGetWindowProperty (display_info->dpy, screen_info->xroot,
+                            display_info->atoms[XFREE86_HAS_VT], 0, 1, False,
+                            AnyPropertyType, &actual_type, &actual_format,
+                            &nitems, &bytes_after, &data) == Success
+        && data != NULL && nitems == 1 && actual_format == 32)
+    {
+        inactive = (*(long *) data == 0);
+    }
+    myDisplayErrorTrapPopIgnored (display_info);
+    if (data)
+    {
+        XFree (data);
+    }
+    return inactive;
+}
+
+static void
+update_vt_state (ScreenInfo *screen_info)
+{
+    gboolean was_inactive = screen_info->vt_inactive;
+
+    screen_info->vt_inactive = read_vt_inactive (screen_info);
+    if (was_inactive && !screen_info->vt_inactive)
+    {
+        damage_screen (screen_info);
+    }
 }
 
 static void
@@ -4761,6 +4805,17 @@ compositorHandlePropertyNotify (DisplayInfo *display_info, XPropertyEvent *ev)
         }
     }
 #endif
+
+    if (ev->atom == display_info->atoms[XFREE86_HAS_VT])
+    {
+        ScreenInfo *screen_info = myDisplayGetScreenFromRoot (display_info, ev->window);
+
+        if ((screen_info) && (screen_info->compositor_active))
+        {
+            update_vt_state (screen_info);
+        }
+        return;
+    }
 
     /* check if Trans property was changed */
     if (ev->atom == display_info->atoms[NET_WM_WINDOW_OPACITY])
@@ -6093,6 +6148,7 @@ compositorManageScreen (ScreenInfo *screen_info)
                              screen_info->xroot,
                              XFixesDisplayCursorNotifyMask);
 
+    screen_info->vt_inactive = read_vt_inactive (screen_info);
     damage_screen (screen_info);
 
     return TRUE;

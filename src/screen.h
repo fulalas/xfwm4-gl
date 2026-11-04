@@ -212,6 +212,7 @@ struct _ScreenInfo
 
     gboolean adding_windows;
     gboolean compositor_active;
+    gboolean vt_inactive;
     gboolean clipChanged;
 
     gboolean damages_pending;

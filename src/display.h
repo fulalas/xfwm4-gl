@@ -275,6 +275,7 @@ enum
     XROOTPMAP,
     XSETROOT,
     GTK_READ_RCFILES,
+    XFREE86_HAS_VT,
     ATOM_COUNT
 };
 
