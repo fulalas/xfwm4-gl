@@ -274,6 +274,13 @@ update_render_backend_label (GtkWidget *label)
     g_free (text);
 }
 
+static void
+hide_widget (GtkWidget *widget)
+{
+    gtk_widget_set_no_show_all (widget, TRUE);
+    gtk_widget_hide (widget);
+}
+
 static GdkFilterReturn
 render_backend_filter (GdkXEvent *xevent, GdkEvent *event, gpointer data)
 {
@@ -355,6 +362,7 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     GtkWidget *suspend_compositing_fullscreen_check = GTK_WIDGET (gtk_builder_get_object (builder, "suspend_compositing_fullscreen_check"));
     GtkWidget *use_gl_compositing_check = GTK_WIDGET (gtk_builder_get_object (builder, "use_gl_compositing_check"));
     GtkWidget *unredirect_overlays_check = GTK_WIDGET (gtk_builder_get_object (builder, "unredirect_overlays_check"));
+    GtkWidget *hdr_check = GTK_WIDGET (gtk_builder_get_object (builder, "hdr_check"));
     GtkWidget *cycle_preview_check = GTK_WIDGET (gtk_builder_get_object (builder, "cycle_preview_check"));
     GtkWidget *show_frame_shadow_check = GTK_WIDGET (gtk_builder_get_object (builder, "show_frame_shadow_check"));
     GtkWidget *show_popup_shadow_check = GTK_WIDGET (gtk_builder_get_object (builder, "show_popup_shadow_check"));
@@ -570,6 +578,10 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                             "/general/unredirect_overlays",
                             G_TYPE_BOOLEAN,
                             (GObject *)unredirect_overlays_check, "active");
+    xfconf_g_property_bind (xfwm4_channel,
+                            "/general/hdr",
+                            G_TYPE_BOOLEAN,
+                            (GObject *)hdr_check, "active");
 
     if (xfwm_is_x11_session ())
     {
@@ -579,11 +591,21 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                                gdk_window_get_events (root_window) | GDK_PROPERTY_CHANGE_MASK);
         gdk_window_add_filter (root_window, render_backend_filter, render_backend_label);
         update_render_backend_label (render_backend_label);
+        hide_widget (hdr_check);
     }
     else
     {
-        gtk_widget_set_no_show_all (render_backend_label, TRUE);
-        gtk_widget_hide (render_backend_label);
+        hide_widget (render_backend_label);
+        hide_widget (unredirect_overlays_check);
+        gtk_button_set_label (GTK_BUTTON (use_gl_compositing_check), _("Use the _GPU for compositing"));
+        gtk_widget_set_tooltip_text (use_gl_compositing_check,
+                                     _("When off, the screen is drawn in software, which is slower and turns HDR off"));
+        gtk_button_set_label (GTK_BUTTON (suspend_compositing_fullscreen_check),
+                              _("Show focused _fullscreen windows directly"));
+        gtk_widget_set_tooltip_text (suspend_compositing_fullscreen_check,
+                                     _("Lets a focused fullscreen window go straight to the screen, which saves power and lowers latency"));
+        g_object_bind_property (use_gl_compositing_check, "active", hdr_check, "sensitive",
+                                G_BINDING_SYNC_CREATE);
     }
     xfconf_g_property_bind (xfwm4_channel,
                             "/general/cycle_preview",

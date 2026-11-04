@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Xfce
 # This file is distributed under the same license as the xfwm4.master package.
-# 
+#
 # Translators:
 # ზურაბი დავითაშვილი <zurabi@tuta.io>, 2019
 # ზურაბი დავითაშვილი <zurabi@tuta.io>, 2019
@@ -9,22 +9,24 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
-"Report-Msgid-Bugs-To: https://gitlab.xfce.org/\n"
-"POT-Creation-Date: 2024-03-26 00:55+0100\n"
+"Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
+"POT-Creation-Date: 2026-08-01 20:55+0200\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
 "Last-Translator: ზურაბი დავითაშვილი <zurabi@tuta.io>, 2019\n"
 "Language-Team: Georgian (http://app.transifex.com/xfce/xfwm4/language/ka/)\n"
+"Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ka\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 #: helper-dialog/helper-dialog.c:86
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "ეს ფანჯარა შესაძლოა დაკავებულია და არ პასუხობს. \nგსურთ ამ პროგრამის დახურვა?"
+msgstr ""
+"ეს ფანჯარა შესაძლოა დაკავებულია და არ პასუხობს. \n"
+"გსურთ ამ პროგრამის დახურვა?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -34,112 +36,403 @@ msgstr "გაფრთხილება"
 msgid "None"
 msgstr "არცერთი"
 
-#: settings-dialogs/tweaks-settings.c:500
+#: settings-dialogs/tweaks-settings.c:229
+msgid "OpenGL EGL"
+msgstr "OpenGL EGL"
+
+#: settings-dialogs/tweaks-settings.c:233
+msgid "OpenGL GLX"
+msgstr "OpenGL GLX"
+
+#: settings-dialogs/tweaks-settings.c:237
+msgid "XRender"
+msgstr "XRender"
+
+#: settings-dialogs/tweaks-settings.c:245
+msgid "vsync on"
+msgstr "vsync ჩართულია"
+
+#: settings-dialogs/tweaks-settings.c:249
+msgid "vsync off"
+msgstr "vsync გამორთულია"
+
+#: settings-dialogs/tweaks-settings.c:253
+msgid "adaptive vsync"
+msgstr "ადაპტური vsync"
+
+#: settings-dialogs/tweaks-settings.c:259
+#, c-format
+msgid "(currently: %s, %s)"
+msgstr "(ამჟამად გამოიყენება: %s, %s)"
+
+#: settings-dialogs/tweaks-settings.c:263
+#, c-format
+msgid "(currently: %s)"
+msgstr "(ამჟამად გამოიყენება: %s)"
+
+#: settings-dialogs/tweaks-settings.c:267
+msgid "(currently off)"
+msgstr "(ამჟამად გამორთულია)"
+
+#: settings-dialogs/tweaks-settings.c:295
+msgid "Use the _GPU for compositing"
+msgstr "_GPU-ის გამოყენება კომპოზიციისთვის"
+
+#: settings-dialogs/tweaks-settings.c:297
+msgid ""
+"When off, the screen is drawn in software, which is slower and turns HDR off"
+msgstr "გამორთვისას ეკრანი პროგრამულად იხატება, რაც უფრო ნელია და HDR-ს თიშავს"
+
+#: settings-dialogs/tweaks-settings.c:299
+msgid "Show focused _fullscreen windows directly"
+msgstr "ფოკუსში მყოფი სრულეკრანიანი ფანჯრების პირდაპირ ჩვენება (_F)"
+
+#: settings-dialogs/tweaks-settings.c:301
+msgid ""
+"Lets a focused fullscreen window go straight to the screen, which saves "
+"power and lowers latency"
+msgstr "ფოკუსში მყოფ სრულეკრანიან ფანჯარას პირდაპირ ეკრანზე გასვლის საშუალებას აძლევს, რაც ზოგავს ენერგიას და ამცირებს დაყოვნებას"
+
+#: settings-dialogs/tweaks-settings.c:700
 msgid "Session manager socket"
 msgstr "სესსის მმართველის სოკეტი"
 
-#: settings-dialogs/tweaks-settings.c:500
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "სოკეტის აიდი"
 
-#: settings-dialogs/tweaks-settings.c:501
-#: settings-dialogs/workspace-settings.c:423
-#: settings-dialogs/xfwm4-settings.c:242
+#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/workspace-settings.c:446
+#: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "ინფორმაცია ვერსიის შესახებ"
 
-#: settings-dialogs/tweaks-settings.c:517
-#: settings-dialogs/workspace-settings.c:440
-#: settings-dialogs/xfwm4-settings.c:869
+#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/workspace-settings.c:463
+#: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:521
-#: settings-dialogs/workspace-settings.c:444
-#: settings-dialogs/xfwm4-settings.c:873
+#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/workspace-settings.c:467
+#: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nსცადეთ %s --help ყველა ხელმისაწვდომი ბრძანების პარამეტრების სანახავად.\n"
+msgstr ""
+"%s: %s\n"
+"სცადეთ %s --help ყველა ხელმისაწვდომი ბრძანების პარამეტრების სანახავად.\n"
 
-#: settings-dialogs/workspace-settings.c:94
-#: settings-dialogs/workspace-settings.c:109
+#: settings-dialogs/workspace-settings.c:107
+#: settings-dialogs/workspace-settings.c:121
+#: settings-dialogs/workspace-settings.c:203
 #, c-format
 msgid "Workspace %d"
 msgstr "სამუშაო სივრცე %d"
 
-#: settings-dialogs/workspace-settings.c:307
+#: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
 msgstr "სამუშაო სივრცის სახელი"
 
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
 msgstr "პარამეტრების მმართველის სოკეტი"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:4
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "დაჩრდილე ფანჯარა"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "დამალე ფანჯარა"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "გაადიდე ფანჯარა"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "შეავსე ფანჯარა"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "ყოველთვის ყველა ფანჯარაზე ზემოდან"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "არაფერი"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "მარცხნივ"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "ცენტრი"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "მარჯვნივ"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "თემა"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "მოქმედება"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "მალსახმობი"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Xfconf-ის ინიციალიზაცია ვერ განხორციელდა. მიზეზი: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "პარამეტრების დიალოგის შექმნა შეუძლებელია."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr ""
+"ყველა მალსახმობი დაუბრუნდება თავის ნაგულისხმევ მნიშვნელობას. ნამდვილად გსურთ "
+"ამის გაკეთება?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "ნაგულისხმევი პარამეტრების დაყენება"
+
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (%s -ზე)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "მხარდაუჭერელი კლავიატურის მოდიფიკატორი '%s'"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "დააყენეთ კომპოზიტორის რეჟიმი"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "დააყენეთ vblank რეჟიმი"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "შეცვალეთ არსებული ფანჯრის მმართველი"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "ვერსიის ინფორმაციის დაბეჭდვა და გასვლა"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "გამართვის ჟურნალის ჩართვა"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[არგუმენტები...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "აკრიფეთ \"%s --help\" გამოყენებისთვის."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "გადიდება"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "შემცირება"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "ჩაკეცვა"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "სხვა ფანჯრების ჩაკეცვა"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "ჩვენება"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "გადაადგილება"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "ზომის შეცვლა"
+
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "ყოველთვის ზემოთ"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "სხვა ფანჯრების მსგავსი"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "ყოველთვის სხვა ფანჯრების ქვემოთ"
+
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "ფანჯრის აკეცვა"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "ფანჯრის ჩამოშვება"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "სრული ეკრანი"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "სრული ეკრანის დატოვება"
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "კონტექსტური დახმარება"
+
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "ყოველთვის ხილულ სამუშაო სივრცეზე"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "სხვა სამუშაო სივრცეზე გადატანა"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "სხვა მონიტორზე გადატანა"
+
+#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433
+msgid "_Close"
+msgstr "დახურვა"
+
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "განადგურება"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "დატოვება"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "გადატვირთვა"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "ეკრანი _მარცხნივ"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "ეკრანი _მარჯვნივ"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "ეკრანი _მაღლა"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "ეკრანი _დაბლა"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: GtkMenu-მ ვერ მოახერხა მაჩვენებელზე ჩაჭიდება\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "შვილობილი პროცესისგან მონაცემის წაკითხვისას დაფიქსირდა შეცდომა: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "დამხმარე დიალოგის შექმნა შეუძლებელია: %s\n"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
 msgstr "ფანჯრის მმართველი"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:5
+#: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
 msgstr "ფანჯრის ქცევის და მალსახმობების კონფიგურაცია"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:6
+#: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
 "windows;management;settings;preferences;themes;styles;decorations;title "
 "bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
-msgstr "windows;management;settings;preferences;themes;styles;decorations;title bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard shortcuts;focus;snapping;screen;workspaces;edges;corner;hide content;move;resize;moving;resizing;double click;"
+msgstr ""
+"windows;management;settings;preferences;themes;styles;decorations;title "
+"bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
+"shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
+"content;move;resize;moving;resizing;double click;"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:54
 msgid "Window Manager Tweaks"
 msgstr "ფანჯრის მმართველის პარამეტრები"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
 msgstr "ფანჯრის ქცევის და ეფექტების გასწორება"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:6
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
-"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title"
-" bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
+msgstr ""
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
 msgid "Workspaces"
 msgstr "სამუშაო სივრცეები"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
 msgstr "განლაგების, სახელების და ზღვრების კონფიგურაცია"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:6
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "workspaces;settings;preferences;virtual desktops;number;windows;screen;margins;"
+msgstr ""
+"workspaces;settings;preferences;virtual "
+"desktops;number;windows;screen;margins;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:71
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_დახმარება"
-
-#. ----------------------------------------------
-#: settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
-msgid "_Close"
-msgstr "დახურვა"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -207,7 +500,8 @@ msgstr "სტილი"
 
 #: settings-dialogs/xfwm4-dialog.glade:553
 msgid "Define shortcuts to perform _window manager actions:"
-msgstr "ფანჯრის მმართველის მოქმედებების შესასრულებლად მალსახმობების განსაზღვრა:"
+msgstr ""
+"ფანჯრის მმართველის მოქმედებების შესასრულებლად მალსახმობების განსაზღვრა:"
 
 #: settings-dialogs/xfwm4-dialog.glade:613
 msgid "_Edit"
@@ -360,82 +654,17 @@ msgstr "<b>ორმაგი დაჭერის მოქმედება<
 msgid "Ad_vanced"
 msgstr "დამატებითი"
 
-#: settings-dialogs/xfwm4-settings.c:218
-msgid "Shade window"
-msgstr "დაჩრდილე ფანჯარა"
-
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Hide window"
-msgstr "დამალე ფანჯარა"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Maximize window"
-msgstr "გაადიდე ფანჯარა"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Fill window"
-msgstr "შეავსე ფანჯარა"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Always on top"
-msgstr "ყოველთვის ყველა ფანჯარაზე ზემოდან"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Nothing"
-msgstr "არაფერი"
-
-#: settings-dialogs/xfwm4-settings.c:228
-msgid "Left"
-msgstr "მარცხნივ"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Center"
-msgstr "ცენტრი"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Right"
-msgstr "მარჯვნივ"
-
-#: settings-dialogs/xfwm4-settings.c:346
-msgid "Theme"
-msgstr "თემა"
-
-#: settings-dialogs/xfwm4-settings.c:496
-msgid "Action"
-msgstr "მოქმედება"
-
-#: settings-dialogs/xfwm4-settings.c:503
-msgid "Shortcut"
-msgstr "მალსახმობი"
-
-#: settings-dialogs/xfwm4-settings.c:898
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Xfconf-ის ინიციალიზაცია ვერ განხორციელდა. მიზეზი: %s"
-
-#: settings-dialogs/xfwm4-settings.c:909
-msgid "Could not create the settings dialog."
-msgstr "პარამეტრების დიალოგის შექმნა შეუძლებელია."
-
-#: settings-dialogs/xfwm4-settings.c:1915
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to"
-" do this?"
-msgstr "ყველა მალსახმობი დაუბრუნდება თავის ნაგულისხმევ მნიშვნელობას. ნამდვილად გსურთ ამის გაკეთება?"
-
-#: settings-dialogs/xfwm4-settings.c:1917
-msgid "Reset to Defaults"
-msgstr "ნაგულისხმევი პარამეტრების დაყენება"
-
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:124
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "გამოტოვე ფანჯრები, რომლებსაც აქვთ \"გამოტოვე პეიჯერი\"\nან \"გამოტოვე დავალებების პანელი\" თვისებები მითითებული"
+msgstr ""
+"გამოტოვე ფანჯრები, რომლებსაც აქვთ \"გამოტოვე პეიჯერი\"\n"
+"ან \"გამოტოვე დავალებების პანელი\" თვისებები მითითებული"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:141
 msgid "Cycle _through minimized windows in most recently used order"
-msgstr ""
+msgstr "ჩაკეცილ ფანჯრებს შორის წრიული _გადართვა ბოლო გამოყენების რიგით"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:157
 msgid "_Include hidden (i.e. iconified) windows"
@@ -527,21 +756,26 @@ msgstr "ხელმისაწვდომობა"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:604
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "სამუშაო მაგიდაზე თაგვის ბორბლის გამოყენებით სამუშაო სივრცეების გადართვა"
+msgstr ""
+"სამუშაო მაგიდაზე თაგვის ბორბლის გამოყენებით სამუშაო სივრცეების გადართვა"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:620
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "დაიმახსოვრე და ხელახლა გამოიძახე წინამდებარე სამუშაო სივრცე\nმალსახმობის ღილაკებით გადართვისას"
+msgstr ""
+"დაიმახსოვრე და ხელახლა გამოიძახე წინამდებარე სამუშაო სივრცე\n"
+"მალსახმობის ღილაკებით გადართვისას"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:637
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "სამუშაო მაგიდის აქტუალური განლაგების მიხედვით შემოაბრუნე სამუშაო სივრცეები"
+msgstr ""
+"სამუშაო მაგიდის აქტუალური განლაგების მიხედვით შემოაბრუნე სამუშაო სივრცეები"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:653
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "პირველი ან ბოლო სამუშაო სივრცის მიღწევისას შემოაბრუნე სამუშაო სივრცეები"
+msgstr ""
+"პირველი ან ბოლო სამუშაო სივრცის მიღწევისას შემოაბრუნე სამუშაო სივრცეები"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:676
 msgid "_Workspaces"
@@ -572,75 +806,109 @@ msgstr "თაგვის მაჩვენებლის ქვეშ"
 msgid "_Placement"
 msgstr "განლაგება"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:876
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
 msgid "_Enable display compositing"
 msgstr "ეკრანის კომპოზიციის ჩართვა"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:917
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+msgid "Enable _HDR"
+msgstr "_HDR-ის ჩართვა"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+msgid ""
+"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
+"Vulkan"
+msgstr "HDR-ის ჩვენება მონიტორებზე, რომლებსაც მისი მხარდაჭერა აქვთ, 10-ბიტიან ფერებში. საჭიროა Vulkan-ის მქონე GPU"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+msgid "Use _OpenGL for compositing"
+msgstr "_OpenGL-ის გამოყენება კომპოზიციისთვის"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
+msgstr "საჭიროა OpenGL 2.0, წინააღმდეგ შემთხვევაში გამოიყენება XRender"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "_Suspend compositing for focused fullscreen windows"
+msgstr "კომპოზიციის _შეჩერება ფოკუსში მყოფი სრულეკრანიანი ფანჯრებისთვის"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+msgid ""
+"Improves performance in fullscreen applications; compositing resumes when "
+"the window closes or loses focus. Video may tear while it is off"
+msgstr "აუმჯობესებს წარმადობას სრულეკრანიან აპლიკაციებში; კომპოზიცია განახლდება, როცა ფანჯარა დაიხურება ან ფოკუსს დაკარგავს. სანამ ის გამორთულია, ვიდეოში შეიძლება გამოჩნდეს გამოსახულების დახევა (tearing)"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
 msgid "Display _fullscreen overlay windows directly"
 msgstr "სრულ ეკრანზე გადაფარებული ფანჯრების პირდაპირ გამოსახვა"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:933
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+msgid ""
+"Let fullscreen windows that bypass the window manager draw straight to the "
+"screen"
+msgstr "სრულეკრანიან ფანჯრებს, რომლებიც ფანჯრის მმართველს გვერდს უვლიან, პირდაპირ ეკრანზე ხატვის საშუალებას აძლევს"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
 msgid "Show windows preview in place of icons when cycling"
 msgstr "წრიულად გადართვისას ხატულების ნაცვლად ფანჯრების ესკიზების ჩვენება"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
 msgid "Show shadows under pop_up windows"
 msgstr "ამოტივტივებული ფანჯრების ქვეშ ჩრდილების ჩვენება"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:965
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
 msgid "Show shadows under _dock windows"
 msgstr "დოკ ფანჯრების ქვეშ ჩრდილების ჩვენება"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:981
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
 msgid "Show shadows under _regular windows"
 msgstr "რეგულარული ფანჯრების ქვეშ ჩრდილების ჩვენება"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:997
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
 msgid "Zoom desktop with mouse wheel"
-msgstr ""
+msgstr "სამუშაო მაგიდის მასშტაბირება თაგვის ბორბლით"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
 msgid "Zoom pointer along with the desktop"
-msgstr ""
+msgstr "მაჩვენებლის მასშტაბირება სამუშაო მაგიდასთან ერთად"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
 msgid "Opaci_ty of window decorations:"
 msgstr "ფანჯრის დეკორაციების გაუმჭვირვალობა:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1057
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1133
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1209
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1285
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1361
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
 msgid "<i>Transparent</i>"
 msgstr "<i>გამჭვირვალე</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1085
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1161
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1237
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1313
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1389
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "<i>Opaque</i>"
 msgstr "<i>გაუმჭვირვალე</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1108
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
 msgid "Opacity of _inactive windows:"
 msgstr "არააქტიური ფანჯრების ბუნდოვნება:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1184
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
 msgid "Opacity of windows during _move:"
 msgstr "ფანჯრების ბუნდოვნება გადაადგილების დროს:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1260
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
 msgid "Opacity of windows during resi_ze:"
 msgstr "ფანჯრების ბუნდოვნება ზომის შეცვლის დროს:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1336
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
 msgid "Opacity of popup wi_ndows:"
 msgstr "ამოტივტივებული ფანჯრების გაუმჭვირვალობა:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1429
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
 msgid "C_ompositor"
 msgstr "კომპოზიტორი"
 
@@ -663,151 +931,10 @@ msgstr "ზოგადი"
 #: settings-dialogs/xfwm4-workspace-dialog.glade:232
 msgid ""
 "Margins are areas on the edges of the screen where no window will be placed"
-msgstr "ზღვრები არის ეკრანის კიდეებზე ის ადგილები, სადაც არ იქნება განთავსებული ფანჯარები"
+msgstr ""
+"ზღვრები არის ეკრანის კიდეებზე ის ადგილები, სადაც არ იქნება განთავსებული "
+"ფანჯარები"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "ზღვრები"
-
-#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (%s -ზე)"
-
-#: src/keyboard.c:143 src/settings.c:160
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "მხარდაუჭერელი კლავიატურის მოდიფიკატორი '%s'"
-
-#: src/main.c:616
-msgid "Set the compositor mode"
-msgstr "დააყენეთ კომპოზიტორის რეჟიმი"
-
-#: src/main.c:618
-msgid "Set the vblank mode"
-msgstr "დააყენეთ vblank რეჟიმი"
-
-#: src/main.c:628
-msgid "Replace the existing window manager"
-msgstr "შეცვალეთ არსებული ფანჯრის მმართველი"
-
-#: src/main.c:630
-msgid "Print version information and exit"
-msgstr "ვერსიის ინფორმაციის დაბეჭდვა და გასვლა"
-
-#: src/main.c:633
-msgid "Enable debug logging"
-msgstr "გამართვის ჟურნალის ჩართვა"
-
-#: src/main.c:673
-msgid "[ARGUMENTS...]"
-msgstr "[არგუმენტები...]"
-
-#: src/main.c:680
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "აკრიფეთ \"%s --help\" გამოყენებისთვის."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "გადიდება"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "შემცირება"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "ჩაკეცვა"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "სხვა ფანჯრების ჩაკეცვა"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "ჩვენება"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "გადაადგილება"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "ზომის შეცვლა"
-
-#. ----------------------------------------------
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "ყოველთვის ზემოთ"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "სხვა ფანჯრების მსგავსი"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "ყოველთვის სხვა ფანჯრების ქვემოთ"
-
-#. ----------------------------------------------
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "ფანჯრის აკეცვა"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "ფანჯრის ჩამოშვება"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "სრული ეკრანი"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "სრული ეკრანის დატოვება"
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "კონტექსტური დახმარება"
-
-#. ----------------------------------------------
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "ყოველთვის ხილულ სამუშაო სივრცეზე"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "სხვა სამუშაო სივრცეზე გადატანა"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr ""
-
-#. --------------------------------------------------------
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "განადგურება"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "დატოვება"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "გადატვირთვა"
-
-#: src/menu.c:457
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: GtkMenu-მ ვერ მოახერხა მაჩვენებელზე ჩაჭიდება\n"
-
-#: src/terminate.c:77
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "შვილობილი პროცესისგან მონაცემის წაკითხვისას დაფიქსირდა შეცდომა: %s\n"
-
-#: src/terminate.c:135
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "დამხმარე დიალოგის შექმნა შეუძლებელია: %s\n"

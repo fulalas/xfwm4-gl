@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Xfce
 # This file is distributed under the same license as the xfwm4.master package.
-# 
+#
 # Translators:
 # Algimantas Margevičius <margevicius.algimantas@gmail.com>, 2012
 # Mantas Zapolskas <mantaz@users.sf.net>, 2003
@@ -10,22 +10,27 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
-"Report-Msgid-Bugs-To: https://gitlab.xfce.org/\n"
-"POT-Creation-Date: 2024-03-26 00:55+0100\n"
+"Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
+"POT-Creation-Date: 2026-08-01 20:55+0200\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
 "Last-Translator: Moo, 2023\n"
-"Language-Team: Lithuanian (http://app.transifex.com/xfce/xfwm4/language/lt/)\n"
+"Language-Team: Lithuanian (http://app.transifex.com/xfce/xfwm4/language/"
+"lt/)\n"
+"Language: lt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: lt\n"
-"Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < 11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 : n % 1 != 0 ? 2: 3);\n"
+"Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < "
+"11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? "
+"1 : n % 1 != 0 ? 2: 3);\n"
 
 #: helper-dialog/helper-dialog.c:86
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Gali būti, kad šis langas yra užsiėmęs ir neatsako.\nAr norite baigti programos darbą?"
+msgstr ""
+"Gali būti, kad šis langas yra užsiėmęs ir neatsako.\n"
+"Ar norite baigti programos darbą?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -35,112 +40,414 @@ msgstr "Įspėjimas"
 msgid "None"
 msgstr "Nėra"
 
-#: settings-dialogs/tweaks-settings.c:500
+#: settings-dialogs/tweaks-settings.c:229
+msgid "OpenGL EGL"
+msgstr "OpenGL EGL"
+
+#: settings-dialogs/tweaks-settings.c:233
+msgid "OpenGL GLX"
+msgstr "OpenGL GLX"
+
+#: settings-dialogs/tweaks-settings.c:237
+msgid "XRender"
+msgstr "XRender"
+
+#: settings-dialogs/tweaks-settings.c:245
+msgid "vsync on"
+msgstr "vsync įjungtas"
+
+#: settings-dialogs/tweaks-settings.c:249
+msgid "vsync off"
+msgstr "vsync išjungtas"
+
+#: settings-dialogs/tweaks-settings.c:253
+msgid "adaptive vsync"
+msgstr "adaptyvusis vsync"
+
+#: settings-dialogs/tweaks-settings.c:259
+#, c-format
+msgid "(currently: %s, %s)"
+msgstr "(dabar naudojama: %s, %s)"
+
+#: settings-dialogs/tweaks-settings.c:263
+#, c-format
+msgid "(currently: %s)"
+msgstr "(dabar naudojama: %s)"
+
+#: settings-dialogs/tweaks-settings.c:267
+msgid "(currently off)"
+msgstr "(dabar išjungta)"
+
+#: settings-dialogs/tweaks-settings.c:295
+msgid "Use the _GPU for compositing"
+msgstr "Naudoti _GPU kompozicijai"
+
+#: settings-dialogs/tweaks-settings.c:297
+msgid ""
+"When off, the screen is drawn in software, which is slower and turns HDR off"
+msgstr "Išjungus ekranas piešiamas programiškai – tai lėčiau ir išjungia HDR"
+
+#: settings-dialogs/tweaks-settings.c:299
+msgid "Show focused _fullscreen windows directly"
+msgstr "Tiesiogiai rodyti fokusuotus _viso ekrano langus"
+
+#: settings-dialogs/tweaks-settings.c:301
+msgid ""
+"Lets a focused fullscreen window go straight to the screen, which saves "
+"power and lowers latency"
+msgstr "Leidžia fokusuotam viso ekrano langui eiti tiesiai į ekraną, taip taupoma energija ir mažinamas delsimas"
+
+#: settings-dialogs/tweaks-settings.c:700
 msgid "Session manager socket"
 msgstr "Seansų tvarkytuvės lizdas"
 
-#: settings-dialogs/tweaks-settings.c:500
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "LIZDO ID"
 
-#: settings-dialogs/tweaks-settings.c:501
-#: settings-dialogs/workspace-settings.c:423
-#: settings-dialogs/xfwm4-settings.c:242
+#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/workspace-settings.c:446
+#: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Versija"
 
-#: settings-dialogs/tweaks-settings.c:517
-#: settings-dialogs/workspace-settings.c:440
-#: settings-dialogs/xfwm4-settings.c:869
+#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/workspace-settings.c:463
+#: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:521
-#: settings-dialogs/workspace-settings.c:444
-#: settings-dialogs/xfwm4-settings.c:873
+#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/workspace-settings.c:467
+#: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nNaudokite %s --help norėdami pamatyti visus komandų eilutės parametrus.\n"
+msgstr ""
+"%s: %s\n"
+"Naudokite %s --help norėdami pamatyti visus komandų eilutės parametrus.\n"
 
-#: settings-dialogs/workspace-settings.c:94
-#: settings-dialogs/workspace-settings.c:109
+#: settings-dialogs/workspace-settings.c:107
+#: settings-dialogs/workspace-settings.c:121
+#: settings-dialogs/workspace-settings.c:203
 #, c-format
 msgid "Workspace %d"
 msgstr "Darbo sritis %d"
 
-#: settings-dialogs/workspace-settings.c:307
+#: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
 msgstr "Darbo srities pavadinimas"
 
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
 msgstr "Nustatymų tvarkytuvės lizdas"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:4
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "Pridengti langą"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "Paslėpti langą"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "Išskleisti langą"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "Užpildyti langą"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "Visada viršuje"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "Nieko"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "Kairė"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "Centras"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "Dešinė"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "Apipavidalinimas"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "Veiksmas"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "Susiejimas"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Nepavyko inicijuoti xfconf. Priežastis: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "Nepavyko sukurti nustatymų dialogo."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr ""
+"Visi susiejimai bus atstatyti į jų numatytąsias reikšmes. Ar jūs tikrai to "
+"norite?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "Atstatyti į numatytuosius"
+
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (ant %s)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "Nepalaikomas klaviatūros modifikatorius „%s“"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "Nustatyti komponavimo veikseną"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "Nustatyti vblank veikseną"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "Pakeisti dabartinę langų tvarkytuvę"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "Parodyti versiją ir išeiti"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "Įjungti derinimo registravimą"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[ARGUMENTAI...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "Informacijai apie naudojimą, įrašykite „%s --help“."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "Iš_skleisti"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "_Grąžinti iš išskleidimo"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "_Suskleisti"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "Suskleisti _kitus langus"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "_Rodyti"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "P_erkelti"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "_Keisti dydį"
+
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "Visada _viršuje"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "_Taip pat kaip kiti langai"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "Visada _po kitais langais"
+
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "Užraityti langą aukštyn"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "Nuraityti langą žemyn"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "_Visas ekranas"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "Išjungti _viso ekrano veikseną"
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "Konteksto _pagalba"
+
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "Visada _matomoje darbo srityje"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "Perkelti į _kitą darbo sritį"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "Perkelti į kitą monitorių"
+
+#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433
+msgid "_Close"
+msgstr "_Užverti"
+
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "Sunaikinti"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "_Išeiti"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "Paleisti iš naujo"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "Į monitorių _kairėje"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "Į monitorių _dešinėje"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "Į monitorių _viršuje"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "Į monitorių _apačioje"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: GtkMenu nesugebėjo pagriebti žymeklio\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "Klaida skaitant iš antrinio proceso: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "Nepavyko sukurti pagalbos dialogo: %s\n"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
 msgstr "Langų tvarkytuvė"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:5
+#: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
 msgstr "Konfigūruoti langų elgseną ir sparčiuosius klavišus"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:6
+#: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
 "windows;management;settings;preferences;themes;styles;decorations;title "
 "bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
-msgstr "langai;langų;langu;valdymas;tvarkymas;nustatymai;nuostatos;temos;apipavidalinimai;stiliai;dekoracijos;antraštės juosta;antrastes juosta;pavadinimo juosta;šriftas;sriftas;raides;mygtukai;meniu;suskleisti;sumažinti;sumazinti;išskleisti;isskleisti;išdidinti;isdidinti;padidinti;pridengti;užraityti;uzraityti;išdėstymas;isdestymas;klaviatūros spartieji klavišai;klaviaturos spartieji klavisai;klaviaturos trumpiniai;fokusavimas;fokusacija;pritraukimas;ekranas;darbo sritys;kraštai;krastai;kampas;kampai;slėpti turinį;slepti turini;perkelti;keisti dydį;keisti dydi;perkėlimas;perkelimas;dvikartis spustelėjimas;dvikartis spustelejimas;dvikartis spragtelėjimas;dvikartis spragetelejimas;dvigubas;"
+msgstr ""
+"langai;langų;langu;valdymas;tvarkymas;nustatymai;nuostatos;temos;apipavidalinimai;stiliai;dekoracijos;antraštės "
+"juosta;antrastes juosta;pavadinimo "
+"juosta;šriftas;sriftas;raides;mygtukai;meniu;suskleisti;sumažinti;sumazinti;išskleisti;isskleisti;išdidinti;isdidinti;padidinti;pridengti;užraityti;uzraityti;išdėstymas;isdestymas;klaviatūros "
+"spartieji klavišai;klaviaturos spartieji klavisai;klaviaturos "
+"trumpiniai;fokusavimas;fokusacija;pritraukimas;ekranas;darbo "
+"sritys;kraštai;krastai;kampas;kampai;slėpti turinį;slepti "
+"turini;perkelti;keisti dydį;keisti dydi;perkėlimas;perkelimas;dvikartis "
+"spustelėjimas;dvikartis spustelejimas;dvikartis spragtelėjimas;dvikartis "
+"spragetelejimas;dvigubas;"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:54
 msgid "Window Manager Tweaks"
 msgstr "Langų tvarkytuvės patobulinimai"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
 msgstr "Konfigūruokite langų elgseną ir efektus"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:6
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
-"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title"
-" bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "langai;langų;elgsena;nustatymai;nuostatos;perjunginėjimas;perjunginejimas;perjungimas;fokusavimas;iškelti;iskelti;iškėlimas;iskelimas;prieinamumas;pasiekiamumas;klavišas;klavisas;tempimas;vilkimas;perkelti;perkėlimas;perkelimas;tempti;vilkti;slėpti;slepti;rėmelis;remelis;pavadinimo juosta;antraštės juosta;antrastes juosta;išskleistas;isskleistas;iškloti;iskloti;ekranas;ekrano;kraštas;krastas;kraštai;krastai;karštas kampas;karstas kampas;karštasis kampas;karstasis kampas;pritraukimas;pelės ratukas;peles ratukas;ratas;užraityti;uzraityti;darbo sritys;išdėstymas;isdestymas;kompozitorius;komponavimas;kompozicionavimas;įjungti;ijungti;išjungti;isjungti;komponavimą;komponavima;šešėliai;seseliai;dekorecijos;nepermatomumas;dengiamumas;keisti dydį;keisti dydi;neaktyvus;pasyvus;peržiūra;perziura;compiz;perėjimai;perejimai;"
+msgstr ""
+"langai;langų;elgsena;nustatymai;nuostatos;perjunginėjimas;perjunginejimas;perjungimas;fokusavimas;iškelti;iskelti;iškėlimas;iskelimas;prieinamumas;pasiekiamumas;klavišas;klavisas;tempimas;vilkimas;perkelti;perkėlimas;perkelimas;tempti;vilkti;slėpti;slepti;rėmelis;remelis;pavadinimo "
+"juosta;antraštės juosta;antrastes "
+"juosta;išskleistas;isskleistas;iškloti;iskloti;ekranas;ekrano;kraštas;krastas;kraštai;krastai;karštas "
+"kampas;karstas kampas;karštasis kampas;karstasis kampas;pritraukimas;pelės "
+"ratukas;peles ratukas;ratas;užraityti;uzraityti;darbo "
+"sritys;išdėstymas;isdestymas;kompozitorius;komponavimas;kompozicionavimas;įjungti;ijungti;išjungti;isjungti;komponavimą;komponavima;šešėliai;seseliai;dekorecijos;nepermatomumas;dengiamumas;keisti "
+"dydį;keisti "
+"dydi;neaktyvus;pasyvus;peržiūra;perziura;compiz;perėjimai;perejimai;"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
 msgid "Workspaces"
 msgstr "Darbo sritys"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
 msgstr "Konfigūruokite išdėstymus, pavadinimus ir paraštes"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:6
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "darbo sritys;darbo sričių;darbo sriciu;nustatymai;nuostatos;virtualūs darbalaukiai;virtualus darbalaukiai;virtualių darbalaukių;virtualiu darbalaukiu;skaičius;skaicius;langai;ekranas;paraštės;parastes;"
+msgstr ""
+"darbo sritys;darbo sričių;darbo sriciu;nustatymai;nuostatos;virtualūs "
+"darbalaukiai;virtualus darbalaukiai;virtualių darbalaukių;virtualiu "
+"darbalaukiu;skaičius;skaicius;langai;ekranas;paraštės;parastes;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:71
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_Žinynas"
-
-#. ----------------------------------------------
-#: settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
-msgid "_Close"
-msgstr "_Užverti"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -208,7 +515,9 @@ msgstr "_Stilius"
 
 #: settings-dialogs/xfwm4-dialog.glade:553
 msgid "Define shortcuts to perform _window manager actions:"
-msgstr "Apibrėžkite sparčiuosius klavišus, skirtus langų tvark_ytuvės veiksmų atlikimui:"
+msgstr ""
+"Apibrėžkite sparčiuosius klavišus, skirtus langų tvark_ytuvės veiksmų "
+"atlikimui:"
 
 #: settings-dialogs/xfwm4-dialog.glade:613
 msgid "_Edit"
@@ -351,7 +660,8 @@ msgstr "<b>Slėpti langų turinį</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1532
 msgid "The action to perform when the title-bar is double-clicked"
-msgstr "Veiksmas, kuris bus atliktas du kartus spustelėjus ant pavadinimo juostos"
+msgstr ""
+"Veiksmas, kuris bus atliktas du kartus spustelėjus ant pavadinimo juostos"
 
 #: settings-dialogs/xfwm4-dialog.glade:1541
 msgid "<b>Double click _action</b>"
@@ -361,82 +671,18 @@ msgstr "<b>Veiksmas du kartus _spustelėjus</b>"
 msgid "Ad_vanced"
 msgstr "Iš_plėstiniai"
 
-#: settings-dialogs/xfwm4-settings.c:218
-msgid "Shade window"
-msgstr "Pridengti langą"
-
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Hide window"
-msgstr "Paslėpti langą"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Maximize window"
-msgstr "Išskleisti langą"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Fill window"
-msgstr "Užpildyti langą"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Always on top"
-msgstr "Visada viršuje"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Nothing"
-msgstr "Nieko"
-
-#: settings-dialogs/xfwm4-settings.c:228
-msgid "Left"
-msgstr "Kairė"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Center"
-msgstr "Centras"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Right"
-msgstr "Dešinė"
-
-#: settings-dialogs/xfwm4-settings.c:346
-msgid "Theme"
-msgstr "Apipavidalinimas"
-
-#: settings-dialogs/xfwm4-settings.c:496
-msgid "Action"
-msgstr "Veiksmas"
-
-#: settings-dialogs/xfwm4-settings.c:503
-msgid "Shortcut"
-msgstr "Susiejimas"
-
-#: settings-dialogs/xfwm4-settings.c:898
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Nepavyko inicijuoti xfconf. Priežastis: %s"
-
-#: settings-dialogs/xfwm4-settings.c:909
-msgid "Could not create the settings dialog."
-msgstr "Nepavyko sukurti nustatymų dialogo."
-
-#: settings-dialogs/xfwm4-settings.c:1915
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to"
-" do this?"
-msgstr "Visi susiejimai bus atstatyti į jų numatytąsias reikšmes. Ar jūs tikrai to norite?"
-
-#: settings-dialogs/xfwm4-settings.c:1917
-msgid "Reset to Defaults"
-msgstr "Atstatyti į numatytuosius"
-
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:124
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "Praleisti langus, _kurie turi „praleisti pranešimų gaviklį“\nar „praleisti užduočių juostą“ savybių rinkinį"
+msgstr ""
+"Praleisti langus, _kurie turi „praleisti pranešimų gaviklį“\n"
+"ar „praleisti užduočių juostą“ savybių rinkinį"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:141
 msgid "Cycle _through minimized windows in most recently used order"
-msgstr "Perjunginėti suskleistus langus _pagal paskiausiai naudotų langų tvarką"
+msgstr ""
+"Perjunginėti suskleistus langus _pagal paskiausiai naudotų langų tvarką"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:157
 msgid "_Include hidden (i.e. iconified) windows"
@@ -512,7 +758,8 @@ msgstr "Vietoj lango pritraukimo naudoti _lango atsparumą"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:532
 msgid "Use mouse wheel on title bar to ro_ll up the window"
-msgstr "Naudoti pelės ratuką ant pavadinimo, kad _langas būtų užraitytas aukštyn"
+msgstr ""
+"Naudoti pelės ratuką ant pavadinimo, kad _langas būtų užraitytas aukštyn"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:548
 msgid "Notify of _urgency by making window's decoration blink"
@@ -534,15 +781,20 @@ msgstr "Darbo _sričių perjungimui naudoti pelės ratuką darbalaukyje"
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "_Prisiminti ir atkurti ankstesnę darbo sritį,\nperjungiant klaviatūros susiejimais"
+msgstr ""
+"_Prisiminti ir atkurti ankstesnę darbo sritį,\n"
+"perjungiant klaviatūros susiejimais"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:637
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Perjunginėti darbo sritis, priklausomai nuo esamo darbalaukio _išdėstymo"
+msgstr ""
+"Perjunginėti darbo sritis, priklausomai nuo esamo darbalaukio _išdėstymo"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:653
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Cikliškai perjunginėti darbo sritis, kai pasiekiama pirma a_rba paskutinė darbo sritis"
+msgstr ""
+"Cikliškai perjunginėti darbo sritis, kai pasiekiama pirma a_rba paskutinė "
+"darbo sritis"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:676
 msgid "_Workspaces"
@@ -573,75 +825,109 @@ msgstr "Po pelės žyme_kliu"
 msgid "_Placement"
 msgstr "_Išdėstymas"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:876
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
 msgid "_Enable display compositing"
 msgstr "Į_jungti ekrano komponavimą"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:917
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+msgid "Enable _HDR"
+msgstr "Įjungti _HDR"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+msgid ""
+"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
+"Vulkan"
+msgstr "Rodyti HDR jį palaikančiuose monitoriuose, 10 bitų spalvomis. Reikia GPU su Vulkan"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+msgid "Use _OpenGL for compositing"
+msgstr "Komponavimui naudoti _OpenGL"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
+msgstr "Reikia OpenGL 2.0, kitaip naudojamas XRender"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "_Suspend compositing for focused fullscreen windows"
+msgstr "_Sustabdyti komponavimą fokusuotiems viso ekrano langams"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+msgid ""
+"Improves performance in fullscreen applications; compositing resumes when "
+"the window closes or loses focus. Video may tear while it is off"
+msgstr "Pagerina viso ekrano programų našumą; komponavimas atnaujinamas, kai langas užveriamas arba praranda fokusą. Kol jis išjungtas, vaizdo įraše gali atsirasti plyšimų"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
 msgid "Display _fullscreen overlay windows directly"
 msgstr "Rodyti _persidengiančius langus visame ekrane tiesiogiai"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:933
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+msgid ""
+"Let fullscreen windows that bypass the window manager draw straight to the "
+"screen"
+msgstr "Leisti viso ekrano langams, kurie apeina langų tvarkytuvę, piešti tiesiai į ekraną"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
 msgid "Show windows preview in place of icons when cycling"
 msgstr "Perjunginėjant, vietoj piktogramų, rodyti langų peržiūrą"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
 msgid "Show shadows under pop_up windows"
 msgstr "Aplink iškylančiuosius langus _rodyti šešėlius"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:965
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
 msgid "Show shadows under _dock windows"
 msgstr "Aplink paslėptus langus _rodyti šešėlius"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:981
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
 msgid "Show shadows under _regular windows"
 msgstr "Aplink įprastus langus _rodyti šešėlius"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:997
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
 msgid "Zoom desktop with mouse wheel"
 msgstr "Didinti darbalaukį naudojant pelės ratuką"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
 msgid "Zoom pointer along with the desktop"
 msgstr "Didinti rodyklę kartu su darbalaukiu"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
 msgid "Opaci_ty of window decorations:"
 msgstr "_Lango dekoracijų permatomumas:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1057
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1133
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1209
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1285
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1361
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
 msgid "<i>Transparent</i>"
 msgstr "<i>Permatomumas</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1085
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1161
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1237
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1313
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1389
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "<i>Opaque</i>"
 msgstr "<i>Matomumas</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1108
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
 msgid "Opacity of _inactive windows:"
 msgstr "_Neaktyvių langų permatomumas:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1184
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
 msgid "Opacity of windows during _move:"
 msgstr "_Perkeliamų langų permatomumas:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1260
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
 msgid "Opacity of windows during resi_ze:"
 msgstr "P_ermatomumas, keičiant lango dydį:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1336
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
 msgid "Opacity of popup wi_ndows:"
 msgstr "_Iškylančiųjų langų permatomumas:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1429
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
 msgid "C_ompositor"
 msgstr "_Kūrimas"
 
@@ -669,146 +955,3 @@ msgstr "Paraštės yra ekrano kraštų vietos, kuriose langai negali būti padė
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "_Paraštės"
-
-#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (ant %s)"
-
-#: src/keyboard.c:143 src/settings.c:160
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "Nepalaikomas klaviatūros modifikatorius „%s“"
-
-#: src/main.c:616
-msgid "Set the compositor mode"
-msgstr "Nustatyti komponavimo veikseną"
-
-#: src/main.c:618
-msgid "Set the vblank mode"
-msgstr "Nustatyti vblank veikseną"
-
-#: src/main.c:628
-msgid "Replace the existing window manager"
-msgstr "Pakeisti dabartinę langų tvarkytuvę"
-
-#: src/main.c:630
-msgid "Print version information and exit"
-msgstr "Parodyti versiją ir išeiti"
-
-#: src/main.c:633
-msgid "Enable debug logging"
-msgstr "Įjungti derinimo registravimą"
-
-#: src/main.c:673
-msgid "[ARGUMENTS...]"
-msgstr "[ARGUMENTAI...]"
-
-#: src/main.c:680
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "Informacijai apie naudojimą, įrašykite „%s --help“."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "Iš_skleisti"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "_Grąžinti iš išskleidimo"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "_Suskleisti"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "Suskleisti _kitus langus"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "_Rodyti"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "P_erkelti"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "_Keisti dydį"
-
-#. ----------------------------------------------
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "Visada _viršuje"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "_Taip pat kaip kiti langai"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "Visada _po kitais langais"
-
-#. ----------------------------------------------
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "Užraityti langą aukštyn"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "Nuraityti langą žemyn"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "_Visas ekranas"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "Išjungti _viso ekrano veikseną"
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "Konteksto _pagalba"
-
-#. ----------------------------------------------
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "Visada _matomoje darbo srityje"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "Perkelti į _kitą darbo sritį"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr "Perkelti į kitą monitorių"
-
-#. --------------------------------------------------------
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "Sunaikinti"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "_Išeiti"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "Paleisti iš naujo"
-
-#: src/menu.c:457
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: GtkMenu nesugebėjo pagriebti žymeklio\n"
-
-#: src/terminate.c:77
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "Klaida skaitant iš antrinio proceso: %s\n"
-
-#: src/terminate.c:135
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Nepavyko sukurti pagalbos dialogo: %s\n"

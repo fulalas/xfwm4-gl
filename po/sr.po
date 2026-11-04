@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Xfce
 # This file is distributed under the same license as the xfwm4.master package.
-# 
+#
 # Translators:
 # Саша Петровић <salepetronije@gmail.com>, 2012,2014
 # Саша Петровић <salepetronije@gmail.com>, 2012,2014-2017,2019
@@ -10,22 +10,26 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
-"Report-Msgid-Bugs-To: https://gitlab.xfce.org/\n"
-"POT-Creation-Date: 2024-03-26 00:55+0100\n"
+"Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
+"POT-Creation-Date: 2026-08-01 20:55+0200\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
-"Last-Translator: Саша Петровић <salepetronije@gmail.com>, 2012,2014-2017,2019\n"
+"Last-Translator: Саша Петровић <salepetronije@gmail.com>, "
+"2012,2014-2017,2019\n"
 "Language-Team: Serbian (http://app.transifex.com/xfce/xfwm4/language/sr/)\n"
+"Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: sr\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: helper-dialog/helper-dialog.c:86
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Овај прозор изгледа заузет и не одазива се.\nДа ли желите да окончате програм?"
+msgstr ""
+"Овај прозор изгледа заузет и не одазива се.\n"
+"Да ли желите да окончате програм?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -35,112 +39,405 @@ msgstr "Упозорење"
 msgid "None"
 msgstr "Ништа"
 
-#: settings-dialogs/tweaks-settings.c:500
+#: settings-dialogs/tweaks-settings.c:229
+msgid "OpenGL EGL"
+msgstr "OpenGL EGL"
+
+#: settings-dialogs/tweaks-settings.c:233
+msgid "OpenGL GLX"
+msgstr "OpenGL GLX"
+
+#: settings-dialogs/tweaks-settings.c:237
+msgid "XRender"
+msgstr "XRender"
+
+#: settings-dialogs/tweaks-settings.c:245
+msgid "vsync on"
+msgstr "vsync укључен"
+
+#: settings-dialogs/tweaks-settings.c:249
+msgid "vsync off"
+msgstr "vsync искључен"
+
+#: settings-dialogs/tweaks-settings.c:253
+msgid "adaptive vsync"
+msgstr "прилагодљиви vsync"
+
+#: settings-dialogs/tweaks-settings.c:259
+#, c-format
+msgid "(currently: %s, %s)"
+msgstr "(тренутно: %s, %s)"
+
+#: settings-dialogs/tweaks-settings.c:263
+#, c-format
+msgid "(currently: %s)"
+msgstr "(тренутно: %s)"
+
+#: settings-dialogs/tweaks-settings.c:267
+msgid "(currently off)"
+msgstr "(тренутно искључено)"
+
+#: settings-dialogs/tweaks-settings.c:295
+msgid "Use the _GPU for compositing"
+msgstr "Користи _GPU за слагање"
+
+#: settings-dialogs/tweaks-settings.c:297
+msgid ""
+"When off, the screen is drawn in software, which is slower and turns HDR off"
+msgstr "Када је искључено, екран се исцртава софтверски, што је спорије и искључује HDR"
+
+#: settings-dialogs/tweaks-settings.c:299
+msgid "Show focused _fullscreen windows directly"
+msgstr "Непосредно приказуј фокусиране прозоре преко _целог екрана"
+
+#: settings-dialogs/tweaks-settings.c:301
+msgid ""
+"Lets a focused fullscreen window go straight to the screen, which saves "
+"power and lowers latency"
+msgstr "Омогућава да фокусирани прозор преко целог екрана иде директно на екран, чиме се штеди енергија и смањује кашњење"
+
+#: settings-dialogs/tweaks-settings.c:700
 msgid "Session manager socket"
 msgstr "Утичница управника седнице"
 
-#: settings-dialogs/tweaks-settings.c:500
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "ЛБ УТИЧНИЦЕ"
 
-#: settings-dialogs/tweaks-settings.c:501
-#: settings-dialogs/workspace-settings.c:423
-#: settings-dialogs/xfwm4-settings.c:242
+#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/workspace-settings.c:446
+#: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Подаци о издању"
 
-#: settings-dialogs/tweaks-settings.c:517
-#: settings-dialogs/workspace-settings.c:440
-#: settings-dialogs/xfwm4-settings.c:869
+#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/workspace-settings.c:463
+#: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:521
-#: settings-dialogs/workspace-settings.c:444
-#: settings-dialogs/xfwm4-settings.c:873
+#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/workspace-settings.c:467
+#: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nПокушајте „%s --help“ за преглед потпуног списка расположивих могућности линије наредби.\n"
+msgstr ""
+"%s: %s\n"
+"Покушајте „%s --help“ за преглед потпуног списка расположивих могућности "
+"линије наредби.\n"
 
-#: settings-dialogs/workspace-settings.c:94
-#: settings-dialogs/workspace-settings.c:109
+#: settings-dialogs/workspace-settings.c:107
+#: settings-dialogs/workspace-settings.c:121
+#: settings-dialogs/workspace-settings.c:203
 #, c-format
 msgid "Workspace %d"
 msgstr "Радни простор %d"
 
-#: settings-dialogs/workspace-settings.c:307
+#: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
 msgstr "Назив радног простора"
 
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
 msgstr "Утичница управника поставки"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:4
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "Смотај прозор"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "Сакриј прозор"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "Увећај прозор"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "Попуни прозор"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "Увек на врху"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "Ништа"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "Лево"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "По средини"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "Десно"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "Тема"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "Радња"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "Пречица"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Нисам успео да покренем xfconf. Разлог: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "Нисам успео да покренем прозор поставки."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr ""
+"Ово ће поново поставити све пречице на њихове почетне вредности. Да ли "
+"стварно желите да то урадите?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "Врати на подразумеване вредности"
+
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (на %s)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "Измењивач распореда тастатуре „%s“ није подржан"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "Подеси начин слагања"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "Постави усправно чишћење"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "Замени тренутног управника прозора"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "Штампај податке о издању и изађи"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "Омогући дневник исправки грешака"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[ОДРЕДНИЦЕ...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "Куцајте „%s --help“ за упутство."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "Ув_ећај"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "Пони_шти увећање"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "Ум_ањи"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "Умањи _остале прозоре"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "П_рикажи"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "_Премести"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "_Промени величину"
+
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "Увек на _врху"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "_Исто као и остали прозори"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "Увек _испод осталих прозора"
+
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "Смотај прозор"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "Размотај прозор"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "_Преко целог екрана"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "Напусти _цео екран"
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "Додатна _помоћ"
+
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "_Увек на видљивом радном простору"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "Премести на други _радни простор"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "Премести на други заслон"
+
+#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433
+msgid "_Close"
+msgstr "_Затвори"
+
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "Уништи"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "_Изађи"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "Поново покрени"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "Заслон _лево"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "Заслон _десно"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "Заслон _горе"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "Заслон _доле"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: Гтк-ов изборник није успео да ухвати показивач миша\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "Грешка читања података из проистеклог процеса: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "Нисам успео да изродим прозорче помоћника : %s\n"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
 msgstr "Управник прозора"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:5
+#: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
 msgstr "Подесите понашање прозора и пречице"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:6
+#: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
 "windows;management;settings;preferences;themes;styles;decorations;title "
 "bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
-msgstr "прозори;управљање;поставке;подешавања;теме;изглед;украси;наслов;словолик;дугмад;изборник;умањи;увећај;смотај;распоред;тастатура;пречице;жижа;шкљоцање;приказ;екран;радни простри;ивице;угао;кутак;сакриј садржај;помери;премести;промени величину;двоклик;"
+msgstr ""
+"прозори;управљање;поставке;подешавања;теме;изглед;украси;наслов;словолик;дугмад;изборник;умањи;увећај;смотај;распоред;тастатура;пречице;жижа;шкљоцање;приказ;екран;радни "
+"простри;ивице;угао;кутак;сакриј садржај;помери;премести;промени "
+"величину;двоклик;"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:54
 msgid "Window Manager Tweaks"
 msgstr "Лицкања управника прозора"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
 msgstr "Фино подесите понашање прозора и ефекте"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:6
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
-"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title"
-" bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "прозори;понашање;поставке;подешавања;кружење;круг;промена;жижа;издизање;приступачност;дугме;превлачење;премештање;сакриј;оквир;насловна трака;увећани;наслов;плоча;ивица;врући кутак;шкљоцање;точкић миша;смотавање;радни простори;смештај;слагање приказа;омогући;онемогући;сене;украшавање;прозирност;провидност;промени величину;преглед;компиз;прелаз;"
+msgstr ""
+"прозори;понашање;поставке;подешавања;кружење;круг;промена;жижа;издизање;приступачност;дугме;превлачење;премештање;сакриј;оквир;насловна "
+"трака;увећани;наслов;плоча;ивица;врући кутак;шкљоцање;точкић "
+"миша;смотавање;радни простори;смештај;слагање "
+"приказа;омогући;онемогући;сене;украшавање;прозирност;провидност;промени "
+"величину;преглед;компиз;прелаз;"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
 msgid "Workspaces"
 msgstr "Радни простори"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
 msgstr "Подесите распоред, називе и ивице"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:6
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "радни простори;поставке;подешавања;нестварни простори;број;прозор;екран;ивице;"
+msgstr ""
+"радни простори;поставке;подешавања;нестварни "
+"простори;број;прозор;екран;ивице;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:71
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_Помоћ"
-
-#. ----------------------------------------------
-#: settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
-msgid "_Close"
-msgstr "_Затвори"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -361,78 +658,13 @@ msgstr "<b>_Радња двоклика</b>"
 msgid "Ad_vanced"
 msgstr "На_предно"
 
-#: settings-dialogs/xfwm4-settings.c:218
-msgid "Shade window"
-msgstr "Смотај прозор"
-
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Hide window"
-msgstr "Сакриј прозор"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Maximize window"
-msgstr "Увећај прозор"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Fill window"
-msgstr "Попуни прозор"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Always on top"
-msgstr "Увек на врху"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Nothing"
-msgstr "Ништа"
-
-#: settings-dialogs/xfwm4-settings.c:228
-msgid "Left"
-msgstr "Лево"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Center"
-msgstr "По средини"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Right"
-msgstr "Десно"
-
-#: settings-dialogs/xfwm4-settings.c:346
-msgid "Theme"
-msgstr "Тема"
-
-#: settings-dialogs/xfwm4-settings.c:496
-msgid "Action"
-msgstr "Радња"
-
-#: settings-dialogs/xfwm4-settings.c:503
-msgid "Shortcut"
-msgstr "Пречица"
-
-#: settings-dialogs/xfwm4-settings.c:898
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Нисам успео да покренем xfconf. Разлог: %s"
-
-#: settings-dialogs/xfwm4-settings.c:909
-msgid "Could not create the settings dialog."
-msgstr "Нисам успео да покренем прозор поставки."
-
-#: settings-dialogs/xfwm4-settings.c:1915
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to"
-" do this?"
-msgstr "Ово ће поново поставити све пречице на њихове почетне вредности. Да ли стварно желите да то урадите?"
-
-#: settings-dialogs/xfwm4-settings.c:1917
-msgid "Reset to Defaults"
-msgstr "Врати на подразумеване вредности"
-
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:124
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "_Прескочи прозоре који имају постављене особине \n„прескочи страничник“ или „прескочи траку задатака“"
+msgstr ""
+"_Прескочи прозоре који имају постављене особине \n"
+"„прескочи страничник“ или „прескочи траку задатака“"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:141
 msgid "Cycle _through minimized windows in most recently used order"
@@ -534,15 +766,19 @@ msgstr "Користи точкић _миша на радној површи з�
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "_Запамти и позови претходни радни простор\nприликом промена помоћу пречица на тастатури"
+msgstr ""
+"_Запамти и позови претходни радни простор\n"
+"приликом промена помоћу пречица на тастатури"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:637
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Преломи радне просторе у зависности од тренутног _распореда радне површи"
+msgstr ""
+"Преломи радне просторе у зависности од тренутног _распореда радне површи"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:653
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Преломи радне просторе кад је _први или последњи радни простор досегнут"
+msgstr ""
+"Преломи радне просторе кад је _први или последњи радни простор досегнут"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:676
 msgid "_Workspaces"
@@ -573,75 +809,109 @@ msgstr "Испод _показивача миша"
 msgid "_Placement"
 msgstr "_Смештај"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:876
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
 msgid "_Enable display compositing"
 msgstr "_Омогући слагање приказа"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:917
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+msgid "Enable _HDR"
+msgstr "Укључи _HDR"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+msgid ""
+"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
+"Vulkan"
+msgstr "Приказуј HDR на мониторима који га подржавају, у 10-битним бојама. Потребан је GPU са Vulkan-ом"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+msgid "Use _OpenGL for compositing"
+msgstr "Користи _OpenGL за слагање"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
+msgstr "Захтева OpenGL 2.0, у супротном користи XRender"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "_Suspend compositing for focused fullscreen windows"
+msgstr "_Обустави слагање за фокусиране прозоре преко целог екрана"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+msgid ""
+"Improves performance in fullscreen applications; compositing resumes when "
+"the window closes or loses focus. Video may tear while it is off"
+msgstr "Побољшава учинак програма преко целог екрана; слагање се наставља када се прозор затвори или изгуби фокус. Док је слагање обустављено, слика видеа може да се кида"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
 msgid "Display _fullscreen overlay windows directly"
 msgstr "Приказуј преклапање _целог екрана непосредно"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:933
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+msgid ""
+"Let fullscreen windows that bypass the window manager draw straight to the "
+"screen"
+msgstr "Дозволи прозорима преко целог екрана који заобилазе управника прозора да цртају непосредно на екран"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
 msgid "Show windows preview in place of icons when cycling"
 msgstr "Приказуј преглед прозора уместо сличица при кружењу"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
 msgid "Show shadows under pop_up windows"
 msgstr "Приказуј сене испод искачућ_их прозора"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:965
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
 msgid "Show shadows under _dock windows"
 msgstr "Приказуј _сене испод усидрених прозора"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:981
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
 msgid "Show shadows under _regular windows"
 msgstr "Приказуј сене испод _обичних прозора"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:997
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
 msgid "Zoom desktop with mouse wheel"
 msgstr "Приближи радну површ точкићем миша"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
 msgid "Zoom pointer along with the desktop"
 msgstr "Приближи показивач заједно са радном површи"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
 msgid "Opaci_ty of window decorations:"
 msgstr "Прозирност_ст украса прозора:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1057
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1133
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1209
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1285
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1361
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
 msgid "<i>Transparent</i>"
 msgstr "<i>Прозирни</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1085
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1161
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1237
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1313
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1389
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "<i>Opaque</i>"
 msgstr "<i>Непрозирни</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1108
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
 msgid "Opacity of _inactive windows:"
 msgstr "Прозирност не_радних прозора:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1184
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
 msgid "Opacity of windows during _move:"
 msgstr "Прозирност прозора приликом _померања:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1260
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
 msgid "Opacity of windows during resi_ze:"
 msgstr "Прозирност прозора приликом промене величи_не:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1336
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
 msgid "Opacity of popup wi_ndows:"
 msgstr "Прозирност искачућих прозор_а:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1429
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
 msgid "C_ompositor"
 msgstr "С_лагач приказа"
 
@@ -664,151 +934,9 @@ msgstr "_Опште"
 #: settings-dialogs/xfwm4-workspace-dialog.glade:232
 msgid ""
 "Margins are areas on the edges of the screen where no window will be placed"
-msgstr "Ивице су области на крајевима екрана где ниједан прозор неће бити смештен"
+msgstr ""
+"Ивице су области на крајевима екрана где ниједан прозор неће бити смештен"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "_Ивице"
-
-#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (на %s)"
-
-#: src/keyboard.c:143 src/settings.c:160
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "Измењивач распореда тастатуре „%s“ није подржан"
-
-#: src/main.c:616
-msgid "Set the compositor mode"
-msgstr "Подеси начин слагања"
-
-#: src/main.c:618
-msgid "Set the vblank mode"
-msgstr "Постави усправно чишћење"
-
-#: src/main.c:628
-msgid "Replace the existing window manager"
-msgstr "Замени тренутног управника прозора"
-
-#: src/main.c:630
-msgid "Print version information and exit"
-msgstr "Штампај податке о издању и изађи"
-
-#: src/main.c:633
-msgid "Enable debug logging"
-msgstr "Омогући дневник исправки грешака"
-
-#: src/main.c:673
-msgid "[ARGUMENTS...]"
-msgstr "[ОДРЕДНИЦЕ...]"
-
-#: src/main.c:680
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "Куцајте „%s --help“ за упутство."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "Ув_ећај"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "Пони_шти увећање"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "Ум_ањи"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "Умањи _остале прозоре"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "П_рикажи"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "_Премести"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "_Промени величину"
-
-#. ----------------------------------------------
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "Увек на _врху"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "_Исто као и остали прозори"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "Увек _испод осталих прозора"
-
-#. ----------------------------------------------
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "Смотај прозор"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "Размотај прозор"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "_Преко целог екрана"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "Напусти _цео екран"
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "Додатна _помоћ"
-
-#. ----------------------------------------------
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "_Увек на видљивом радном простору"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "Премести на други _радни простор"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr "Премести на други заслон"
-
-#. --------------------------------------------------------
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "Уништи"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "_Изађи"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "Поново покрени"
-
-#: src/menu.c:457
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: Гтк-ов изборник није успео да ухвати показивач миша\n"
-
-#: src/terminate.c:77
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "Грешка читања података из проистеклог процеса: %s\n"
-
-#: src/terminate.c:135
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Нисам успео да изродим прозорче помоћника : %s\n"

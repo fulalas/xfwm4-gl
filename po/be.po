@@ -1,23 +1,26 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Xfce
 # This file is distributed under the same license as the xfwm4.master package.
-# 
+#
 # Translators:
 # Źmicier Turok <nashtlumach@gmail.com>, 2018-2020
 # Źmicier Turok <nashtlumach@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
-"Report-Msgid-Bugs-To: https://gitlab.xfce.org/\n"
-"POT-Creation-Date: 2024-03-26 00:55+0100\n"
+"Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
+"POT-Creation-Date: 2026-08-01 20:55+0200\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
 "Last-Translator: Źmicier Turok <nashtlumach@gmail.com>, 2018-2020\n"
-"Language-Team: Belarusian (http://app.transifex.com/xfce/xfwm4/language/be/)\n"
+"Language-Team: Belarusian (http://app.transifex.com/xfce/xfwm4/language/"
+"be/)\n"
+"Language: be\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: be\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: helper-dialog/helper-dialog.c:86
 msgid ""
@@ -33,112 +36,405 @@ msgstr "Увага"
 msgid "None"
 msgstr "Няма"
 
-#: settings-dialogs/tweaks-settings.c:500
+#: settings-dialogs/tweaks-settings.c:229
+msgid "OpenGL EGL"
+msgstr "OpenGL EGL"
+
+#: settings-dialogs/tweaks-settings.c:233
+msgid "OpenGL GLX"
+msgstr "OpenGL GLX"
+
+#: settings-dialogs/tweaks-settings.c:237
+msgid "XRender"
+msgstr "XRender"
+
+#: settings-dialogs/tweaks-settings.c:245
+msgid "vsync on"
+msgstr "vsync уключана"
+
+#: settings-dialogs/tweaks-settings.c:249
+msgid "vsync off"
+msgstr "vsync выключана"
+
+#: settings-dialogs/tweaks-settings.c:253
+msgid "adaptive vsync"
+msgstr "адаптыўная vsync"
+
+#: settings-dialogs/tweaks-settings.c:259
+#, c-format
+msgid "(currently: %s, %s)"
+msgstr "(зараз выкарыстоўваецца: %s, %s)"
+
+#: settings-dialogs/tweaks-settings.c:263
+#, c-format
+msgid "(currently: %s)"
+msgstr "(зараз выкарыстоўваецца: %s)"
+
+#: settings-dialogs/tweaks-settings.c:267
+msgid "(currently off)"
+msgstr "(зараз выключана)"
+
+#: settings-dialogs/tweaks-settings.c:295
+msgid "Use the _GPU for compositing"
+msgstr "Выкарыстоўваць _GPU для кампазіцыі"
+
+#: settings-dialogs/tweaks-settings.c:297
+msgid ""
+"When off, the screen is drawn in software, which is slower and turns HDR off"
+msgstr "Калі выключана, экран малюецца праграмна: гэта павольней і выключае HDR"
+
+#: settings-dialogs/tweaks-settings.c:299
+msgid "Show focused _fullscreen windows directly"
+msgstr "Паказваць _поўнаэкранныя вокны ў фокусе непасрэдна"
+
+#: settings-dialogs/tweaks-settings.c:301
+msgid ""
+"Lets a focused fullscreen window go straight to the screen, which saves "
+"power and lowers latency"
+msgstr "Дазваляе поўнаэкраннаму акну ў фокусе выводзіцца непасрэдна на экран, што эканоміць энергію і памяншае затрымку"
+
+#: settings-dialogs/tweaks-settings.c:700
 msgid "Session manager socket"
 msgstr "Сокет кіраўніка сеансаў"
 
-#: settings-dialogs/tweaks-settings.c:500
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "SOCKET ID"
 
-#: settings-dialogs/tweaks-settings.c:501
-#: settings-dialogs/workspace-settings.c:423
-#: settings-dialogs/xfwm4-settings.c:242
+#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/workspace-settings.c:446
+#: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Інфармацыя пра версію"
 
-#: settings-dialogs/tweaks-settings.c:517
-#: settings-dialogs/workspace-settings.c:440
-#: settings-dialogs/xfwm4-settings.c:869
+#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/workspace-settings.c:463
+#: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:521
-#: settings-dialogs/workspace-settings.c:444
-#: settings-dialogs/xfwm4-settings.c:873
+#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/workspace-settings.c:467
+#: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nПаспрабуйце \"%s --help\", каб праглядзець спіс даступных параметраў загаднага радка.\n"
+msgstr ""
+"%s: %s\n"
+"Паспрабуйце \"%s --help\", каб праглядзець спіс даступных параметраў "
+"загаднага радка.\n"
 
-#: settings-dialogs/workspace-settings.c:94
-#: settings-dialogs/workspace-settings.c:109
+#: settings-dialogs/workspace-settings.c:107
+#: settings-dialogs/workspace-settings.c:121
+#: settings-dialogs/workspace-settings.c:203
 #, c-format
 msgid "Workspace %d"
 msgstr "Працоўная прастора %d"
 
-#: settings-dialogs/workspace-settings.c:307
+#: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
 msgstr "Назва працоўнай прасторы"
 
-#: settings-dialogs/workspace-settings.c:422
-#: settings-dialogs/xfwm4-settings.c:240
+#: settings-dialogs/workspace-settings.c:445
+#: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
 msgstr "Сокет кіраўніка налад"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:4
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "Згарнуць акно"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "Схаваць акно"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "Разгарнуць акно"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "Запоўніць акно"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "Заўсёды наверсе"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "Нічога"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "Налева"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "Цэнтр"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "Направа"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "Тэма"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "Дзеянне"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "Спалучэнне клавіш"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Не атрымалася ініцыялізаваць xfconf. Прычына: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "Не атрымалася стварыць акно налад."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr "Гэтае дзеянне скіне ўсе спалучэнні клавіш. Сапраўды зрабіць гэта?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "Скінуць да прадвызначанага"
+
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (на %s)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "Непадтрымліваемы клавіятурны мадыфікатар '%s'"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "Прызначыць кампазітны рэжым"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "Прызначыць рэжым вертыкальнага сінхранізавання"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "Замяніць бягучага кіраўніка акон"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "Вывесці інфармацыю пра версію і выйсці"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "Уключыць журнал адладкі"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[АРГУМЕНТЫ...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "Увядзіце \"%s --help\", каб праглядзець даведку."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "Раз_гарнуць"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "Скасаваць _разгортванне"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "З_гарнуць"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "Згарнуць _іншыя вокны"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "Пака_заць"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "Пера_мясціць"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "Змяніць _памер"
+
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "Заўсёды _наверсе"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "_Як іншыя вокны"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "Заўсёды _пад іншымі вокнамі"
+
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "Згарнуць у загаловак"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "Разгарнуць з загалоўка"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "На ўвесь _экран"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "Выйсці з _рэжыму \"на ўвесь экран\""
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "Кантэкстная _дапамога"
+
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "Заўсёды на _бачнай працоўнай прасторы"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "Перамясціць на іншую _працоўную прастору"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "Перамясціць на іншы манітор"
+
+#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433
+msgid "_Close"
+msgstr "Закры_ць"
+
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "Знішчыць"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "_Выйсці"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "Перазапусціць"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "Манітор _злева"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "Манітор _справа"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "Манітор _зверху"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "Манітор _знізу"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: у GtkMenu не атрымалася захапіць паказальнік\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "Падчас чытання даных працэса нашчадка адбылася памылка: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "Немагчыма вывесці дыялог даведкі: %s\n"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
 msgstr "Кіраўнік акон"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:5
+#: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
 msgstr "Наладка паводзін акна і значкоў"
 
-#: settings-dialogs/xfce-wm-settings.desktop.in:6
+#: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
 "windows;management;settings;preferences;themes;styles;decorations;title "
 "bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
-msgstr "вокны;кіраванне;налады;тэмы;стылі;аздабленне;загаловак;шрыфт;кнопкі;меню;згарнуць;разгарнуць;цень;згарнуць у загаловак;раскладкі;спалучэнні клавіш;фокус;мацаванне акон;экран;працоўныя прасторы;вуглы;межы;схаваць змесціва;перамясціць;змяніць памер;перамяшчэнне;змена памеру;падвойная пстрычка;"
+msgstr ""
+"вокны;кіраванне;налады;тэмы;стылі;аздабленне;загаловак;шрыфт;кнопкі;меню;згарнуць;разгарнуць;цень;згарнуць "
+"у загаловак;раскладкі;спалучэнні клавіш;фокус;мацаванне акон;экран;працоўныя "
+"прасторы;вуглы;межы;схаваць змесціва;перамясціць;змяніць "
+"памер;перамяшчэнне;змена памеру;падвойная пстрычка;"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:54
 msgid "Window Manager Tweaks"
 msgstr "Налады кіраўніка акон"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
 msgstr "Падрабязныя налады паводзін акна і эфектаў"
 
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:6
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
-"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title"
-" bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "вокны;паводзіны;налады;цыклічнае пераключэнне;пераключэнне;фокус;уздыманне;адмысловыя магчымасці;ключ;перацягванне;перамясціць;перамяшчэнне;хаванне;рамкі;загаловак;разгарнуць;плітка;экран;вуглы;мацаванне акон;кола мышы;разгарнуць з загалоўка;працоўныя прасторы;размяшчэнні;адмалёўшчык;адмалёўка;уключыць;выключыць;цені;аздабленне;празрыстасць;змяніць памер;неактыўна;папярэдні прагляд;compiz;перадачы;"
+msgstr ""
+"вокны;паводзіны;налады;цыклічнае "
+"пераключэнне;пераключэнне;фокус;уздыманне;адмысловыя "
+"магчымасці;ключ;перацягванне;перамясціць;перамяшчэнне;хаванне;рамкі;загаловак;разгарнуць;плітка;экран;вуглы;мацаванне "
+"акон;кола мышы;разгарнуць з загалоўка;працоўныя "
+"прасторы;размяшчэнні;адмалёўшчык;адмалёўка;уключыць;выключыць;цені;аздабленне;празрыстасць;змяніць "
+"памер;неактыўна;папярэдні прагляд;compiz;перадачы;"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
 msgid "Workspaces"
 msgstr "Працоўныя прасторы"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
 msgstr "Наладка размяшчэння, назваў і бакавых межаў"
 
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:6
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "працоўныя прасторы;налады;віртуальныя працоўныя асяроддзі;колькасць;вокны;экран;палі;"
+msgstr ""
+"працоўныя прасторы;налады;віртуальныя працоўныя "
+"асяроддзі;колькасць;вокны;экран;палі;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:71
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_Даведка"
-
-#. ----------------------------------------------
-#: settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
-msgid "_Close"
-msgstr "Закры_ць"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -214,7 +510,7 @@ msgstr "_Рэдагаванне"
 
 #: settings-dialogs/xfwm4-dialog.glade:629
 msgid "_Clear"
-msgstr ""
+msgstr "_Ачысціць"
 
 #: settings-dialogs/xfwm4-dialog.glade:645
 msgid "_Reset to Defaults"
@@ -359,82 +655,18 @@ msgstr "<b>Дзеянне пры падвойнай пстрычцы _па за�
 msgid "Ad_vanced"
 msgstr "Да_датковыя"
 
-#: settings-dialogs/xfwm4-settings.c:218
-msgid "Shade window"
-msgstr "Згарнуць акно"
-
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Hide window"
-msgstr "Схаваць акно"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Maximize window"
-msgstr "Разгарнуць акно"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Fill window"
-msgstr "Запоўніць акно"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Always on top"
-msgstr "Заўсёды наверсе"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Nothing"
-msgstr "Нічога"
-
-#: settings-dialogs/xfwm4-settings.c:228
-msgid "Left"
-msgstr "Налева"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Center"
-msgstr "Цэнтр"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Right"
-msgstr "Направа"
-
-#: settings-dialogs/xfwm4-settings.c:346
-msgid "Theme"
-msgstr "Тэма"
-
-#: settings-dialogs/xfwm4-settings.c:496
-msgid "Action"
-msgstr "Дзеянне"
-
-#: settings-dialogs/xfwm4-settings.c:503
-msgid "Shortcut"
-msgstr "Спалучэнне клавіш"
-
-#: settings-dialogs/xfwm4-settings.c:898
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Не атрымалася ініцыялізаваць xfconf. Прычына: %s"
-
-#: settings-dialogs/xfwm4-settings.c:909
-msgid "Could not create the settings dialog."
-msgstr "Не атрымалася стварыць акно налад."
-
-#: settings-dialogs/xfwm4-settings.c:1915
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to"
-" do this?"
-msgstr "Гэтае дзеянне скіне ўсе спалучэнні клавіш. Сапраўды зрабіць гэта?"
-
-#: settings-dialogs/xfwm4-settings.c:1917
-msgid "Reset to Defaults"
-msgstr "Скінуць да прадвызначанага"
-
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:124
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "М_інаць вокны з уключаным параметрам \"не паказваць у пераключальніку працоўных прастораў\"\nальбо \"не паказваць на панэлі задач\""
+msgstr ""
+"М_інаць вокны з уключаным параметрам \"не паказваць у пераключальніку "
+"працоўных прастораў\"\n"
+"альбо \"не паказваць на панэлі задач\""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:141
 msgid "Cycle _through minimized windows in most recently used order"
-msgstr ""
+msgstr "Пераключацца _паміж згорнутымі вокнамі ў парадку апошняга выкарыстання"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:157
 msgid "_Include hidden (i.e. iconified) windows"
@@ -526,21 +758,28 @@ msgstr "_Адмысловыя магчымасці"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:604
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "Выкарыстоўваць кола мышы на працоўным стале для пераключэння паміж працоўнымі прасторамі"
+msgstr ""
+"Выкарыстоўваць кола мышы на працоўным стале для пераключэння паміж "
+"працоўнымі прасторамі"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:620
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "_Запамінаць і вяртацца да папярэдняй\nпрацоўнай прасторы пры пераключэнні спалучэннямі клавіш"
+msgstr ""
+"_Запамінаць і вяртацца да папярэдняй\n"
+"працоўнай прасторы пры пераключэнні спалучэннямі клавіш"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:637
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Пераключацца паміж працоўнымі прасторамі ў залежнасці ад яе _размяшчэння"
+msgstr ""
+"Пераключацца паміж працоўнымі прасторамі ў залежнасці ад яе _размяшчэння"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:653
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Пераключацца паміж працоўнымі прасторамі _далей пры дасягненні першай альбо апошняй працоўнай прасторы"
+msgstr ""
+"Пераключацца паміж працоўнымі прасторамі _далей пры дасягненні першай альбо "
+"апошняй працоўнай прасторы"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:676
 msgid "_Workspaces"
@@ -571,75 +810,109 @@ msgstr "П_ад паказальнікам мышы"
 msgid "_Placement"
 msgstr "_Размяшчэнне"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:876
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
 msgid "_Enable display compositing"
 msgstr "_Уключыць кампазітынг"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:917
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+msgid "Enable _HDR"
+msgstr "Уключыць _HDR"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+msgid ""
+"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
+"Vulkan"
+msgstr "Паказваць HDR на маніторах, якія яго падтрымліваюць, у 10-бітным колеры. Патрэбны GPU з Vulkan"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+msgid "Use _OpenGL for compositing"
+msgstr "Выкарыстоўваць _OpenGL для кампазіцыі"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
+msgstr "Патрабуецца OpenGL 2.0, інакш выкарыстоўваецца XRender"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "_Suspend compositing for focused fullscreen windows"
+msgstr "_Прыпыняць кампазіцыю для поўнаэкранных акон у фокусе"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+msgid ""
+"Improves performance in fullscreen applications; compositing resumes when "
+"the window closes or loses focus. Video may tear while it is off"
+msgstr "Паляпшае прадукцыйнасць поўнаэкранных праграм; кампазіцыя аднаўляецца, калі акно закрываецца або губляе фокус. Пакуль яна выключана, відэа можа разрывацца"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
 msgid "Display _fullscreen overlay windows directly"
 msgstr "Адлюстроўваць _вокны на ўвесь экран"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:933
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+msgid ""
+"Let fullscreen windows that bypass the window manager draw straight to the "
+"screen"
+msgstr "Дазваляць поўнаэкранным вокнам, якія абыходзяць кіраўніка акон, выводзіцца непасрэдна на экран"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
 msgid "Show windows preview in place of icons when cycling"
 msgstr "Паказваць мініяцюры акон замест значкоў падчас пераключэння"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
 msgid "Show shadows under pop_up windows"
 msgstr "Адлюстроўваць цень ад вып_лыўных акон"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:965
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
 msgid "Show shadows under _dock windows"
 msgstr "Адлюстроўваць цень ад акон _док-панэлі"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:981
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
 msgid "Show shadows under _regular windows"
 msgstr "Адлюстроўваць цень ад _звычайных акон"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:997
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
 msgid "Zoom desktop with mouse wheel"
 msgstr "Маштабаванне працоўнага стала колам мышы"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
 msgid "Zoom pointer along with the desktop"
 msgstr "Маштабаваць курсор разам з працоўным сталом"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1032
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
 msgid "Opaci_ty of window decorations:"
 msgstr "Празрыс_тасць аздаблення акон:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1057
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1133
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1209
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1285
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1361
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
 msgid "<i>Transparent</i>"
 msgstr "<i>Празрыста</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1085
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1161
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1237
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1313
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1389
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "<i>Opaque</i>"
 msgstr "<i>Непразрыста</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1108
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
 msgid "Opacity of _inactive windows:"
 msgstr "Празрыстасць _неактыўных акон:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1184
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
 msgid "Opacity of windows during _move:"
 msgstr "Празрыстасць акон падчас _перамяшчэння:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1260
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
 msgid "Opacity of windows during resi_ze:"
 msgstr "Празрыстасць акон падчас змены па_мераў:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1336
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
 msgid "Opacity of popup wi_ndows:"
 msgstr "Празрыстасць выплыўных _акон:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1429
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
 msgid "C_ompositor"
 msgstr "Э_фекты"
 
@@ -667,146 +940,3 @@ msgstr "Водступы - гэта вобласці па краях экран�
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "_Палі"
-
-#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (на %s)"
-
-#: src/keyboard.c:143 src/settings.c:160
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "Непадтрымліваемы клавіятурны мадыфікатар '%s'"
-
-#: src/main.c:616
-msgid "Set the compositor mode"
-msgstr "Прызначыць кампазітны рэжым"
-
-#: src/main.c:618
-msgid "Set the vblank mode"
-msgstr "Прызначыць рэжым вертыкальнага сінхранізавання"
-
-#: src/main.c:628
-msgid "Replace the existing window manager"
-msgstr "Замяніць бягучага кіраўніка акон"
-
-#: src/main.c:630
-msgid "Print version information and exit"
-msgstr "Вывесці інфармацыю пра версію і выйсці"
-
-#: src/main.c:633
-msgid "Enable debug logging"
-msgstr "Уключыць журнал адладкі"
-
-#: src/main.c:673
-msgid "[ARGUMENTS...]"
-msgstr "[АРГУМЕНТЫ...]"
-
-#: src/main.c:680
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "Увядзіце \"%s --help\", каб праглядзець даведку."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "Раз_гарнуць"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "Скасаваць _разгортванне"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "З_гарнуць"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "Згарнуць _іншыя вокны"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "Пака_заць"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "Пера_мясціць"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "Змяніць _памер"
-
-#. ----------------------------------------------
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "Заўсёды _наверсе"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "_Як іншыя вокны"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "Заўсёды _пад іншымі вокнамі"
-
-#. ----------------------------------------------
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "Згарнуць у загаловак"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "Разгарнуць з загалоўка"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "На ўвесь _экран"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "Выйсці з _рэжыму \"на ўвесь экран\""
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "Кантэкстная _дапамога"
-
-#. ----------------------------------------------
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "Заўсёды на _бачнай працоўнай прасторы"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "Перамясціць на іншую _працоўную прастору"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr ""
-
-#. --------------------------------------------------------
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "Знішчыць"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "_Выйсці"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "Перазапусціць"
-
-#: src/menu.c:457
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: у GtkMenu не атрымалася захапіць паказальнік\n"
-
-#: src/terminate.c:77
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "Падчас чытання даных працэса нашчадка адбылася памылка: %s\n"
-
-#: src/terminate.c:135
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Немагчыма вывесці дыялог даведкі: %s\n"
