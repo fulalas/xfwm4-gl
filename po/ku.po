@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
 "Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
-"POT-Creation-Date: 2026-08-01 20:55+0200\n"
+"POT-Creation-Date: 2026-11-04 23:40+0100\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
 "Last-Translator: Xfce Bot <transifex@xfce.org>\n"
 "Language-Team: Kurdish (http://app.transifex.com/xfce/xfwm4/language/ku/)\n"
@@ -21,7 +21,9 @@ msgstr ""
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Dibe ku ev pencere mijûl be û bersiv nade.\nTu dixwazî sepanê bidawî bikî?"
+msgstr ""
+"Dibe ku ev pencere mijûl be û bersiv nade.\n"
+"Tu dixwazî sepanê bidawî bikî?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -69,55 +71,61 @@ msgstr "(niha tê bikaranîn: %s)"
 msgid "(currently off)"
 msgstr "(niha neçalak e)"
 
-#: settings-dialogs/tweaks-settings.c:295
+#: settings-dialogs/tweaks-settings.c:614
 msgid "Use the _GPU for compositing"
 msgstr "_GPU ji bo pêkhatinê bi kar bîne"
 
-#: settings-dialogs/tweaks-settings.c:297
+#: settings-dialogs/tweaks-settings.c:616
 msgid ""
 "When off, the screen is drawn in software, which is slower and turns HDR off"
-msgstr "Dema neçalak be, ekran bi nermalavê tê xêzkirin, ku hêdîtir e û HDR neçalak dike"
+msgstr ""
+"Dema neçalak be, ekran bi nermalavê tê xêzkirin, ku hêdîtir e û HDR neçalak "
+"dike"
 
-#: settings-dialogs/tweaks-settings.c:299
+#: settings-dialogs/tweaks-settings.c:618
 msgid "Show focused _fullscreen windows directly"
 msgstr "Paceyên _tevahiya ekranê yên li ser fokusê rasterast nîşan bide"
 
-#: settings-dialogs/tweaks-settings.c:301
+#: settings-dialogs/tweaks-settings.c:620
 msgid ""
 "Lets a focused fullscreen window go straight to the screen, which saves "
 "power and lowers latency"
-msgstr "Dihêle paceyek tevahiya ekranê ya li ser fokusê rasterast biçe ekranê, ku enerjiyê teserûf dike û derengmayînê kêm dike"
+msgstr ""
+"Dihêle paceyek tevahiya ekranê ya li ser fokusê rasterast biçe ekranê, ku "
+"enerjiyê teserûf dike û derengmayînê kêm dike"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
 msgstr "Soketa rêvebirê danişînê"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "Nasnameya Socket"
 
-#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/tweaks-settings.c:696
 #: settings-dialogs/workspace-settings.c:446
 #: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Agahdariya guhertoyê"
 
-#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/tweaks-settings.c:711
 #: settings-dialogs/workspace-settings.c:463
 #: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/tweaks-settings.c:715
 #: settings-dialogs/workspace-settings.c:467
 #: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nJi bo lîsteya tevahî ya vebijarkên rêzika fermanê %s --help biceribîne.\n"
+msgstr ""
+"%s: %s\n"
+"Ji bo lîsteya tevahî ya vebijarkên rêzika fermanê %s --help biceribîne.\n"
 
 #: settings-dialogs/workspace-settings.c:107
 #: settings-dialogs/workspace-settings.c:121
@@ -135,233 +143,6 @@ msgstr "Navê Workspace"
 msgid "Settings manager socket"
 msgstr "Soketa rêvebirê mîhengan"
 
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Shade window"
-msgstr "Siya Pencerê"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Hide window"
-msgstr "Pencereyê veşêrin"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Maximize window"
-msgstr "Pencereya Maximize"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Fill window"
-msgstr "Pencereyê tijî bike"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Always on top"
-msgstr "Hema li ser jor"
-
-#: settings-dialogs/xfwm4-settings.c:224
-msgid "Nothing"
-msgstr "Netişt"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Left"
-msgstr "Çep"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Center"
-msgstr "Navîne"
-
-#: settings-dialogs/xfwm4-settings.c:231
-msgid "Right"
-msgstr "Rast"
-
-#: settings-dialogs/xfwm4-settings.c:347
-msgid "Theme"
-msgstr "Mijad"
-
-#: settings-dialogs/xfwm4-settings.c:497
-msgid "Action"
-msgstr "Çalakî"
-
-#: settings-dialogs/xfwm4-settings.c:504
-msgid "Shortcut"
-msgstr "Kurte"
-
-#: settings-dialogs/xfwm4-settings.c:906
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Destpêkî Xfconf destpê nekir. Sedem: %s"
-
-#: settings-dialogs/xfwm4-settings.c:917
-msgid "Could not create the settings dialog."
-msgstr "Nekaribû Diyaloga Mîhengan biafirîne."
-
-#: settings-dialogs/xfwm4-settings.c:1922
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to "
-"do this?"
-msgstr "Ev ê hemû kurteriyan vegerîne nirxên wan ên standard. Tu bi rastî dixwazî vê bikî?"
-
-#: settings-dialogs/xfwm4-settings.c:1924
-msgid "Reset to Defaults"
-msgstr "Vegerîne nirxên standard"
-
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (li %s)"
-
-#: src/keyboard.c:147 src/settings.c:158
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "Guhertina klavyeyê ya bêpergal '%s'"
-
-#: src/main.c:611
-msgid "Set the compositor mode"
-msgstr "Moda pêkhêner diyar bike"
-
-#: src/main.c:613
-msgid "Set the vblank mode"
-msgstr "Moda vblank diyar bike"
-
-#: src/main.c:623
-msgid "Replace the existing window manager"
-msgstr "Rêvebirê pencereya heyî biguhezînin"
-
-#: src/main.c:625
-msgid "Print version information and exit"
-msgstr "Agahdariya guhertoya çapkirinê û derketinê"
-
-#: src/main.c:628
-msgid "Enable debug logging"
-msgstr "Têketina Debug aktîf bike"
-
-#: src/main.c:668
-msgid "[ARGUMENTS...]"
-msgstr "[ARGUMAN...]"
-
-#: src/main.c:675
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "Type \"%s --help\" ji bo karanînê."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "_Mezin bike"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "Mezinkirinê _rake"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "_Biçûk bike"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "Pencereyên _din biçûk bike"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "_Nîşan bide"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "_Veguhezîne"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "Me_zinahiyê biguherîne"
-
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "Her tim li _jor"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "_Wek pencereyên din"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "Her tim _li bin pencereyên din"
-
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "Pencereyê bipêçe jor"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "Pencereyê veke jêr"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "_Tevahiya ekranê"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "Ji tevahiya _ekranê derkeve"
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "_Alîkariya li gorî rewşê"
-
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "Her tim li qada xebatê ya _xuyayî"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "Vegere yekî din _Workspace"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr "Vegere çavdêriyek din"
-
-#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433
-msgid "_Close"
-msgstr "_Bigire"
-
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "Hilweşîne"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "_Derkeve"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "Restart"
-
-#: src/menu.c:207
-msgid "Monitor _Left"
-msgstr "Ekrana _çepê"
-
-#: src/menu.c:211
-msgid "Monitor _Right"
-msgstr "Ekrana _rastê"
-
-#: src/menu.c:215
-msgid "Monitor _Up"
-msgstr "Ekrana _jorê"
-
-#: src/menu.c:219
-msgid "Monitor _Down"
-msgstr "Ekrana _jêrê"
-
-#: src/menu.c:459
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: GtkMenu nikarîbû nîşanderê bigire\n"
-
-#: src/terminate.c:83
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "Çewtiya xwendina daneyan ji pêvajoya zarok: %s\n"
-
-#: src/terminate.c:141
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Diyaloga alîkar nayê destpêkirin: %s\n"
-
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
@@ -377,10 +158,15 @@ msgid ""
 "bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
-msgstr "pencere;rêvebirin;mîheng;vebijark;mijar;şêwaz;xemilandin;darika sernavê;font;bişkok;menû;biçûk bike;mezin bike;sî;pêça jor;rêzkirin;kurteriyên klavyeyê;fokus;pêvekirin;ekran;qadên xebatê;kenar;goşe;naverokê veşêre;veguhestin;mezinahî biguherîne;tê veguhestin;guherandina mezinahiyê;du caran klîk;"
+msgstr ""
+"pencere;rêvebirin;mîheng;vebijark;mijar;şêwaz;xemilandin;darika "
+"sernavê;font;bişkok;menû;biçûk bike;mezin bike;sî;pêça "
+"jor;rêzkirin;kurteriyên klavyeyê;fokus;pêvekirin;ekran;qadên "
+"xebatê;kenar;goşe;naverokê veşêre;veguhestin;mezinahî biguherîne;tê "
+"veguhestin;guherandina mezinahiyê;du caran klîk;"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:54
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:61
 msgid "Window Manager Tweaks"
 msgstr "Rêvebirê Pencereyê Tweaks"
 
@@ -393,7 +179,13 @@ msgid ""
 "windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "pencere;tevger;mîheng;vebijark;gerandin;ger;guherandin;fokus;bilindkirin;gihîştinbarî;mifte;kişandin;veguhestin;tê veguhestin;veşartin;çarçove;darika sernavê;mezinkirî;rêzkirina kêlekhev;ekran;kenar;goşeya germ;pêvekirin;tekera mişkê;pêça jor;qadên xebatê;bicihkirin;pêkhêner;pêkhatin;çalak bike;neçalak bike;sî;xemilandin;nezelalî;mezinahî biguherîne;neçalak;pêşdîtin;compiz;derbasbûn;"
+msgstr ""
+"pencere;tevger;mîheng;vebijark;gerandin;ger;guherandin;fokus;bilindkirin;gihîştinbarî;mifte;kişandin;veguhestin;tê "
+"veguhestin;veşartin;çarçove;darika sernavê;mezinkirî;rêzkirina "
+"kêlekhev;ekran;kenar;goşeya germ;pêvekirin;tekera mişkê;pêça jor;qadên "
+"xebatê;bicihkirin;pêkhêner;pêkhatin;çalak bike;neçalak "
+"bike;sî;xemilandin;nezelalî;mezinahî "
+"biguherîne;neçalak;pêşdîtin;compiz;derbasbûn;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
@@ -408,13 +200,21 @@ msgstr "Navmalîn, nav û marjînal"
 msgid ""
 "workspaces;settings;preferences;virtual "
 "desktops;number;windows;screen;margins;"
-msgstr "qadên xebatê;mîheng;vebijark;sermaseyên virtual;hejmar;pencere;ekran;marjîn;"
+msgstr ""
+"qadên xebatê;mîheng;vebijark;sermaseyên virtual;hejmar;pencere;ekran;marjîn;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:71
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:78
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_Alîkarî"
+
+#. ----------------------------------------------
+#: settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:95
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
+msgid "_Close"
+msgstr "_Bigire"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -559,7 +359,7 @@ msgid "<b>Raise on click</b>"
 msgstr "<b>Li ser bikirtînin</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1088
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:397
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:404
 msgid "_Focus"
 msgstr "_Focus"
 
@@ -580,7 +380,7 @@ msgstr "_Dûrahî:"
 #. Smart placement size
 #: settings-dialogs/xfwm4-dialog.glade:1202
 #: settings-dialogs/xfwm4-dialog.glade:1374
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:722
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:729
 msgid "<i>Small</i>"
 msgstr "<i>Biçûk</i>"
 
@@ -635,255 +435,345 @@ msgstr "<b>_Çalakiya du caran klîkê</b>"
 msgid "Ad_vanced"
 msgstr "Pêş_veçû"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:124
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "Siya Pencerê"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "Pencereyê veşêrin"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "Pencereya Maximize"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "Pencereyê tijî bike"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "Hema li ser jor"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "Netişt"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "Çep"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "Navîne"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "Rast"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "Mijad"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "Çalakî"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "Kurte"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Destpêkî Xfconf destpê nekir. Sedem: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "Nekaribû Diyaloga Mîhengan biafirîne."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr ""
+"Ev ê hemû kurteriyan vegerîne nirxên wan ên standard. Tu bi rastî dixwazî vê "
+"bikî?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "Vegerîne nirxên standard"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:131
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
-msgstr "Pencereyên ku taybetiyên \"skip pager\"\nan \"skip taskbar\" li wan hatine danîn _derbas bike"
+msgstr ""
+"Pencereyên ku taybetiyên \"skip pager\"\n"
+"an \"skip taskbar\" li wan hatine danîn _derbas bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:141
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
 msgstr "Di nav pencereyên biçûkkirî de li gorî rêza karanîna dawîn _bigere"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:157
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
 msgstr "Pencereyên veşartî (ango îkonkirî) _jî tê de bigire"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:173
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:180
 msgid "Cycle _through windows on all workspaces"
 msgstr "Di nav pencereyên hemû qadên xebatê de _bigere"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:189
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:196
 msgid "_Draw frame around selected window while cycling"
 msgstr "Dema gerandinê li dora pencereya hilbijartî çarçoveyê _xêz bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:205
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:212
 msgid "_Raise windows while cycling"
 msgstr "Dema gerandinê pencereyan _bilind bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:221
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:228
 msgid "Cycle through windows in a _list"
 msgstr "Di _lîsteyekê de di nav pencereyan de bigere"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:241
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:248
 msgid "C_ycling"
 msgstr "_Gerandin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:257
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:264
 msgid "Activate foc_us stealing prevention"
 msgstr "Pêşkêşkirina diziya foc_us çalak bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:273
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
 msgstr "Şîreta fokusê ya _standard a ICCCM bişopîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:298
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:305
 msgid "When a window raises itself:"
 msgstr "Gava ku pencereyek xwe bilind dike:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:321
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:328
 msgid "_Bring window on current workspace"
 msgstr "Pencereyê bîne qada xebatê ya _heyî"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:338
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
 msgstr "Vegere Win_Dow Workspace"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:356
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
 msgstr "Do _nothing"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:423
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:430
 msgid "Key used to _grab and move windows:"
 msgstr "Mifteya ku bi _grab û veguhastina Windows ve hatî kişandin:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:453
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:460
 msgid "_Raise windows when any mouse button is pressed"
 msgstr "_Pencereya dema ku bişkoja mişk tê zext kirin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:469
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:476
 msgid "Hide frame of windows when ma_ximized"
 msgstr "Dema pencere _mezin dibin, çarçoveya wan veşêre"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:485
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:492
 msgid "Hide title of windows when maximized"
 msgstr "Dema pencere mezin dibin, sernavê wan veşêre"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:500
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:507
 msgid "Automatically _tile windows when moving toward the screen edge"
 msgstr "Dema ber bi kenarê ekranê ve tên birin, pencereyan bixweber _rêz bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:516
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
 msgstr "Li şûna pencereya pencereyê li şûna pencereya pencereyê bikar bînin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:532
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
 msgstr "Li ser sernavê mişkokê li ser pencereyê hilkişînin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:548
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:555
 msgid "Notify of _urgency by making window's decoration blink"
 msgstr "Bi biriqandina xemilandina pencereyê _lezgîniyê ragihîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:564
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:571
 msgid "Keep urgent windows _blinking repeatedly"
 msgstr "Pencereyên lezgîn _blinking dubare bikin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:587
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:594
 msgid "_Accessibility"
 msgstr "_Gihîştinbarî"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:604
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
 msgstr ""
 "Li ser sermaseyê karta _mouse bikar bînin ku ji bo veguheztina karên xebatê"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:620
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:627
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "Dema bi kurteriyên klavyeyê tê guherandin, qada xebatê ya berê\nbi bîr bîne û _vegerîne"
+msgstr ""
+"Dema bi kurteriyên klavyeyê tê guherandin, qada xebatê ya berê\n"
+"bi bîr bîne û _vegerîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:637
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"
 msgstr "Worksiyonên Worksiyonê li gorî sermaseya rastîn a ku girêdayî ye"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:653
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
 msgstr "Dema qada xebatê ya yekem an dawîn tê gihîştin, _ji serî ve bidomîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:676
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:683
 msgid "_Workspaces"
 msgstr "_Qadên xebatê"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:696
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:703
 msgid "_Minimum size of windows to trigger smart placement:"
 msgstr "_Minumh Mezinahiya Windows-ê ji bo pêkanîna cîhaza hişmend:"
 
 #. Smart placement size
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:750
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:757
 msgid "<i>Large</i>"
 msgstr "<i>Mezin</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:779
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:786
 msgid "By default, place windows:"
 msgstr "Bi awayê standard, pencereyan bi cih bike:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:802
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:809
 msgid "At the c_enter of the screen"
 msgstr "Li _navenda ekranê"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:818
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:825
 msgid "U_nder the mouse pointer"
 msgstr "Li _bin nîşanderê mişkê"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:859
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:866
 msgid "_Placement"
 msgstr "_Placement"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:889
 msgid "_Enable display compositing"
 msgstr "Pêkhatina dîmenderê _çalak bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
 msgid "Enable _HDR"
 msgstr "_HDR çalak bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:950
 msgid ""
 "Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
 "Vulkan"
-msgstr "HDR li ser ekranên ku piştgirî didin, bi rengê 10-bit nîşan bide. GPUyek bi Vulkan pêwîst e"
+msgstr ""
+"HDR li ser ekranên ku piştgirî didin, bi rengê 10-bit nîşan bide. GPUyek bi "
+"Vulkan pêwîst e"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "HDR _brightness:"
+msgstr "_Ronahiya HDR:"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:990
+msgid ""
+"Brightness of the whole picture while HDR is on, HDR videos and games "
+"included"
+msgstr "Ronahiya tevahiya wêneyê dema HDR vekirî ye, vîdeo û lîstikên HDR jî tê de"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1012
 msgid "Use _OpenGL for compositing"
 msgstr "Ji bo pêkhatinê _OpenGL bi kar bîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
 msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
 msgstr "OpenGL 2.0 pêwîst e, wekî din XRender tê bikaranîn"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1029
 msgid "_Suspend compositing for focused fullscreen windows"
 msgstr "_Pêkhatinê ji bo pencereyên tevahiya ekranê yên bi fokus rawestîne"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1030
 msgid ""
 "Improves performance in fullscreen applications; compositing resumes when "
 "the window closes or loses focus. Video may tear while it is off"
-msgstr "Performansa sepanên tevahiya ekranê baştir dike; dema pencere tê girtin an fokusê winda dike, pêkhatin dîsa dest pê dike. Heta ku neçalak be, dibe ku dîmena vîdyoyê biçire"
+msgstr ""
+"Performansa sepanên tevahiya ekranê baştir dike; dema pencere tê girtin an "
+"fokusê winda dike, pêkhatin dîsa dest pê dike. Heta ku neçalak be, dibe ku "
+"dîmena vîdyoyê biçire"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
 msgstr "Pencereyên serdanînê yên _tevahiya ekranê rasterast nîşan bide"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
 "Let fullscreen windows that bypass the window manager draw straight to the "
 "screen"
-msgstr "Bihêle pencereyên tevahiya ekranê yên ku rêvebirê pencereyan derbas dikin rasterast li ser ekranê xêz bikin"
+msgstr ""
+"Bihêle pencereyên tevahiya ekranê yên ku rêvebirê pencereyan derbas dikin "
+"rasterast li ser ekranê xêz bikin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1063
 msgid "Show windows preview in place of icons when cycling"
 msgstr "Dema gerandinê li şûna îkonan pêşdîtina pencereyan nîşan bide"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1079
 msgid "Show shadows under pop_up windows"
 msgstr "Siyan di bin pencereyên pop_up de nîşan bidin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1095
 msgid "Show shadows under _dock windows"
 msgstr "Siyan di bin windows _dock nîşan bidin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1111
 msgid "Show shadows under _regular windows"
 msgstr "Siyan di bin pencereyên _regular de nîşan bidin"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1127
 msgid "Zoom desktop with mouse wheel"
 msgstr "Bi tekera mişkê sermaseyê nêzîk bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1143
 msgid "Zoom pointer along with the desktop"
 msgstr "Nîşanderê jî bi sermaseyê re nêzîk bike"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
 msgid "Opaci_ty of window decorations:"
 msgstr "_Nezelaliya xemilandinên pencereyê:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1187
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1263
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1339
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1415
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1491
 msgid "<i>Transparent</i>"
 msgstr "<i>Transparent</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1215
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1291
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1367
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1443
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1519
 msgid "<i>Opaque</i>"
 msgstr "<i>Opaque</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
 msgid "Opacity of _inactive windows:"
 msgstr "Nezelaliya pencereyên _neçalak:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
 msgid "Opacity of windows during _move:"
 msgstr "Nezelaliya pencereyan dema _veguhestinê:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
 msgid "Opacity of windows during resi_ze:"
 msgstr "Nezelaliya pencereyan dema guherandina _mezinahiyê:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "Opacity of popup wi_ndows:"
 msgstr "Nezelaliya pencereyên _pop-up:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1559
 msgid "C_ompositor"
 msgstr "_Pêkhêner"
 
@@ -911,3 +801,162 @@ msgstr "Marjîn ew deverên li kenarên ekranê ne ku tu pencere li wir nayê da
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "_Marjîn"
+
+#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (li %s)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "Guhertina klavyeyê ya bêpergal '%s'"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "Moda pêkhêner diyar bike"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "Moda vblank diyar bike"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "Rêvebirê pencereya heyî biguhezînin"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "Agahdariya guhertoya çapkirinê û derketinê"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "Têketina Debug aktîf bike"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[ARGUMAN...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "Type \"%s --help\" ji bo karanînê."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "_Mezin bike"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "Mezinkirinê _rake"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "_Biçûk bike"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "Pencereyên _din biçûk bike"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "_Nîşan bide"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "_Veguhezîne"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "Me_zinahiyê biguherîne"
+
+#. ----------------------------------------------
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "Her tim li _jor"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "_Wek pencereyên din"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "Her tim _li bin pencereyên din"
+
+#. ----------------------------------------------
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "Pencereyê bipêçe jor"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "Pencereyê veke jêr"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "_Tevahiya ekranê"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "Ji tevahiya _ekranê derkeve"
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "_Alîkariya li gorî rewşê"
+
+#. ----------------------------------------------
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "Her tim li qada xebatê ya _xuyayî"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "Vegere yekî din _Workspace"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "Vegere çavdêriyek din"
+
+#. --------------------------------------------------------
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "Hilweşîne"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "_Derkeve"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "Restart"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "Ekrana _çepê"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "Ekrana _rastê"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "Ekrana _jorê"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "Ekrana _jêrê"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: GtkMenu nikarîbû nîşanderê bigire\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "Çewtiya xwendina daneyan ji pêvajoya zarok: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "Diyaloga alîkar nayê destpêkirin: %s\n"

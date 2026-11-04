@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: xfwm4 4.4.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
-"POT-Creation-Date: 2026-08-01 20:55+0200\n"
+"POT-Creation-Date: 2026-11-04 23:40+0100\n"
 "PO-Revision-Date: 2006-03-11 18:40+0100\n"
 "Last-Translator: Sylvain Vedrenne <gnu_sylvain@xfce.org>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -21,7 +21,9 @@ msgstr ""
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Ĉi tiu fenestro eble estas okupata kaj ne respondas.\nĈu vi volas ĉesigi la aplikaĵon?"
+msgstr ""
+"Ĉi tiu fenestro eble estas okupata kaj ne respondas.\n"
+"Ĉu vi volas ĉesigi la aplikaĵon?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -69,55 +71,62 @@ msgstr "(nun uzata: %s)"
 msgid "(currently off)"
 msgstr "(nun malŝaltita)"
 
-#: settings-dialogs/tweaks-settings.c:295
+#: settings-dialogs/tweaks-settings.c:614
 msgid "Use the _GPU for compositing"
 msgstr "Uzi la _GPU por kunmetado"
 
-#: settings-dialogs/tweaks-settings.c:297
+#: settings-dialogs/tweaks-settings.c:616
 msgid ""
 "When off, the screen is drawn in software, which is slower and turns HDR off"
-msgstr "Malŝaltite, la ekrano estas desegnata per programaro, kio estas pli malrapida kaj malŝaltas HDR"
+msgstr ""
+"Malŝaltite, la ekrano estas desegnata per programaro, kio estas pli "
+"malrapida kaj malŝaltas HDR"
 
-#: settings-dialogs/tweaks-settings.c:299
+#: settings-dialogs/tweaks-settings.c:618
 msgid "Show focused _fullscreen windows directly"
 msgstr "Rekte montri fokusitajn _tutekranajn fenestrojn"
 
-#: settings-dialogs/tweaks-settings.c:301
+#: settings-dialogs/tweaks-settings.c:620
 msgid ""
 "Lets a focused fullscreen window go straight to the screen, which saves "
 "power and lowers latency"
-msgstr "Lasas fokusitan tutekranan fenestron iri rekte al la ekrano, kio ŝparas energion kaj malpliigas la latencon"
+msgstr ""
+"Lasas fokusitan tutekranan fenestron iri rekte al la ekrano, kio ŝparas "
+"energion kaj malpliigas la latencon"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
 msgstr "Kontaktoskatolo de la seanc-administrilo"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "ID DE KONTAKTOSKATOLO"
 
-#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/tweaks-settings.c:696
 #: settings-dialogs/workspace-settings.c:446
 #: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Versia informo"
 
-#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/tweaks-settings.c:711
 #: settings-dialogs/workspace-settings.c:463
 #: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/tweaks-settings.c:715
 #: settings-dialogs/workspace-settings.c:467
 #: settings-dialogs/xfwm4-settings.c:885
 #, c-format
 msgid ""
 "%s: %s\n"
 "Try %s --help to see a full list of available command line options.\n"
-msgstr "%s: %s\nTajpu %s --help por vidi la plenan liston de disponeblaj komandliniaj opcioj.\n"
+msgstr ""
+"%s: %s\n"
+"Tajpu %s --help por vidi la plenan liston de disponeblaj komandliniaj "
+"opcioj.\n"
 
 #: settings-dialogs/workspace-settings.c:107
 #: settings-dialogs/workspace-settings.c:121
@@ -126,8 +135,8 @@ msgstr "%s: %s\nTajpu %s --help por vidi la plenan liston de disponeblaj komandl
 msgid "Workspace %d"
 msgstr "Laborspaco %d"
 
-#: settings-dialogs/workspace-settings.c:329
 #
+#: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
 msgstr "Nomo de laborspaco"
 
@@ -135,6 +144,331 @@ msgstr "Nomo de laborspaco"
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
 msgstr "Kontaktoskatolo de la agordo-administrilo"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:3
+#: settings-dialogs/xfwm4-dialog.glade:61
+msgid "Window Manager"
+msgstr "Administradilo de Fenestroj"
+
+#
+#: settings-dialogs/xfce-wm-settings.desktop.in:4
+msgid "Configure window behavior and shortcuts"
+msgstr "Agordi konduton de fenestroj kaj klavkombinojn"
+
+#: settings-dialogs/xfce-wm-settings.desktop.in:5
+msgid ""
+"windows;management;settings;preferences;themes;styles;decorations;title "
+"bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
+"shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
+"content;move;resize;moving;resizing;double click;"
+msgstr ""
+"fenestroj;administrado;agordoj;preferoj;etosoj;stiloj;dekoracioj;titolbreto;tiparo;butonoj;menuo;minimumigi;maksimumigi;volvi;aranĝo;klavkombinoj;fokuso;magnetigo;ekrano;laborspacoj;bordoj;angulo;kaŝi "
+"enhavon;movi;regrandigi;movado;regrandigado;duobla klako;"
+
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:61
+msgid "Window Manager Tweaks"
+msgstr "Rafina Agordo de la Administradilo de Fenestroj"
+
+#
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
+msgid "Fine-tune window behaviour and effects"
+msgstr "Fajnagordi konduton kaj efektojn de fenestroj"
+
+#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
+msgid ""
+"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
+"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
+"up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
+msgstr ""
+"fenestroj;konduto;agordoj;preferoj;ciklado;cikli;ŝanĝado;fokuso;antaŭenigi;alirebleco;klavo;trenado;movi;movado;kaŝi;kadro;titolbreto;maksimumigita;kaheligi;ekrano;bordo;aktiva "
+"angulo;magnetigo;musrado;volvi;laborspacoj;lokigo;kunmetilo;kunmetado;ŝalti;malŝalti;ombroj;dekoracioj;opakeco;regrandigi;neaktiva;antaŭvido;compiz;transiroj;"
+
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
+#: settings-dialogs/xfwm4-workspace-dialog.glade:44
+msgid "Workspaces"
+msgstr "Laborspacoj"
+
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
+msgid "Configure layout, names and margins"
+msgstr "Agordi aranĝon, nomojn kaj marĝenojn"
+
+#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
+msgid ""
+"workspaces;settings;preferences;virtual "
+"desktops;number;windows;screen;margins;"
+msgstr ""
+"laborspacoj;agordoj;preferoj;virtualaj "
+"labortabloj;nombro;fenestroj;ekrano;marĝenoj;"
+
+#: settings-dialogs/xfwm4-dialog.glade:77
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:78
+#: settings-dialogs/xfwm4-workspace-dialog.glade:416
+msgid "_Help"
+msgstr "_Helpo"
+
+#. ----------------------------------------------
+#: settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:95
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
+msgid "_Close"
+msgstr "_Fermu"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:163
+msgid "<b>The_me</b>"
+msgstr "<b>_Etoso</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:208
+msgid "<b>Title fon_t</b>"
+msgstr "<b>_Tiparo de titolo</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:246
+msgid "<b>Title _alignment</b>"
+msgstr "<b>Ĝisrandigo de _titolo</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:283
+msgid "Click and drag the buttons to change the layout"
+msgstr "Alklaku kaj trenu la butonojn por ŝanĝi la aranĝon"
+
+#: settings-dialogs/xfwm4-dialog.glade:309
+msgid "Title"
+msgstr "Titolo"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:314
+msgid "The window title cannot be removed"
+msgstr "La fenestra titolo ne povas esti forigita"
+
+#: settings-dialogs/xfwm4-dialog.glade:330
+msgid "Active"
+msgstr "Aktiva"
+
+#: settings-dialogs/xfwm4-dialog.glade:363
+msgid "Menu"
+msgstr "Menuo"
+
+#: settings-dialogs/xfwm4-dialog.glade:384
+msgid "Stick"
+msgstr "Algluu"
+
+#: settings-dialogs/xfwm4-dialog.glade:405
+msgid "Shade"
+msgstr "Volvu"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:426
+msgid "Minimize"
+msgstr "Minimumigi"
+
+#: settings-dialogs/xfwm4-dialog.glade:447
+msgid "Maximize"
+msgstr "Maksimumigu"
+
+#: settings-dialogs/xfwm4-dialog.glade:468
+msgid "Close"
+msgstr "Fermu"
+
+#: settings-dialogs/xfwm4-dialog.glade:491
+msgid "Hidden"
+msgstr "Kaŝita"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:510
+msgid "<b>Button layout</b>"
+msgstr "<b>Aranĝo de butonoj</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:534
+msgid "_Style"
+msgstr "_Stilo"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:553
+msgid "Define shortcuts to perform _window manager actions:"
+msgstr "Difini klavkombinojn por agoj de la _fenestra administrilo:"
+
+#: settings-dialogs/xfwm4-dialog.glade:613
+msgid "_Edit"
+msgstr "_Redakti"
+
+#: settings-dialogs/xfwm4-dialog.glade:629
+msgid "_Clear"
+msgstr "_Vakigi"
+
+#: settings-dialogs/xfwm4-dialog.glade:645
+msgid "_Reset to Defaults"
+msgstr "_Restarigi al defaŭltoj"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:679
+msgid "_Keyboard"
+msgstr "_Klavaro"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:722
+msgid "Click to foc_us"
+msgstr "Alklaki por _fokusi"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:738
+msgid "Focus follows _mouse"
+msgstr "Fokuso sekvas la _muson"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:765
+msgid "_Delay before window receives focus:"
+msgstr "_Prokrasto antaŭ ol fenestro ricevas fokuson:"
+
+#
+#. Focus delay
+#. Raise focus delay
+#: settings-dialogs/xfwm4-dialog.glade:791
+#: settings-dialogs/xfwm4-dialog.glade:967
+msgid "<i>Short</i>"
+msgstr "<i>Mallonga</i>"
+
+#
+#. Focus delay
+#. Raise focus delay
+#: settings-dialogs/xfwm4-dialog.glade:818
+#: settings-dialogs/xfwm4-dialog.glade:994
+msgid "<i>Long</i>"
+msgstr "<i>Longa</i>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:844
+msgid "<b>Focus model</b>"
+msgstr "<b>Fokusa modelo</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:870
+msgid "Automatically give focus to _newly created windows"
+msgstr "Aŭtomate fokusi _nove kreitajn fenestrojn"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:885
+msgid "<b>New window focus</b>"
+msgstr "<b>Fokuso de novaj fenestroj</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:917
+msgid "Automatically _raise windows when they receive focus"
+msgstr "Aŭtomate _antaŭenigi fenestrojn kiam ili ricevas fokuson"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:942
+msgid "Delay _before raising focused window:"
+msgstr "Prokrasto _antaŭ antaŭenigo de fokusita fenestro:"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1027
+msgid "<b>Raise on focus</b>"
+msgstr "<b>Antaŭenigi je fokusiĝo</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1053
+msgid "Raise window when clicking _inside application window"
+msgstr "Antaŭenigi fenestron per alklako _ene de aplikaĵa fenestro"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1068
+msgid "<b>Raise on click</b>"
+msgstr "<b>Antaŭenigi je alklako</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1088
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:404
+msgid "_Focus"
+msgstr "_Fokuso"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1129
+msgid "To screen _borders"
+msgstr "Al ekranaj _bordoj"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1145
+msgid "To other _windows"
+msgstr "Al aliaj _fenestroj"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1177
+msgid "Dis_tance:"
+msgstr "Dis_tanco:"
+
+#
+#. Snapping distance
+#. Edge resistance
+#. Smart placement size
+#: settings-dialogs/xfwm4-dialog.glade:1202
+#: settings-dialogs/xfwm4-dialog.glade:1374
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:729
+msgid "<i>Small</i>"
+msgstr "<i>Malgranda</i>"
+
+#
+#. Snapping distance
+#. Edge resistance
+#: settings-dialogs/xfwm4-dialog.glade:1230
+#: settings-dialogs/xfwm4-dialog.glade:1402
+msgid "<i>Wide</i>"
+msgstr "<i>Larĝa</i>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1263
+msgid "<b>Windows snapping</b>"
+msgstr "<b>Magnetigo de fenestroj</b>"
+
+#: settings-dialogs/xfwm4-dialog.glade:1300
+msgid "With the mouse _pointer"
+msgstr "Per la mus_montrilo"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1316
+msgid "With a _dragged window"
+msgstr "Per _trenata fenestro"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1348
+msgid "_Edge resistance:"
+msgstr "Rezisto de _bordoj:"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1435
+msgid "<b>Wrap workspaces when reaching the screen edge</b>"
+msgstr "<b>Ŝanĝi laborspacon atingante la ekranbordon</b>"
+
+#: settings-dialogs/xfwm4-dialog.glade:1466
+msgid "When _moving"
+msgstr "Dum _movado"
+
+#: settings-dialogs/xfwm4-dialog.glade:1482
+msgid "When _resizing"
+msgstr "Dum _regrandigo"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1504
+msgid "<b>Hide content of windows</b>"
+msgstr "<b>Kaŝi enhavon de fenestroj</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1532
+msgid "The action to perform when the title-bar is double-clicked"
+msgstr "La ago farota kiam oni duoble alklakas la titolbreton"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1541
+msgid "<b>Double click _action</b>"
+msgstr "<b>_Ago de duobla klako</b>"
+
+#
+#: settings-dialogs/xfwm4-dialog.glade:1563
+msgid "Ad_vanced"
+msgstr "_Altnivela"
 
 #: settings-dialogs/xfwm4-settings.c:219
 msgid "Shade window"
@@ -148,8 +482,8 @@ msgstr "Kaŝu la fenestron"
 msgid "Maximize window"
 msgstr "Maksimumigu la fenestron"
 
-#: settings-dialogs/xfwm4-settings.c:222
 #
+#: settings-dialogs/xfwm4-settings.c:222
 msgid "Fill window"
 msgstr "Plenigi fenestron"
 
@@ -177,13 +511,13 @@ msgstr "Dekstra"
 msgid "Theme"
 msgstr "Etoso"
 
-#: settings-dialogs/xfwm4-settings.c:497
 #
+#: settings-dialogs/xfwm4-settings.c:497
 msgid "Action"
 msgstr "Ago"
 
-#: settings-dialogs/xfwm4-settings.c:504
 #
+#: settings-dialogs/xfwm4-settings.c:504
 msgid "Shortcut"
 msgstr "Klavkombino"
 
@@ -200,12 +534,353 @@ msgstr "Ne eblis krei la agordan dialogon."
 msgid ""
 "This will reset all shortcuts to their default values. Do you really want to "
 "do this?"
-msgstr "Ĉi tio restarigos ĉiujn klavkombinojn al iliaj defaŭltaj valoroj. Ĉu vi vere volas fari tion?"
+msgstr ""
+"Ĉi tio restarigos ĉiujn klavkombinojn al iliaj defaŭltaj valoroj. Ĉu vi vere "
+"volas fari tion?"
 
 #: settings-dialogs/xfwm4-settings.c:1924
 msgid "Reset to Defaults"
 msgstr "Restarigi al defaŭltoj"
 
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:131
+msgid ""
+"S_kip windows that have \"skip pager\"\n"
+"or \"skip taskbar\" properties set"
+msgstr ""
+"Pre_terlasi fenestrojn kun la atributoj \"skip pager\"\n"
+"aŭ \"skip taskbar\""
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:148
+msgid "Cycle _through minimized windows in most recently used order"
+msgstr "Cikli _tra minimumigitaj fenestroj laŭ lasta uzo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:164
+msgid "_Include hidden (i.e. iconified) windows"
+msgstr "_Inkluzivi kaŝitajn (t.e. minimumigitajn) fenestrojn"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:180
+msgid "Cycle _through windows on all workspaces"
+msgstr "Cikli _tra fenestroj de ĉiuj laborspacoj"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:196
+msgid "_Draw frame around selected window while cycling"
+msgstr "_Desegni kadron ĉirkaŭ la elektita fenestro dum ciklado"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:212
+msgid "_Raise windows while cycling"
+msgstr "_Antaŭenigi fenestrojn dum ciklado"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:228
+msgid "Cycle through windows in a _list"
+msgstr "Cikli tra fenestroj en _listo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:248
+msgid "C_ycling"
+msgstr "_Ciklado"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:264
+msgid "Activate foc_us stealing prevention"
+msgstr "Ŝalti _protekton kontraŭ fokusŝtelo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:280
+msgid "Honor _standard ICCCM focus hint"
+msgstr "Respekti la _norman ICCCM-fokusindikon"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:305
+msgid "When a window raises itself:"
+msgstr "Kiam fenestro antaŭenigas sin:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:328
+msgid "_Bring window on current workspace"
+msgstr "_Porti la fenestron al la nuna laborspaco"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:345
+msgid "Switch to win_dow's workspace"
+msgstr "Iri al la laborspaco de la _fenestro"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:363
+msgid "Do _nothing"
+msgstr "_Nenion fari"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:430
+msgid "Key used to _grab and move windows:"
+msgstr "Klavo por _preni kaj movi fenestrojn:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:460
+msgid "_Raise windows when any mouse button is pressed"
+msgstr "_Antaŭenigi fenestrojn per iu ajn musbutono"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:476
+msgid "Hide frame of windows when ma_ximized"
+msgstr "Kaŝi kadron de fenestroj kiam ma_ksimumigitaj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:492
+msgid "Hide title of windows when maximized"
+msgstr "Kaŝi titolon de fenestroj kiam maksimumigitaj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:507
+msgid "Automatically _tile windows when moving toward the screen edge"
+msgstr "Aŭtomate _kaheligi fenestrojn movatajn al la ekranbordo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:523
+msgid "Use _edge resistance instead of window snapping"
+msgstr "Uzi reziston de _bordoj anstataŭ magnetigon de fenestroj"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:539
+msgid "Use mouse wheel on title bar to ro_ll up the window"
+msgstr "Uzi musradon sur la titolbreto por _volvi la fenestron"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:555
+msgid "Notify of _urgency by making window's decoration blink"
+msgstr "Sciigi pri _urĝeco per palpebrumado de la fenestra dekoracio"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:571
+msgid "Keep urgent windows _blinking repeatedly"
+msgstr "Daŭre _palpebrumigi urĝajn fenestrojn"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:594
+msgid "_Accessibility"
+msgstr "A_lirebleco"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:611
+msgid "Use the _mouse wheel on the desktop to switch workspaces"
+msgstr "Uzi la _musradon sur la labortablo por ŝanĝi laborspacon"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:627
+msgid ""
+"_Remember and recall previous workspace\n"
+"when switching via keyboard shortcuts"
+msgstr ""
+"_Memori kaj reiri al la antaŭa laborspaco\n"
+"ŝanĝante per klavkombinoj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:644
+msgid "Wrap workspaces depending on the actual desktop _layout"
+msgstr "Ŝanĝi laborspacojn laŭ la reala _aranĝo de la labortablo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:660
+msgid "Wrap workspaces when _the first or the last workspace is reached"
+msgstr "Cikle ŝanĝi laborspacojn atingante la _unuan aŭ la lastan laborspacon"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:683
+msgid "_Workspaces"
+msgstr "_Laborspacoj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:703
+msgid "_Minimum size of windows to trigger smart placement:"
+msgstr "_Minimuma grando de fenestroj por inteligenta lokigo:"
+
+#
+#. Smart placement size
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:757
+msgid "<i>Large</i>"
+msgstr "<i>Granda</i>"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:786
+msgid "By default, place windows:"
+msgstr "Defaŭlte, lokigi fenestrojn:"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:809
+msgid "At the c_enter of the screen"
+msgstr "En la _centro de la ekrano"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:825
+msgid "U_nder the mouse pointer"
+msgstr "Sub la _musmontrilo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:866
+msgid "_Placement"
+msgstr "_Lokigo"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:889
+msgid "_Enable display compositing"
+msgstr "Ŝalti ekranan _kunmetadon"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
+msgid "Enable _HDR"
+msgstr "Ŝalti _HDR"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:950
+msgid ""
+"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
+"Vulkan"
+msgstr ""
+"Montri HDR ĉe ekranoj, kiuj subtenas ĝin, per 10-bita koloro. Bezonas GPU "
+"kun Vulkan"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "HDR _brightness:"
+msgstr "HDR-_heleco:"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:990
+msgid ""
+"Brightness of the whole picture while HDR is on, HDR videos and games "
+"included"
+msgstr "Heleco de la tuta bildo dum HDR estas ŝaltita, inkluzive de HDR-videoj kaj ludoj"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1012
+msgid "Use _OpenGL for compositing"
+msgstr "Uzi _OpenGL por kunmetado"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
+msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
+msgstr "Bezonas OpenGL 2.0, alie uzas XRender"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1029
+msgid "_Suspend compositing for focused fullscreen windows"
+msgstr "_Paŭzigi kunmetadon por fokusitaj tutekranaj fenestroj"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1030
+msgid ""
+"Improves performance in fullscreen applications; compositing resumes when "
+"the window closes or loses focus. Video may tear while it is off"
+msgstr ""
+"Plibonigas rendimenton de tutekranaj aplikaĵoj; kunmetado rekomenciĝas kiam "
+"la fenestro fermiĝas aŭ perdas la fokuson. Dum ĝi estas malŝaltita, videoj "
+"povas ŝiriĝi"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
+msgid "Display _fullscreen overlay windows directly"
+msgstr "Montri _tutekranajn surmetitajn fenestrojn rekte"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
+msgid ""
+"Let fullscreen windows that bypass the window manager draw straight to the "
+"screen"
+msgstr ""
+"Lasas tutekranajn fenestrojn, kiuj preteriras la fenestran administrilon, "
+"desegni rekte al la ekrano"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1063
+msgid "Show windows preview in place of icons when cycling"
+msgstr "Montri antaŭvidojn de fenestroj anstataŭ piktogramoj dum ciklado"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1079
+msgid "Show shadows under pop_up windows"
+msgstr "Montri ombrojn sub ŝ_prucfenestroj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1095
+msgid "Show shadows under _dock windows"
+msgstr "Montri ombrojn sub _dokaj fenestroj"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1111
+msgid "Show shadows under _regular windows"
+msgstr "Montri ombrojn sub _ordinaraj fenestroj"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1127
+msgid "Zoom desktop with mouse wheel"
+msgstr "Zomi la labortablon per la musrado"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1143
+msgid "Zoom pointer along with the desktop"
+msgstr "Zomi la montrilon kune kun la labortablo"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
+msgid "Opaci_ty of window decorations:"
+msgstr "Opake_co de fenestraj dekoracioj:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1187
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1263
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1339
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1415
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1491
+msgid "<i>Transparent</i>"
+msgstr "<i>Travidebla</i>"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1215
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1291
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1367
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1443
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1519
+msgid "<i>Opaque</i>"
+msgstr "<i>Opaka</i>"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
+msgid "Opacity of _inactive windows:"
+msgstr "Opakeco de _neaktivaj fenestroj:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
+msgid "Opacity of windows during _move:"
+msgstr "Opakeco de fenestroj dum _movado:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
+msgid "Opacity of windows during resi_ze:"
+msgstr "Opakeco de fenestroj dum _regrandigo:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
+msgid "Opacity of popup wi_ndows:"
+msgstr "Opakeco de ŝpruc_fenestroj:"
+
+#
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1559
+msgid "C_ompositor"
+msgstr "_Kunmetilo"
+
+#
+#: settings-dialogs/xfwm4-workspace-dialog.glade:90
+msgid "_Number of workspaces:"
+msgstr "_Nombro de laborspacoj:"
+
+#: settings-dialogs/xfwm4-workspace-dialog.glade:126
+msgid "Layout"
+msgstr "Aranĝo"
+
+#
+#: settings-dialogs/xfwm4-workspace-dialog.glade:174
+msgid "Names"
+msgstr "Nomoj"
+
+#: settings-dialogs/xfwm4-workspace-dialog.glade:194
+msgid "_General"
+msgstr "Ĝe_nerala"
+
+#: settings-dialogs/xfwm4-workspace-dialog.glade:232
+msgid ""
+"Margins are areas on the edges of the screen where no window will be placed"
+msgstr ""
+"La marĝenoj estas la regionoj ĉe la bordoj de la ekrano kie nenia fenestro "
+"estos metita"
+
+#
+#: settings-dialogs/xfwm4-workspace-dialog.glade:393
+msgid "_Margins"
+msgstr "_Marĝenoj"
+
+#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
 #: src/client.c:215
 #, c-format
 msgid "%s (on %s)"
@@ -224,8 +899,8 @@ msgstr "Agordi la reĝimon de la kunmetilo"
 msgid "Set the vblank mode"
 msgstr "Agordi la vblank-reĝimon"
 
-#: src/main.c:623
 #
+#: src/main.c:623
 msgid "Replace the existing window manager"
 msgstr "Anstataŭigi la ekzistantan fenestran administrilon"
 
@@ -250,13 +925,13 @@ msgstr "Tajpu \"%s --help\" por la uzado."
 msgid "Ma_ximize"
 msgstr "Ma_ksimumigu"
 
-#: src/menu.c:52
 #
+#: src/menu.c:52
 msgid "Unma_ximize"
 msgstr "Malma_ksimumigi"
 
-#: src/menu.c:53
 #
+#: src/menu.c:53
 msgid "Mi_nimize"
 msgstr "Mi_nimumigi"
 
@@ -276,53 +951,56 @@ msgstr "_Movi"
 msgid "_Resize"
 msgstr "_Regrandigi"
 
-#: src/menu.c:59
 #
+#. ----------------------------------------------
+#: src/menu.c:59
 msgid "Always on _Top"
 msgstr "Ĉiam _supre"
 
-#: src/menu.c:60
 #
+#: src/menu.c:60
 msgid "_Same as Other Windows"
 msgstr "_Same kiel aliaj fenestroj"
 
-#: src/menu.c:61
 #
+#: src/menu.c:61
 msgid "Always _Below Other Windows"
 msgstr "Ĉiam _sub aliaj fenestroj"
 
-#: src/menu.c:63
 #
+#. ----------------------------------------------
+#: src/menu.c:63
 msgid "Roll Window Up"
 msgstr "Volvi fenestron"
 
-#: src/menu.c:64
 #
+#: src/menu.c:64
 msgid "Roll Window Down"
 msgstr "Malvolvi fenestron"
 
-#: src/menu.c:65
 #
+#: src/menu.c:65
 msgid "_Fullscreen"
 msgstr "_Tutekrane"
 
-#: src/menu.c:66
 #
+#: src/menu.c:66
 msgid "Leave _Fullscreen"
 msgstr "Forlasi _tutekranan reĝimon"
 
-#: src/menu.c:67
 #
+#: src/menu.c:67
 msgid "Context _Help"
 msgstr "Kunteksta _helpo"
 
-#: src/menu.c:69
 #
+#. ----------------------------------------------
+#: src/menu.c:69
 msgid "Always on _Visible Workspace"
 msgstr "Ĉiam sur _videbla laborspaco"
 
-#: src/menu.c:70
 #
+#: src/menu.c:70
 msgid "Move to Another _Workspace"
 msgstr "Movi al alia _laborspaco"
 
@@ -330,12 +1008,7 @@ msgstr "Movi al alia _laborspaco"
 msgid "Move to Another Monitor"
 msgstr "Movi al alia ekrano"
 
-#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433
-msgid "_Close"
-msgstr "_Fermu"
-
+#. --------------------------------------------------------
 #: src/menu.c:76
 msgid "Destroy"
 msgstr "Detruu"
@@ -378,635 +1051,6 @@ msgstr "Eraro dum legado de datumoj el ida procezo: %s\n"
 #, c-format
 msgid "Cannot spawn helper-dialog: %s\n"
 msgstr "Ne eblas lanĉi helpan dialogon: %s\n"
-
-#: settings-dialogs/xfce-wm-settings.desktop.in:3
-#: settings-dialogs/xfwm4-dialog.glade:61
-msgid "Window Manager"
-msgstr "Administradilo de Fenestroj"
-
-#: settings-dialogs/xfce-wm-settings.desktop.in:4
-#
-msgid "Configure window behavior and shortcuts"
-msgstr "Agordi konduton de fenestroj kaj klavkombinojn"
-
-#: settings-dialogs/xfce-wm-settings.desktop.in:5
-msgid ""
-"windows;management;settings;preferences;themes;styles;decorations;title "
-"bar;font;buttons;menu;minimize;maximize;shade;roll up;layout;keyboard "
-"shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
-"content;move;resize;moving;resizing;double click;"
-msgstr "fenestroj;administrado;agordoj;preferoj;etosoj;stiloj;dekoracioj;titolbreto;tiparo;butonoj;menuo;minimumigi;maksimumigi;volvi;aranĝo;klavkombinoj;fokuso;magnetigo;ekrano;laborspacoj;bordoj;angulo;kaŝi enhavon;movi;regrandigi;movado;regrandigado;duobla klako;"
-
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:54
-msgid "Window Manager Tweaks"
-msgstr "Rafina Agordo de la Administradilo de Fenestroj"
-
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
-#
-msgid "Fine-tune window behaviour and effects"
-msgstr "Fajnagordi konduton kaj efektojn de fenestroj"
-
-#: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
-msgid ""
-"windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
-"bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
-"up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "fenestroj;konduto;agordoj;preferoj;ciklado;cikli;ŝanĝado;fokuso;antaŭenigi;alirebleco;klavo;trenado;movi;movado;kaŝi;kadro;titolbreto;maksimumigita;kaheligi;ekrano;bordo;aktiva angulo;magnetigo;musrado;volvi;laborspacoj;lokigo;kunmetilo;kunmetado;ŝalti;malŝalti;ombroj;dekoracioj;opakeco;regrandigi;neaktiva;antaŭvido;compiz;transiroj;"
-
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:3
-#: settings-dialogs/xfwm4-workspace-dialog.glade:44
-msgid "Workspaces"
-msgstr "Laborspacoj"
-
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:4
-msgid "Configure layout, names and margins"
-msgstr "Agordi aranĝon, nomojn kaj marĝenojn"
-
-#: settings-dialogs/xfce-workspaces-settings.desktop.in:5
-msgid ""
-"workspaces;settings;preferences;virtual "
-"desktops;number;windows;screen;margins;"
-msgstr "laborspacoj;agordoj;preferoj;virtualaj labortabloj;nombro;fenestroj;ekrano;marĝenoj;"
-
-#: settings-dialogs/xfwm4-dialog.glade:77
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:71
-#: settings-dialogs/xfwm4-workspace-dialog.glade:416
-msgid "_Help"
-msgstr "_Helpo"
-
-#: settings-dialogs/xfwm4-dialog.glade:163
-#
-msgid "<b>The_me</b>"
-msgstr "<b>_Etoso</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:208
-#
-msgid "<b>Title fon_t</b>"
-msgstr "<b>_Tiparo de titolo</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:246
-#
-msgid "<b>Title _alignment</b>"
-msgstr "<b>Ĝisrandigo de _titolo</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:283
-#
-msgid "Click and drag the buttons to change the layout"
-msgstr "Alklaku kaj trenu la butonojn por ŝanĝi la aranĝon"
-
-#: settings-dialogs/xfwm4-dialog.glade:309
-msgid "Title"
-msgstr "Titolo"
-
-#: settings-dialogs/xfwm4-dialog.glade:314
-#
-msgid "The window title cannot be removed"
-msgstr "La fenestra titolo ne povas esti forigita"
-
-#: settings-dialogs/xfwm4-dialog.glade:330
-msgid "Active"
-msgstr "Aktiva"
-
-#: settings-dialogs/xfwm4-dialog.glade:363
-msgid "Menu"
-msgstr "Menuo"
-
-#: settings-dialogs/xfwm4-dialog.glade:384
-msgid "Stick"
-msgstr "Algluu"
-
-#: settings-dialogs/xfwm4-dialog.glade:405
-msgid "Shade"
-msgstr "Volvu"
-
-#: settings-dialogs/xfwm4-dialog.glade:426
-#
-msgid "Minimize"
-msgstr "Minimumigi"
-
-#: settings-dialogs/xfwm4-dialog.glade:447
-msgid "Maximize"
-msgstr "Maksimumigu"
-
-#: settings-dialogs/xfwm4-dialog.glade:468
-msgid "Close"
-msgstr "Fermu"
-
-#: settings-dialogs/xfwm4-dialog.glade:491
-msgid "Hidden"
-msgstr "Kaŝita"
-
-#: settings-dialogs/xfwm4-dialog.glade:510
-#
-msgid "<b>Button layout</b>"
-msgstr "<b>Aranĝo de butonoj</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:534
-#
-msgid "_Style"
-msgstr "_Stilo"
-
-#: settings-dialogs/xfwm4-dialog.glade:553
-#
-msgid "Define shortcuts to perform _window manager actions:"
-msgstr "Difini klavkombinojn por agoj de la _fenestra administrilo:"
-
-#: settings-dialogs/xfwm4-dialog.glade:613
-msgid "_Edit"
-msgstr "_Redakti"
-
-#: settings-dialogs/xfwm4-dialog.glade:629
-msgid "_Clear"
-msgstr "_Vakigi"
-
-#: settings-dialogs/xfwm4-dialog.glade:645
-msgid "_Reset to Defaults"
-msgstr "_Restarigi al defaŭltoj"
-
-#: settings-dialogs/xfwm4-dialog.glade:679
-#
-msgid "_Keyboard"
-msgstr "_Klavaro"
-
-#: settings-dialogs/xfwm4-dialog.glade:722
-#
-msgid "Click to foc_us"
-msgstr "Alklaki por _fokusi"
-
-#: settings-dialogs/xfwm4-dialog.glade:738
-#
-msgid "Focus follows _mouse"
-msgstr "Fokuso sekvas la _muson"
-
-#: settings-dialogs/xfwm4-dialog.glade:765
-#
-msgid "_Delay before window receives focus:"
-msgstr "_Prokrasto antaŭ ol fenestro ricevas fokuson:"
-
-#. Focus delay
-#. Raise focus delay
-#: settings-dialogs/xfwm4-dialog.glade:791
-#: settings-dialogs/xfwm4-dialog.glade:967
-#
-msgid "<i>Short</i>"
-msgstr "<i>Mallonga</i>"
-
-#. Focus delay
-#. Raise focus delay
-#: settings-dialogs/xfwm4-dialog.glade:818
-#: settings-dialogs/xfwm4-dialog.glade:994
-#
-msgid "<i>Long</i>"
-msgstr "<i>Longa</i>"
-
-#: settings-dialogs/xfwm4-dialog.glade:844
-#
-msgid "<b>Focus model</b>"
-msgstr "<b>Fokusa modelo</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:870
-#
-msgid "Automatically give focus to _newly created windows"
-msgstr "Aŭtomate fokusi _nove kreitajn fenestrojn"
-
-#: settings-dialogs/xfwm4-dialog.glade:885
-#
-msgid "<b>New window focus</b>"
-msgstr "<b>Fokuso de novaj fenestroj</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:917
-#
-msgid "Automatically _raise windows when they receive focus"
-msgstr "Aŭtomate _antaŭenigi fenestrojn kiam ili ricevas fokuson"
-
-#: settings-dialogs/xfwm4-dialog.glade:942
-#
-msgid "Delay _before raising focused window:"
-msgstr "Prokrasto _antaŭ antaŭenigo de fokusita fenestro:"
-
-#: settings-dialogs/xfwm4-dialog.glade:1027
-#
-msgid "<b>Raise on focus</b>"
-msgstr "<b>Antaŭenigi je fokusiĝo</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1053
-#
-msgid "Raise window when clicking _inside application window"
-msgstr "Antaŭenigi fenestron per alklako _ene de aplikaĵa fenestro"
-
-#: settings-dialogs/xfwm4-dialog.glade:1068
-#
-msgid "<b>Raise on click</b>"
-msgstr "<b>Antaŭenigi je alklako</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1088
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:397
-#
-msgid "_Focus"
-msgstr "_Fokuso"
-
-#: settings-dialogs/xfwm4-dialog.glade:1129
-#
-msgid "To screen _borders"
-msgstr "Al ekranaj _bordoj"
-
-#: settings-dialogs/xfwm4-dialog.glade:1145
-#
-msgid "To other _windows"
-msgstr "Al aliaj _fenestroj"
-
-#: settings-dialogs/xfwm4-dialog.glade:1177
-#
-msgid "Dis_tance:"
-msgstr "Dis_tanco:"
-
-#. Snapping distance
-#. Edge resistance
-#. Smart placement size
-#: settings-dialogs/xfwm4-dialog.glade:1202
-#: settings-dialogs/xfwm4-dialog.glade:1374
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:722
-#
-msgid "<i>Small</i>"
-msgstr "<i>Malgranda</i>"
-
-#. Snapping distance
-#. Edge resistance
-#: settings-dialogs/xfwm4-dialog.glade:1230
-#: settings-dialogs/xfwm4-dialog.glade:1402
-#
-msgid "<i>Wide</i>"
-msgstr "<i>Larĝa</i>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1263
-#
-msgid "<b>Windows snapping</b>"
-msgstr "<b>Magnetigo de fenestroj</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1300
-msgid "With the mouse _pointer"
-msgstr "Per la mus_montrilo"
-
-#: settings-dialogs/xfwm4-dialog.glade:1316
-#
-msgid "With a _dragged window"
-msgstr "Per _trenata fenestro"
-
-#: settings-dialogs/xfwm4-dialog.glade:1348
-#
-msgid "_Edge resistance:"
-msgstr "Rezisto de _bordoj:"
-
-#: settings-dialogs/xfwm4-dialog.glade:1435
-#
-msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Ŝanĝi laborspacon atingante la ekranbordon</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1466
-msgid "When _moving"
-msgstr "Dum _movado"
-
-#: settings-dialogs/xfwm4-dialog.glade:1482
-msgid "When _resizing"
-msgstr "Dum _regrandigo"
-
-#: settings-dialogs/xfwm4-dialog.glade:1504
-#
-msgid "<b>Hide content of windows</b>"
-msgstr "<b>Kaŝi enhavon de fenestroj</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1532
-#
-msgid "The action to perform when the title-bar is double-clicked"
-msgstr "La ago farota kiam oni duoble alklakas la titolbreton"
-
-#: settings-dialogs/xfwm4-dialog.glade:1541
-#
-msgid "<b>Double click _action</b>"
-msgstr "<b>_Ago de duobla klako</b>"
-
-#: settings-dialogs/xfwm4-dialog.glade:1563
-#
-msgid "Ad_vanced"
-msgstr "_Altnivela"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:124
-#
-msgid ""
-"S_kip windows that have \"skip pager\"\n"
-"or \"skip taskbar\" properties set"
-msgstr "Pre_terlasi fenestrojn kun la atributoj \"skip pager\"\naŭ \"skip taskbar\""
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:141
-msgid "Cycle _through minimized windows in most recently used order"
-msgstr "Cikli _tra minimumigitaj fenestroj laŭ lasta uzo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:157
-#
-msgid "_Include hidden (i.e. iconified) windows"
-msgstr "_Inkluzivi kaŝitajn (t.e. minimumigitajn) fenestrojn"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:173
-#
-msgid "Cycle _through windows on all workspaces"
-msgstr "Cikli _tra fenestroj de ĉiuj laborspacoj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:189
-msgid "_Draw frame around selected window while cycling"
-msgstr "_Desegni kadron ĉirkaŭ la elektita fenestro dum ciklado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:205
-#
-msgid "_Raise windows while cycling"
-msgstr "_Antaŭenigi fenestrojn dum ciklado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:221
-#
-msgid "Cycle through windows in a _list"
-msgstr "Cikli tra fenestroj en _listo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:241
-#
-msgid "C_ycling"
-msgstr "_Ciklado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:257
-#
-msgid "Activate foc_us stealing prevention"
-msgstr "Ŝalti _protekton kontraŭ fokusŝtelo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:273
-#
-msgid "Honor _standard ICCCM focus hint"
-msgstr "Respekti la _norman ICCCM-fokusindikon"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:298
-msgid "When a window raises itself:"
-msgstr "Kiam fenestro antaŭenigas sin:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:321
-#
-msgid "_Bring window on current workspace"
-msgstr "_Porti la fenestron al la nuna laborspaco"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:338
-#
-msgid "Switch to win_dow's workspace"
-msgstr "Iri al la laborspaco de la _fenestro"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:356
-#
-msgid "Do _nothing"
-msgstr "_Nenion fari"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:423
-#
-msgid "Key used to _grab and move windows:"
-msgstr "Klavo por _preni kaj movi fenestrojn:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:453
-#
-msgid "_Raise windows when any mouse button is pressed"
-msgstr "_Antaŭenigi fenestrojn per iu ajn musbutono"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:469
-#
-msgid "Hide frame of windows when ma_ximized"
-msgstr "Kaŝi kadron de fenestroj kiam ma_ksimumigitaj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:485
-#
-msgid "Hide title of windows when maximized"
-msgstr "Kaŝi titolon de fenestroj kiam maksimumigitaj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:500
-#
-msgid "Automatically _tile windows when moving toward the screen edge"
-msgstr "Aŭtomate _kaheligi fenestrojn movatajn al la ekranbordo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:516
-#
-msgid "Use _edge resistance instead of window snapping"
-msgstr "Uzi reziston de _bordoj anstataŭ magnetigon de fenestroj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:532
-msgid "Use mouse wheel on title bar to ro_ll up the window"
-msgstr "Uzi musradon sur la titolbreto por _volvi la fenestron"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:548
-msgid "Notify of _urgency by making window's decoration blink"
-msgstr "Sciigi pri _urĝeco per palpebrumado de la fenestra dekoracio"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:564
-msgid "Keep urgent windows _blinking repeatedly"
-msgstr "Daŭre _palpebrumigi urĝajn fenestrojn"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:587
-#
-msgid "_Accessibility"
-msgstr "A_lirebleco"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:604
-msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "Uzi la _musradon sur la labortablo por ŝanĝi laborspacon"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:620
-#
-msgid ""
-"_Remember and recall previous workspace\n"
-"when switching via keyboard shortcuts"
-msgstr "_Memori kaj reiri al la antaŭa laborspaco\nŝanĝante per klavkombinoj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:637
-#
-msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Ŝanĝi laborspacojn laŭ la reala _aranĝo de la labortablo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:653
-#
-msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Cikle ŝanĝi laborspacojn atingante la _unuan aŭ la lastan laborspacon"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:676
-#
-msgid "_Workspaces"
-msgstr "_Laborspacoj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:696
-#
-msgid "_Minimum size of windows to trigger smart placement:"
-msgstr "_Minimuma grando de fenestroj por inteligenta lokigo:"
-
-#. Smart placement size
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:750
-#
-msgid "<i>Large</i>"
-msgstr "<i>Granda</i>"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:779
-msgid "By default, place windows:"
-msgstr "Defaŭlte, lokigi fenestrojn:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:802
-msgid "At the c_enter of the screen"
-msgstr "En la _centro de la ekrano"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:818
-msgid "U_nder the mouse pointer"
-msgstr "Sub la _musmontrilo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:859
-#
-msgid "_Placement"
-msgstr "_Lokigo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
-msgid "_Enable display compositing"
-msgstr "Ŝalti ekranan _kunmetadon"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
-msgid "Enable _HDR"
-msgstr "Ŝalti _HDR"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
-msgid ""
-"Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
-"Vulkan"
-msgstr "Montri HDR ĉe ekranoj, kiuj subtenas ĝin, per 10-bita koloro. Bezonas GPU kun Vulkan"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
-msgid "Use _OpenGL for compositing"
-msgstr "Uzi _OpenGL por kunmetado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
-msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
-msgstr "Bezonas OpenGL 2.0, alie uzas XRender"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
-msgid "_Suspend compositing for focused fullscreen windows"
-msgstr "_Paŭzigi kunmetadon por fokusitaj tutekranaj fenestroj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
-msgid ""
-"Improves performance in fullscreen applications; compositing resumes when "
-"the window closes or loses focus. Video may tear while it is off"
-msgstr "Plibonigas rendimenton de tutekranaj aplikaĵoj; kunmetado rekomenciĝas kiam la fenestro fermiĝas aŭ perdas la fokuson. Dum ĝi estas malŝaltita, videoj povas ŝiriĝi"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
-msgid "Display _fullscreen overlay windows directly"
-msgstr "Montri _tutekranajn surmetitajn fenestrojn rekte"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
-msgid ""
-"Let fullscreen windows that bypass the window manager draw straight to the "
-"screen"
-msgstr "Lasas tutekranajn fenestrojn, kiuj preteriras la fenestran administrilon, desegni rekte al la ekrano"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
-msgid "Show windows preview in place of icons when cycling"
-msgstr "Montri antaŭvidojn de fenestroj anstataŭ piktogramoj dum ciklado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
-#
-msgid "Show shadows under pop_up windows"
-msgstr "Montri ombrojn sub ŝ_prucfenestroj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
-#
-msgid "Show shadows under _dock windows"
-msgstr "Montri ombrojn sub _dokaj fenestroj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
-#
-msgid "Show shadows under _regular windows"
-msgstr "Montri ombrojn sub _ordinaraj fenestroj"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
-msgid "Zoom desktop with mouse wheel"
-msgstr "Zomi la labortablon per la musrado"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
-msgid "Zoom pointer along with the desktop"
-msgstr "Zomi la montrilon kune kun la labortablo"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
-#
-msgid "Opaci_ty of window decorations:"
-msgstr "Opake_co de fenestraj dekoracioj:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
-#
-msgid "<i>Transparent</i>"
-msgstr "<i>Travidebla</i>"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
-#
-msgid "<i>Opaque</i>"
-msgstr "<i>Opaka</i>"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
-#
-msgid "Opacity of _inactive windows:"
-msgstr "Opakeco de _neaktivaj fenestroj:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
-#
-msgid "Opacity of windows during _move:"
-msgstr "Opakeco de fenestroj dum _movado:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
-#
-msgid "Opacity of windows during resi_ze:"
-msgstr "Opakeco de fenestroj dum _regrandigo:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
-#
-msgid "Opacity of popup wi_ndows:"
-msgstr "Opakeco de ŝpruc_fenestroj:"
-
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
-#
-msgid "C_ompositor"
-msgstr "_Kunmetilo"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:90
-#
-msgid "_Number of workspaces:"
-msgstr "_Nombro de laborspacoj:"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:126
-msgid "Layout"
-msgstr "Aranĝo"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:174
-#
-msgid "Names"
-msgstr "Nomoj"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:194
-msgid "_General"
-msgstr "Ĝe_nerala"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:232
-msgid ""
-"Margins are areas on the edges of the screen where no window will be placed"
-msgstr ""
-"La marĝenoj estas la regionoj ĉe la bordoj de la ekrano kie nenia fenestro "
-"estos metita"
-
-#: settings-dialogs/xfwm4-workspace-dialog.glade:393
-#
-msgid "_Margins"
-msgstr "_Marĝenoj"
 
 #, fuzzy
 #~ msgid "Only _Visible on This Workspace"

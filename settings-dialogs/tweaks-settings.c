@@ -281,6 +281,20 @@ hide_widget (GtkWidget *widget)
     gtk_widget_hide (widget);
 }
 
+static void
+update_hdr_brightness_sensitive (GtkWidget *hdr_check, GParamSpec *pspec, gpointer box)
+{
+    gtk_widget_set_sensitive (GTK_WIDGET (box),
+                              gtk_widget_get_sensitive (hdr_check)
+                              && gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (hdr_check)));
+}
+
+static gchar *
+format_percent (GtkScale *scale, gdouble value, gpointer data)
+{
+    return g_strdup_printf ("%.0f%%", value);
+}
+
 static GdkFilterReturn
 render_backend_filter (GdkXEvent *xevent, GdkEvent *event, gpointer data)
 {
@@ -363,6 +377,8 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     GtkWidget *use_gl_compositing_check = GTK_WIDGET (gtk_builder_get_object (builder, "use_gl_compositing_check"));
     GtkWidget *unredirect_overlays_check = GTK_WIDGET (gtk_builder_get_object (builder, "unredirect_overlays_check"));
     GtkWidget *hdr_check = GTK_WIDGET (gtk_builder_get_object (builder, "hdr_check"));
+    GtkWidget *hdr_brightness_box = GTK_WIDGET (gtk_builder_get_object (builder, "hdr_brightness_box"));
+    GtkWidget *hdr_brightness_scale = GTK_WIDGET (gtk_builder_get_object (builder, "hdr_brightness_scale"));
     GtkWidget *cycle_preview_check = GTK_WIDGET (gtk_builder_get_object (builder, "cycle_preview_check"));
     GtkWidget *show_frame_shadow_check = GTK_WIDGET (gtk_builder_get_object (builder, "show_frame_shadow_check"));
     GtkWidget *show_popup_shadow_check = GTK_WIDGET (gtk_builder_get_object (builder, "show_popup_shadow_check"));
@@ -582,6 +598,11 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                             "/general/hdr",
                             G_TYPE_BOOLEAN,
                             (GObject *)hdr_check, "active");
+    xfconf_g_property_bind (xfwm4_channel,
+                            "/general/hdr_brightness",
+                            G_TYPE_INT,
+                            (GObject *) range_debouncer_bind (GTK_RANGE (hdr_brightness_scale)), "value");
+    g_signal_connect (hdr_brightness_scale, "format-value", G_CALLBACK (format_percent), NULL);
 
     if (xfwm_is_x11_session ())
     {
@@ -592,6 +613,7 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
         gdk_window_add_filter (root_window, render_backend_filter, render_backend_label);
         update_render_backend_label (render_backend_label);
         hide_widget (hdr_check);
+        hide_widget (hdr_brightness_box);
     }
     else
     {
@@ -606,6 +628,11 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
                                      _("Lets a focused fullscreen window go straight to the screen, which saves power and lowers latency"));
         g_object_bind_property (use_gl_compositing_check, "active", hdr_check, "sensitive",
                                 G_BINDING_SYNC_CREATE);
+        g_signal_connect (hdr_check, "notify::active",
+                          G_CALLBACK (update_hdr_brightness_sensitive), hdr_brightness_box);
+        g_signal_connect (hdr_check, "notify::sensitive",
+                          G_CALLBACK (update_hdr_brightness_sensitive), hdr_brightness_box);
+        update_hdr_brightness_sensitive (hdr_check, NULL, hdr_brightness_box);
     }
     xfconf_g_property_bind (xfwm4_channel,
                             "/general/cycle_preview",

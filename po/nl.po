@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Xfwm4\n"
 "Report-Msgid-Bugs-To: https://gitlab.xfce.org/xfce/xfwm4\n"
-"POT-Creation-Date: 2026-08-01 20:55+0200\n"
+"POT-Creation-Date: 2026-11-04 23:40+0100\n"
 "PO-Revision-Date: 2013-07-02 20:22+0000\n"
 "Last-Translator: Pjotr <pjotrvertaalt@gmail.com>, 2013-2017,2019-2022,2024\n"
 "Language-Team: Dutch (http://app.transifex.com/xfce/xfwm4/language/nl/)\n"
@@ -74,48 +74,52 @@ msgstr "(momenteel in gebruik: %s)"
 msgid "(currently off)"
 msgstr "(momenteel uit)"
 
-#: settings-dialogs/tweaks-settings.c:295
+#: settings-dialogs/tweaks-settings.c:614
 msgid "Use the _GPU for compositing"
 msgstr "De _GPU gebruiken voor compositie"
 
-#: settings-dialogs/tweaks-settings.c:297
+#: settings-dialogs/tweaks-settings.c:616
 msgid ""
 "When off, the screen is drawn in software, which is slower and turns HDR off"
-msgstr "Indien uit, wordt het scherm in software getekend; dat is trager en schakelt HDR uit"
+msgstr ""
+"Indien uit, wordt het scherm in software getekend; dat is trager en schakelt "
+"HDR uit"
 
-#: settings-dialogs/tweaks-settings.c:299
+#: settings-dialogs/tweaks-settings.c:618
 msgid "Show focused _fullscreen windows directly"
 msgstr "Gefocuste _volledigschermvensters direct tonen"
 
-#: settings-dialogs/tweaks-settings.c:301
+#: settings-dialogs/tweaks-settings.c:620
 msgid ""
 "Lets a focused fullscreen window go straight to the screen, which saves "
 "power and lowers latency"
-msgstr "Laat een gefocust volledigschermvenster rechtstreeks naar het scherm gaan, wat energie bespaart en de vertraging verlaagt"
+msgstr ""
+"Laat een gefocust volledigschermvenster rechtstreeks naar het scherm gaan, "
+"wat energie bespaart en de vertraging verlaagt"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
 msgstr "Sessiebeheerdersocket"
 
-#: settings-dialogs/tweaks-settings.c:700
+#: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "SOCKET ID"
 msgstr "SOCKET ID"
 
-#: settings-dialogs/tweaks-settings.c:701
+#: settings-dialogs/tweaks-settings.c:696
 #: settings-dialogs/workspace-settings.c:446
 #: settings-dialogs/xfwm4-settings.c:243
 msgid "Version information"
 msgstr "Versie-informatie"
 
-#: settings-dialogs/tweaks-settings.c:716
+#: settings-dialogs/tweaks-settings.c:711
 #: settings-dialogs/workspace-settings.c:463
 #: settings-dialogs/xfwm4-settings.c:881
 msgid "."
 msgstr "."
 
-#: settings-dialogs/tweaks-settings.c:720
+#: settings-dialogs/tweaks-settings.c:715
 #: settings-dialogs/workspace-settings.c:467
 #: settings-dialogs/xfwm4-settings.c:885
 #, c-format
@@ -143,235 +147,6 @@ msgstr "Werkbladnaam"
 msgid "Settings manager socket"
 msgstr "Instellingenbeheerdersocket"
 
-#: settings-dialogs/xfwm4-settings.c:219
-msgid "Shade window"
-msgstr "Venster oprollen"
-
-#: settings-dialogs/xfwm4-settings.c:220
-msgid "Hide window"
-msgstr "Venster verbergen"
-
-#: settings-dialogs/xfwm4-settings.c:221
-msgid "Maximize window"
-msgstr "Venster maximaliseren"
-
-#: settings-dialogs/xfwm4-settings.c:222
-msgid "Fill window"
-msgstr "Venster vullen"
-
-#: settings-dialogs/xfwm4-settings.c:223
-msgid "Always on top"
-msgstr "Altijd bovenaan"
-
-#: settings-dialogs/xfwm4-settings.c:224
-msgid "Nothing"
-msgstr "Niets"
-
-#: settings-dialogs/xfwm4-settings.c:229
-msgid "Left"
-msgstr "Links"
-
-#: settings-dialogs/xfwm4-settings.c:230
-msgid "Center"
-msgstr "Midden"
-
-#: settings-dialogs/xfwm4-settings.c:231
-msgid "Right"
-msgstr "Rechts"
-
-#: settings-dialogs/xfwm4-settings.c:347
-msgid "Theme"
-msgstr "Thema"
-
-#: settings-dialogs/xfwm4-settings.c:497
-msgid "Action"
-msgstr "Actie"
-
-#: settings-dialogs/xfwm4-settings.c:504
-msgid "Shortcut"
-msgstr "Sneltoets"
-
-#: settings-dialogs/xfwm4-settings.c:906
-#, c-format
-msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Kon xconf niet initialiseren. Reden: %s"
-
-#: settings-dialogs/xfwm4-settings.c:917
-msgid "Could not create the settings dialog."
-msgstr "Kon de instellingendialoog niet maken."
-
-#: settings-dialogs/xfwm4-settings.c:1922
-msgid ""
-"This will reset all shortcuts to their default values. Do you really want to "
-"do this?"
-msgstr ""
-"Dit zal alle sneltoetsen terugzetten op hun standaardwaarden. Wilt u dit "
-"echt doen?"
-
-#: settings-dialogs/xfwm4-settings.c:1924
-msgid "Reset to Defaults"
-msgstr "Zet terug op standaardwaarden"
-
-#: src/client.c:215
-#, c-format
-msgid "%s (on %s)"
-msgstr "%s (op %s)"
-
-#: src/keyboard.c:147 src/settings.c:158
-#, c-format
-msgid "Unsupported keyboard modifier '%s'"
-msgstr "Niet-ondersteunde toetsenbordaanpasser '%s'"
-
-#: src/main.c:611
-msgid "Set the compositor mode"
-msgstr "Stel de beeldsamenstellingsmodus in"
-
-#: src/main.c:613
-msgid "Set the vblank mode"
-msgstr "Stel de vblank-modus in"
-
-#: src/main.c:623
-msgid "Replace the existing window manager"
-msgstr "Vervang de bestaande vensterbeheerder"
-
-#: src/main.c:625
-msgid "Print version information and exit"
-msgstr "Druk de versie-informatie af en sluit af"
-
-#: src/main.c:628
-msgid "Enable debug logging"
-msgstr "Logboek voor foutopsporing inschakelen"
-
-#: src/main.c:668
-msgid "[ARGUMENTS...]"
-msgstr "[ARGUMENTEN...]"
-
-#: src/main.c:675
-#, c-format
-msgid "Type \"%s --help\" for usage."
-msgstr "Tik '%s --help' voor een gebruiksaanwijzing."
-
-#: src/menu.c:51
-msgid "Ma_ximize"
-msgstr "Ma_ximaliseren"
-
-#: src/menu.c:52
-msgid "Unma_ximize"
-msgstr "_Ontmaximaliseren"
-
-#: src/menu.c:53
-msgid "Mi_nimize"
-msgstr "Mi_nimaliseren"
-
-#: src/menu.c:54
-msgid "Minimize _Other Windows"
-msgstr "Andere vensters minimaliseren"
-
-#: src/menu.c:55
-msgid "S_how"
-msgstr "_Tonen"
-
-#: src/menu.c:56
-msgid "_Move"
-msgstr "_Verplaats"
-
-#: src/menu.c:57
-msgid "_Resize"
-msgstr "Verander _grootte"
-
-#: src/menu.c:59
-msgid "Always on _Top"
-msgstr "Altijd _bovenaan"
-
-#: src/menu.c:60
-msgid "_Same as Other Windows"
-msgstr "_Zelfde als andere vensters"
-
-#: src/menu.c:61
-msgid "Always _Below Other Windows"
-msgstr "Altijd _onder andere vensters"
-
-#: src/menu.c:63
-msgid "Roll Window Up"
-msgstr "Rol venster omhoog"
-
-#: src/menu.c:64
-msgid "Roll Window Down"
-msgstr "Rol venster naar beneden"
-
-#: src/menu.c:65
-msgid "_Fullscreen"
-msgstr "Schermvullend"
-
-#: src/menu.c:66
-msgid "Leave _Fullscreen"
-msgstr "Verlaat schermvullend"
-
-#: src/menu.c:67
-msgid "Context _Help"
-msgstr "Contextuele _hulp"
-
-#: src/menu.c:69
-msgid "Always on _Visible Workspace"
-msgstr "Altijd op zichtbare _werkblad"
-
-#: src/menu.c:70
-msgid "Move to Another _Workspace"
-msgstr "_Verplaats naar ander werkblad"
-
-#: src/menu.c:71
-msgid "Move to Another Monitor"
-msgstr "Verplaatsen naar ander beeldscherm"
-
-#: src/menu.c:73 settings-dialogs/xfwm4-dialog.glade:94
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:88
-#: settings-dialogs/xfwm4-workspace-dialog.glade:433
-msgid "_Close"
-msgstr "_Sluiten"
-
-#: src/menu.c:76
-msgid "Destroy"
-msgstr "Vernietigen"
-
-#: src/menu.c:79
-msgid "_Quit"
-msgstr "_Afsluiten"
-
-#: src/menu.c:80
-msgid "Restart"
-msgstr "Herstarten"
-
-#: src/menu.c:207
-msgid "Monitor _Left"
-msgstr "Beeldscherm _links"
-
-#: src/menu.c:211
-msgid "Monitor _Right"
-msgstr "Beeldscherm _rechts"
-
-#: src/menu.c:215
-msgid "Monitor _Up"
-msgstr "Beeldscherm _boven"
-
-#: src/menu.c:219
-msgid "Monitor _Down"
-msgstr "Beeldscherm _onder"
-
-#: src/menu.c:459
-#, c-format
-msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: GtkMenu kon geen controle over de muisaanwijzer verkrijgen\n"
-
-#: src/terminate.c:83
-#, c-format
-msgid "Error reading data from child process: %s\n"
-msgstr "Fout bij lezen van gegevens van dochterproces: %s\n"
-
-#: src/terminate.c:141
-#, c-format
-msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "Kan hulpdialoog niet starten: %s\n"
-
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
@@ -392,7 +167,7 @@ msgstr ""
 "verbergen;verplaatsen;herschalen;dubbelklik;"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:54
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:61
 msgid "Window Manager Tweaks"
 msgstr "Vensterbeheerder bijstellen"
 
@@ -423,10 +198,17 @@ msgid ""
 msgstr "werkbladen;instellingen;voorkeuren;virtuele;bureaubladen;aantal;vensters;scherm;marges;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:71
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:78
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
 msgstr "_Hulp"
+
+#. ----------------------------------------------
+#: settings-dialogs/xfwm4-dialog.glade:94
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:95
+#: settings-dialogs/xfwm4-workspace-dialog.glade:433 src/menu.c:73
+msgid "_Close"
+msgstr "_Sluiten"
 
 #: settings-dialogs/xfwm4-dialog.glade:163
 msgid "<b>The_me</b>"
@@ -571,7 +353,7 @@ msgid "<b>Raise on click</b>"
 msgstr "<b>Omhoog halen bij klik</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1088
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:397
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:404
 msgid "_Focus"
 msgstr "Scher_pstelling"
 
@@ -592,7 +374,7 @@ msgstr "_Afstand:"
 #. Smart placement size
 #: settings-dialogs/xfwm4-dialog.glade:1202
 #: settings-dialogs/xfwm4-dialog.glade:1374
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:722
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:729
 msgid "<i>Small</i>"
 msgstr "<i>Klein</i>"
 
@@ -647,7 +429,76 @@ msgstr "<b>Actie bij _dubbelklikken</b>"
 msgid "Ad_vanced"
 msgstr "Ge_avanceerd"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:124
+#: settings-dialogs/xfwm4-settings.c:219
+msgid "Shade window"
+msgstr "Venster oprollen"
+
+#: settings-dialogs/xfwm4-settings.c:220
+msgid "Hide window"
+msgstr "Venster verbergen"
+
+#: settings-dialogs/xfwm4-settings.c:221
+msgid "Maximize window"
+msgstr "Venster maximaliseren"
+
+#: settings-dialogs/xfwm4-settings.c:222
+msgid "Fill window"
+msgstr "Venster vullen"
+
+#: settings-dialogs/xfwm4-settings.c:223
+msgid "Always on top"
+msgstr "Altijd bovenaan"
+
+#: settings-dialogs/xfwm4-settings.c:224
+msgid "Nothing"
+msgstr "Niets"
+
+#: settings-dialogs/xfwm4-settings.c:229
+msgid "Left"
+msgstr "Links"
+
+#: settings-dialogs/xfwm4-settings.c:230
+msgid "Center"
+msgstr "Midden"
+
+#: settings-dialogs/xfwm4-settings.c:231
+msgid "Right"
+msgstr "Rechts"
+
+#: settings-dialogs/xfwm4-settings.c:347
+msgid "Theme"
+msgstr "Thema"
+
+#: settings-dialogs/xfwm4-settings.c:497
+msgid "Action"
+msgstr "Actie"
+
+#: settings-dialogs/xfwm4-settings.c:504
+msgid "Shortcut"
+msgstr "Sneltoets"
+
+#: settings-dialogs/xfwm4-settings.c:906
+#, c-format
+msgid "Failed to initialize xfconf. Reason: %s"
+msgstr "Kon xconf niet initialiseren. Reden: %s"
+
+#: settings-dialogs/xfwm4-settings.c:917
+msgid "Could not create the settings dialog."
+msgstr "Kon de instellingendialoog niet maken."
+
+#: settings-dialogs/xfwm4-settings.c:1922
+msgid ""
+"This will reset all shortcuts to their default values. Do you really want to "
+"do this?"
+msgstr ""
+"Dit zal alle sneltoetsen terugzetten op hun standaardwaarden. Wilt u dit "
+"echt doen?"
+
+#: settings-dialogs/xfwm4-settings.c:1924
+msgid "Reset to Defaults"
+msgstr "Zet terug op standaardwaarden"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:131
 msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
@@ -655,106 +506,106 @@ msgstr ""
 "Sla vensters over die de eigenschappen 'pager overslaan'\n"
 "of 'taakbalk overslaan' hebben"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:141
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
 msgstr ""
 "Schakel repeterend door geminimaliseerde vensters in volgorde van laatste "
 "gebruik"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:157
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
 msgstr "Inclusief verborgen (d.i. geminimaliseerde) vensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:173
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:180
 msgid "Cycle _through windows on all workspaces"
 msgstr "Wissel af _tussen vensters van alle werkbladen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:189
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:196
 msgid "_Draw frame around selected window while cycling"
 msgstr "Teken een lijst rond gekozen venster tijdens roteren"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:205
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:212
 msgid "_Raise windows while cycling"
 msgstr "Haal vensters omhoog tijdens roteren"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:221
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:228
 msgid "Cycle through windows in a _list"
 msgstr "Wissel af tussen vensters in een lijst"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:241
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:248
 msgid "C_ycling"
 msgstr "Roteren"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:257
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:264
 msgid "Activate foc_us stealing prevention"
 msgstr "Activeer preventie van overnemen van scherpstelling"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:273
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
 msgstr "Neem de standaard ICCCM-focushint in acht"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:298
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:305
 msgid "When a window raises itself:"
 msgstr "Wanneer een venster zichzelf omhoog brengt:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:321
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:328
 msgid "_Bring window on current workspace"
 msgstr "Verplaats venster naar huidig werkblad"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:338
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
 msgstr "Wissel naar het _werkblad van het venster"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:356
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
 msgstr "Doe _niets"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:423
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:430
 msgid "Key used to _grab and move windows:"
 msgstr "Toets gebruikt voor het pakken en verplaatsen van vensters:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:453
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:460
 msgid "_Raise windows when any mouse button is pressed"
 msgstr ""
 "Haal vensters omhoog wanneer er op een willekeurige muisknop wordt geklikt"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:469
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:476
 msgid "Hide frame of windows when ma_ximized"
 msgstr "Verberg randen van vensters wanneer gemaximaliseerd"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:485
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:492
 msgid "Hide title of windows when maximized"
 msgstr "Verberg venstertitels wanneer gemaximaliseerd"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:500
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:507
 msgid "Automatically _tile windows when moving toward the screen edge"
 msgstr "Vensters automatisch tegelen bij beweging naar de schermrand"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:516
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
 msgstr "Gebruik _randweerstand in plaats van het aantrekken aan vensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:532
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
 msgstr "Gebruik muiswiel op titelbalk om het venster op te rollen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:548
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:555
 msgid "Notify of _urgency by making window's decoration blink"
 msgstr "Meld urgentie door de vensterdecoratie te laten knipperen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:564
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:571
 msgid "Keep urgent windows _blinking repeatedly"
 msgstr "Laat _belangrijke vensters herhaaldelijk knipperen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:587
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:594
 msgid "_Accessibility"
 msgstr "_Toegankelijkheid"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:604
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
 msgstr "Gebruik het _muiswieltje op het bureaublad om werkbladen te wisselen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:620
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:627
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
@@ -762,148 +613,165 @@ msgstr ""
 "Vorige werkblad _onthouden en oproepen\n"
 "wanneer er wordt gewisseld via sneltoetsen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:637
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"
 msgstr "Wissel van werkbladen afhankelijk van de eigenlijke bureaubladopmaak"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:653
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
 msgstr ""
 "Wissel van werkbladen wanneer het eerste of laatste werkblad is bereikt"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:676
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:683
 msgid "_Workspaces"
 msgstr "_Werkbladen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:696
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:703
 msgid "_Minimum size of windows to trigger smart placement:"
 msgstr "Minimale venstergrootte om slimme plaatsing te activeren:"
 
 #. Smart placement size
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:750
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:757
 msgid "<i>Large</i>"
 msgstr "<i>Groot</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:779
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:786
 msgid "By default, place windows:"
 msgstr "Plaats vensters standaard:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:802
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:809
 msgid "At the c_enter of the screen"
 msgstr "In het _midden van het scherm"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:818
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:825
 msgid "U_nder the mouse pointer"
 msgstr "Onder de muisaanwijzer"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:859
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:866
 msgid "_Placement"
 msgstr "_Plaatsing"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:882
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:889
 msgid "_Enable display compositing"
 msgstr "_Activeer beeldsamenstelling"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:942
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:949
 msgid "Enable _HDR"
 msgstr "_HDR inschakelen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:943
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:950
 msgid ""
 "Show HDR on monitors that support it, in 10-bit color. Needs a GPU with "
 "Vulkan"
-msgstr "HDR tonen op beeldschermen die het ondersteunen, met 10-bits kleur. Vereist een GPU met Vulkan"
+msgstr ""
+"HDR tonen op beeldschermen die het ondersteunen, met 10-bits kleur. Vereist "
+"een GPU met Vulkan"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:959
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+msgid "HDR _brightness:"
+msgstr "HDR-_helderheid:"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:990
+msgid ""
+"Brightness of the whole picture while HDR is on, HDR videos and games "
+"included"
+msgstr "Helderheid van het hele beeld als HDR aan staat, inclusief HDR-video's en -games"
+
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1012
 msgid "Use _OpenGL for compositing"
 msgstr "_OpenGL gebruiken voor beeldsamenstelling"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:960
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1013
 msgid "Requires OpenGL 2.0, otherwise falls back to XRender"
 msgstr "Vereist OpenGL 2.0, anders wordt XRender gebruikt"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:976
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1029
 msgid "_Suspend compositing for focused fullscreen windows"
 msgstr "Beeldsamenstelling _onderbreken voor gefocuste volledigschermvensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:977
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1030
 msgid ""
 "Improves performance in fullscreen applications; compositing resumes when "
 "the window closes or loses focus. Video may tear while it is off"
-msgstr "Verbetert de prestaties van volledigschermtoepassingen; de beeldsamenstelling wordt hervat wanneer het venster sluit of de focus verliest. Video kan scheuren zolang deze uit staat"
+msgstr ""
+"Verbetert de prestaties van volledigschermtoepassingen; de "
+"beeldsamenstelling wordt hervat wanneer het venster sluit of de focus "
+"verliest. Video kan scheuren zolang deze uit staat"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:993
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
 msgstr "Geef scherm_vullende overlapvensters direct weer"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:994
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
 "Let fullscreen windows that bypass the window manager draw straight to the "
 "screen"
-msgstr "Volledigschermvensters die de vensterbeheerder omzeilen rechtstreeks naar het scherm laten tekenen"
+msgstr ""
+"Volledigschermvensters die de vensterbeheerder omzeilen rechtstreeks naar "
+"het scherm laten tekenen"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1010
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1063
 msgid "Show windows preview in place of icons when cycling"
 msgstr ""
 "Toon voorbeeldweergave van vensters in plaats van pictogrammen bij roteren"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1026
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1079
 msgid "Show shadows under pop_up windows"
 msgstr "Toon schaduwen onder _opduikvensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1042
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1095
 msgid "Show shadows under _dock windows"
 msgstr "Toon schaduwen onder _dokvensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1058
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1111
 msgid "Show shadows under _regular windows"
 msgstr "Toon schaduwen onder _normale vensters"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1074
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1127
 msgid "Zoom desktop with mouse wheel"
 msgstr "Vergroot of verklein bureaublad met muiswiel"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1090
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1143
 msgid "Zoom pointer along with the desktop"
 msgstr "Vergroot muispijl samen met het bureaublad"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1109
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
 msgid "Opaci_ty of window decorations:"
 msgstr "Ondoorzichtigheid van vensterdecoraties:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1134
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1210
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1286
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1362
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1438
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1187
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1263
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1339
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1415
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1491
 msgid "<i>Transparent</i>"
 msgstr "<i>Transparant</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1215
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1291
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1367
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1443
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1519
 msgid "<i>Opaque</i>"
 msgstr "<i>Ondoorzichtig</i>"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1185
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
 msgid "Opacity of _inactive windows:"
 msgstr "Ondoorzichtigheid van inactieve vensters:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1261
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
 msgid "Opacity of windows during _move:"
 msgstr "Ondoorzichtigheid van vensters tijdens verp_laatsen:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1337
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
 msgid "Opacity of windows during resi_ze:"
 msgstr "Ondoorzichtigheid van vensters bij _veranderen van grootte:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1413
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "Opacity of popup wi_ndows:"
 msgstr "Ondoorzichtigheid van opduikvensters:"
 
-#: settings-dialogs/xfwm4-tweaks-dialog.glade:1506
+#: settings-dialogs/xfwm4-tweaks-dialog.glade:1559
 msgid "C_ompositor"
 msgstr "_Samensteller"
 
@@ -933,3 +801,162 @@ msgstr ""
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"
 msgstr "_Marges"
+
+#. TRANSLATORS: "(on %s)" is like "running on" the name of the other host
+#: src/client.c:215
+#, c-format
+msgid "%s (on %s)"
+msgstr "%s (op %s)"
+
+#: src/keyboard.c:147 src/settings.c:158
+#, c-format
+msgid "Unsupported keyboard modifier '%s'"
+msgstr "Niet-ondersteunde toetsenbordaanpasser '%s'"
+
+#: src/main.c:611
+msgid "Set the compositor mode"
+msgstr "Stel de beeldsamenstellingsmodus in"
+
+#: src/main.c:613
+msgid "Set the vblank mode"
+msgstr "Stel de vblank-modus in"
+
+#: src/main.c:623
+msgid "Replace the existing window manager"
+msgstr "Vervang de bestaande vensterbeheerder"
+
+#: src/main.c:625
+msgid "Print version information and exit"
+msgstr "Druk de versie-informatie af en sluit af"
+
+#: src/main.c:628
+msgid "Enable debug logging"
+msgstr "Logboek voor foutopsporing inschakelen"
+
+#: src/main.c:668
+msgid "[ARGUMENTS...]"
+msgstr "[ARGUMENTEN...]"
+
+#: src/main.c:675
+#, c-format
+msgid "Type \"%s --help\" for usage."
+msgstr "Tik '%s --help' voor een gebruiksaanwijzing."
+
+#: src/menu.c:51
+msgid "Ma_ximize"
+msgstr "Ma_ximaliseren"
+
+#: src/menu.c:52
+msgid "Unma_ximize"
+msgstr "_Ontmaximaliseren"
+
+#: src/menu.c:53
+msgid "Mi_nimize"
+msgstr "Mi_nimaliseren"
+
+#: src/menu.c:54
+msgid "Minimize _Other Windows"
+msgstr "Andere vensters minimaliseren"
+
+#: src/menu.c:55
+msgid "S_how"
+msgstr "_Tonen"
+
+#: src/menu.c:56
+msgid "_Move"
+msgstr "_Verplaats"
+
+#: src/menu.c:57
+msgid "_Resize"
+msgstr "Verander _grootte"
+
+#. ----------------------------------------------
+#: src/menu.c:59
+msgid "Always on _Top"
+msgstr "Altijd _bovenaan"
+
+#: src/menu.c:60
+msgid "_Same as Other Windows"
+msgstr "_Zelfde als andere vensters"
+
+#: src/menu.c:61
+msgid "Always _Below Other Windows"
+msgstr "Altijd _onder andere vensters"
+
+#. ----------------------------------------------
+#: src/menu.c:63
+msgid "Roll Window Up"
+msgstr "Rol venster omhoog"
+
+#: src/menu.c:64
+msgid "Roll Window Down"
+msgstr "Rol venster naar beneden"
+
+#: src/menu.c:65
+msgid "_Fullscreen"
+msgstr "Schermvullend"
+
+#: src/menu.c:66
+msgid "Leave _Fullscreen"
+msgstr "Verlaat schermvullend"
+
+#: src/menu.c:67
+msgid "Context _Help"
+msgstr "Contextuele _hulp"
+
+#. ----------------------------------------------
+#: src/menu.c:69
+msgid "Always on _Visible Workspace"
+msgstr "Altijd op zichtbare _werkblad"
+
+#: src/menu.c:70
+msgid "Move to Another _Workspace"
+msgstr "_Verplaats naar ander werkblad"
+
+#: src/menu.c:71
+msgid "Move to Another Monitor"
+msgstr "Verplaatsen naar ander beeldscherm"
+
+#. --------------------------------------------------------
+#: src/menu.c:76
+msgid "Destroy"
+msgstr "Vernietigen"
+
+#: src/menu.c:79
+msgid "_Quit"
+msgstr "_Afsluiten"
+
+#: src/menu.c:80
+msgid "Restart"
+msgstr "Herstarten"
+
+#: src/menu.c:207
+msgid "Monitor _Left"
+msgstr "Beeldscherm _links"
+
+#: src/menu.c:211
+msgid "Monitor _Right"
+msgstr "Beeldscherm _rechts"
+
+#: src/menu.c:215
+msgid "Monitor _Up"
+msgstr "Beeldscherm _boven"
+
+#: src/menu.c:219
+msgid "Monitor _Down"
+msgstr "Beeldscherm _onder"
+
+#: src/menu.c:459
+#, c-format
+msgid "%s: GtkMenu failed to grab the pointer\n"
+msgstr "%s: GtkMenu kon geen controle over de muisaanwijzer verkrijgen\n"
+
+#: src/terminate.c:83
+#, c-format
+msgid "Error reading data from child process: %s\n"
+msgstr "Fout bij lezen van gegevens van dochterproces: %s\n"
+
+#: src/terminate.c:141
+#, c-format
+msgid "Cannot spawn helper-dialog: %s\n"
+msgstr "Kan hulpdialoog niet starten: %s\n"
