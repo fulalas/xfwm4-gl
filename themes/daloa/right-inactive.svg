@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="5" height="24" viewBox="0 0 5 24">
-<rect x="0" y="0" width="3" height="24" style="fill:var(--inactive_color_2, #e4e4e0)" shape-rendering="crispEdges"/>
-<rect x="3" y="0" width="1" height="24" style="fill:var(--inactive_hilight_1, #e2e2e2)" shape-rendering="crispEdges"/>
-<rect x="4" y="0" width="1" height="24" style="fill:var(--inactive_shadow_1, #929292)" shape-rendering="crispEdges"/>
-<rect x="4" y="0" width="1" height="24" style="fill:black;fill-opacity:0.5" shape-rendering="crispEdges"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="5" height="24" viewBox="0 0 5 24"><rect width="3" height="24" shape-rendering="crispEdges" style="fill:var(--inactive_color_2, #e4e4e0)"/><rect width="1" height="24" x="3" shape-rendering="crispEdges" style="fill:var(--inactive_hilight_1, #e2e2e2)"/><rect width="1" height="24" x="4" shape-rendering="crispEdges" style="fill:var(--inactive_shadow_1, #929292)"/><rect width="1" height="24" x="4" shape-rendering="crispEdges" style="fill:#000;fill-opacity:.5"/></svg>

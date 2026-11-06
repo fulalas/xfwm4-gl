@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="21" height="29" viewBox="0 0 21 29">
-<defs><linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#ffffff;stop-opacity:0.05"/><stop offset="1" style="stop-color:#ffffff;stop-opacity:0"/></linearGradient></defs>
-<rect x="0" y="0" width="21" height="29" style="fill:var(--active_mid_2, #bdbdb7)" shape-rendering="crispEdges"/>
-<path d="M10.5,19.5 L15,15 L15,13 L13,13 L10.5,15.5 L8,13 L6,13 L6,15 Z" style="fill:var(--active_text_color, #000000)"/>
-<rect x="0" y="1" width="21" height="18" style="fill:url(#sheen)" shape-rendering="crispEdges"/>
-<rect x="0" y="0" width="21" height="1" style="fill:#000000;fill-opacity:0.5" shape-rendering="crispEdges"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="21" height="29" viewBox="0 0 21 29"><defs><linearGradient id="a" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:#fff;stop-opacity:.05"/><stop offset="1" style="stop-color:#fff;stop-opacity:0"/></linearGradient></defs><rect width="21" height="29" shape-rendering="crispEdges" style="fill:var(--active_mid_2, #bdbdb7)"/><path d="M10.5 19.5 15 15V13H13L10.5 15.5 8 13H6V15Z" style="fill:var(--active_text_color, #000000)"/><rect width="21" height="18" y="1" shape-rendering="crispEdges" style="fill:url(#a)"/><rect width="21" height="1" shape-rendering="crispEdges" style="fill:#000;fill-opacity:.5"/></svg>

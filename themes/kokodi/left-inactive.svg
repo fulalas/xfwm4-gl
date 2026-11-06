@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="6" height="24" viewBox="0 0 6 24">
-<rect x="0" y="0" width="2" height="24" style="fill:var(--inactive_color_1, #c4c4c4)" shape-rendering="crispEdges"/>
-<rect x="2" y="0" width="4" height="24" style="fill:var(--inactive_color_2, #e4e4e0)" shape-rendering="crispEdges"/>
-<rect x="0" y="0" width="1" height="24" style="fill:black;fill-opacity:0.5" shape-rendering="crispEdges"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="6" height="24" viewBox="0 0 6 24"><rect width="2" height="24" shape-rendering="crispEdges" style="fill:var(--inactive_color_1, #c4c4c4)"/><rect width="4" height="24" x="2" shape-rendering="crispEdges" style="fill:var(--inactive_color_2, #e4e4e0)"/><rect width="1" height="24" shape-rendering="crispEdges" style="fill:#000;fill-opacity:.5"/></svg>

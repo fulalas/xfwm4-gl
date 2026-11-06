@@ -1,14 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="21" height="29" viewBox="0 0 21 29">
-<defs><linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#ffffff;stop-opacity:0.05"/><stop offset="1" style="stop-color:#ffffff;stop-opacity:0"/></linearGradient></defs>
-<rect x="0" y="0" width="21" height="29" style="fill:var(--active_mid_2, #bdbdb7)" shape-rendering="crispEdges"/>
-<rect x="1" y="5" width="19" height="1" style="fill:var(--active_shadow_2, #8e8e8a)" shape-rendering="crispEdges"/>
-<rect x="1" y="25" width="19" height="1" style="fill:var(--active_shadow_2, #8e8e8a)" shape-rendering="crispEdges"/>
-<rect x="0" y="6" width="1" height="19" style="fill:var(--active_shadow_2, #8e8e8a)" shape-rendering="crispEdges"/>
-<rect x="20" y="6" width="1" height="19" style="fill:var(--active_shadow_2, #8e8e8a)" shape-rendering="crispEdges"/>
-<path d="M9,12 L12,12 L12,14 L10.5,15.5 L9,14 Z" style="fill:var(--active_text_color, #000000)"/>
-<path d="M9,21 L12,21 L12,19 L10.5,17.5 L9,19 Z" style="fill:var(--active_text_color, #000000)"/>
-<path d="M6,15 L8,15 L9.5,16.5 L8,18 L6,18 Z" style="fill:var(--active_text_color, #000000)"/>
-<path d="M15,15 L13,15 L11.5,16.5 L13,18 L15,18 Z" style="fill:var(--active_text_color, #000000)"/>
-<rect x="0" y="1" width="21" height="18" style="fill:url(#sheen)" shape-rendering="crispEdges"/>
-<rect x="0" y="0" width="21" height="1" style="fill:#000000;fill-opacity:0.5" shape-rendering="crispEdges"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="21" height="29" viewBox="0 0 21 29"><defs><linearGradient id="a" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:#fff;stop-opacity:.05"/><stop offset="1" style="stop-color:#fff;stop-opacity:0"/></linearGradient></defs><rect width="21" height="29" shape-rendering="crispEdges" style="fill:var(--active_mid_2, #bdbdb7)"/><rect width="19" height="1" x="1" y="5" shape-rendering="crispEdges" style="fill:var(--active_shadow_2, #8e8e8a)"/><rect width="19" height="1" x="1" y="25" shape-rendering="crispEdges" style="fill:var(--active_shadow_2, #8e8e8a)"/><rect width="1" height="19" y="6" shape-rendering="crispEdges" style="fill:var(--active_shadow_2, #8e8e8a)"/><rect width="1" height="19" x="20" y="6" shape-rendering="crispEdges" style="fill:var(--active_shadow_2, #8e8e8a)"/><path d="M9 12H12V14L10.5 15.5 9 14Z" style="fill:var(--active_text_color, #000000)"/><path d="M9 21H12V19L10.5 17.5 9 19Z" style="fill:var(--active_text_color, #000000)"/><path d="M6 15H8L9.5 16.5 8 18H6Z" style="fill:var(--active_text_color, #000000)"/><path d="M15 15H13L11.5 16.5 13 18H15Z" style="fill:var(--active_text_color, #000000)"/><rect width="21" height="18" y="1" shape-rendering="crispEdges" style="fill:url(#a)"/><rect width="21" height="1" shape-rendering="crispEdges" style="fill:#000;fill-opacity:.5"/></svg>

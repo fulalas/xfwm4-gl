@@ -508,7 +508,7 @@ map_path (Layout *layout, const gchar *d)
         }
         if (g_ascii_isalpha (*p))
         {
-            c = strchr (commands, *p);
+            c = strchr (commands, (*p == 'z') ? 'Z' : *p);
             if (!c)
             {
                 g_string_free (out, TRUE);
