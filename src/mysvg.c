@@ -740,7 +740,7 @@ get_size (const gchar *data, gint *width, gint *height, gboolean *snap)
     const gchar *tag, *end, *w_attr, *h_attr;
     RsvgHandle *handle;
     GArray *attrs;
-    gdouble box[4], w, h;
+    gdouble box[4] = { 0 }, w, h;
     gboolean has_box, ok;
 
     tag = next_tag (data, "<svg", &end);
