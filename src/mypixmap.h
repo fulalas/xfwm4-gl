@@ -28,6 +28,7 @@
 #include <glib.h>
 #include <cairo/cairo.h>
 #include "screen.h"
+#include "mysvg.h"
 
 #ifdef HAVE_RENDER
 #include <X11/extensions/Xrender.h>
@@ -37,13 +38,6 @@
 #define INC_MYPIXMAP_H
 
 #define MYPIXMAP_XPIXMAP(p) (p.pixmap)
-
-typedef struct
-{
-    gchar *name;
-    const gchar *value;
-}
-xfwmColorSymbol;
 
 struct _xfwmPixmap
 {
@@ -63,6 +57,7 @@ gboolean                 xfwmPixmapLoad                         (ScreenInfo *,
                                                                  const gchar *,
                                                                  const gchar *,
                                                                  xfwmColorSymbol *);
+gboolean                 xfwmPixmapIsRaster                     (const gchar *);
 void                     xfwmPixmapCreate                       (ScreenInfo *,
                                                                  xfwmPixmap *,
                                                                  gint,

@@ -127,6 +127,9 @@ New features:
   not focused, from a new `inactive-prelight` image in the theme
 * any tool can read the current renderer and vsync mode by running
   `xprop -root _XFWM4_RENDER_BACKEND _XFWM4_VSYNC`
+* themes can be made of SVG files, and then grow with the screen DPI instead
+  of needing a separate big copy. The bundled themes are SVG now, and
+  `Default-hdpi` and `Default-xhdpi` are gone. See [SVG themes](#svg-themes)
 
 Fixes:
 
@@ -161,10 +164,33 @@ Fixes:
 * the decoration asks for fewer redraws, and a theme that ships only a
   stretched border image is used instead of being skipped
 
+## SVG themes
+
+A theme uses the same piece names as before (`close-active.svg`,
+`title-3-inactive.svg`, …). An SVG wins over an XPM or PNG of the same name.
+A theme grows with the screen only when all its images are SVG. Other themes
+work and look as before.
+
+* the `viewBox` starts at `0 0` and is the size of the piece at normal size,
+  in whole numbers. If it starts elsewhere or differs from `width` and
+  `height`, nothing gets put on whole pixels
+* each piece is drawn at its size times the scale, which is the screen DPI
+  divided by 96, times the GDK scale. Sizes in `themerc` grow by the same
+  amount, except 1 and -1, which stay as they are like 1-unit lines
+* a color written as `var(--active_color_1, #4a90d9)` takes the GTK color of
+  that name, like the color names in XPM files. The color after the comma is
+  used when the name is unknown
+* a `<rect/>` with `shape-rendering="crispEdges"` gets its edges on whole
+  pixels. One that is 1 unit thick stays exactly 1 pixel at any scale, so
+  borders stay sharp. Put such lines on whole numbers and give them and the
+  groups around them no `transform`
+* paths written with absolute commands (`M L H V C S Q T Z`) follow the same
+  pixels as those rects, so curves meet the straight lines
+
 ## Requirements
 
-No new build dependency. `xfwm4` already builds against `libepoxy` for vsync
-and `xfwm4-gl` uses it for the OpenGL renderer too. It is optional upstream,
+`librsvg` 2.52 or newer, to draw SVG themes. `xfwm4` already builds against
+`libepoxy` for vsync and `xfwm4-gl` uses it for the OpenGL renderer too. It is optional upstream,
 so check that the configure summary says `Epoxy support: yes`.
 
 At runtime the driver needs OpenGL 2.0 or newer, frame buffer objects, and the

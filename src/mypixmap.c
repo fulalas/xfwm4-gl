@@ -326,23 +326,6 @@ out:
     return ret;
 }
 
-static const gchar *
-search_color_symbol (gchar *symbol, xfwmColorSymbol *color_sym)
-{
-    xfwmColorSymbol *i;
-
-    i = color_sym;
-    while (i && i->name)
-    {
-        if (!g_ascii_strcasecmp (i->name, symbol))
-        {
-            return i->value;
-        }
-        ++i;
-    }
-    return NULL;
-}
-
 static void
 safe_strncpy (char *dst, const char *src, size_t size)
 {
@@ -447,7 +430,7 @@ xpm_extract_color (const gchar *buffer, xfwmColorSymbol *color_sym)
         else if (key == 5)
         {
             const gchar *new_color = NULL;
-            new_color = search_color_symbol (color, color_sym);
+            new_color = xfwmColorSymbolFind (color, color_sym);
             if (new_color)
             {
                 current_key = key;
@@ -759,6 +742,38 @@ xfwmPixmapRefreshPict (xfwmPixmap * pm)
 }
 #endif
 
+static const char* image_types[] = {
+  "png",
+  "gif",
+  "jpg",
+  "bmp",
+  NULL };
+
+gboolean
+xfwmPixmapIsRaster (const gchar * filename)
+{
+    const gchar *ext;
+    int i;
+
+    ext = strrchr (filename, '.');
+    if (!ext)
+    {
+        return FALSE;
+    }
+    if (!strcmp (ext + 1, "xpm"))
+    {
+        return TRUE;
+    }
+    for (i = 0; image_types[i]; i++)
+    {
+        if (!strcmp (ext + 1, image_types[i]))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static GdkPixbuf *
 xfwmPixmapCompose (GdkPixbuf *pixbuf, const gchar * dir, const gchar * file)
 {
@@ -767,14 +782,6 @@ xfwmPixmapCompose (GdkPixbuf *pixbuf, const gchar * dir, const gchar * file)
     gchar *filename;
     gint width, height;
     int i;
-
-    static const char* image_types[] = {
-      "svg",
-      "png",
-      "gif",
-      "jpg",
-      "bmp",
-      NULL };
 
     i = 0;
     alpha = NULL;
@@ -975,6 +982,7 @@ xfwmPixmapLoad (ScreenInfo * screen_info, xfwmPixmap * pm, const gchar * dir, co
 {
     gchar *filename;
     gchar *filexpm;
+    gchar *filesvg;
     GdkPixbuf *pixbuf;
 
     g_return_val_if_fail (pm != NULL, FALSE);
@@ -983,19 +991,29 @@ xfwmPixmapLoad (ScreenInfo * screen_info, xfwmPixmap * pm, const gchar * dir, co
     TRACE ("pixmap %p, dir %s, file %s", pm, dir, file);
 
     xfwmPixmapInit (screen_info, pm);
-    /*
-     * Always try to load the XPM first, using our own routine
-     * that supports XPM color symbol susbstitution (used to
-     * apply the gtk+ colors to the pixmaps).
-     */
-    filexpm = g_strdup_printf ("%s.%s", file, "xpm");
-    filename = g_build_filename (dir, filexpm, NULL);
-    g_free (filexpm);
-    pixbuf = xpm_image_load (filename, cs);
+
+    filesvg = g_strdup_printf ("%s.%s", file, "svg");
+    filename = g_build_filename (dir, filesvg, NULL);
+    g_free (filesvg);
+    pixbuf = xfwmSvgLoad (filename, cs, screen_info->theme_scale);
     g_free (filename);
 
-    /* Compose with other image formats, if any available. */
-    pixbuf = xfwmPixmapCompose (pixbuf, dir, file);
+    if (!pixbuf)
+    {
+        /*
+         * Always try to load the XPM first, using our own routine
+         * that supports XPM color symbol susbstitution (used to
+         * apply the gtk+ colors to the pixmaps).
+         */
+        filexpm = g_strdup_printf ("%s.%s", file, "xpm");
+        filename = g_build_filename (dir, filexpm, NULL);
+        g_free (filexpm);
+        pixbuf = xpm_image_load (filename, cs);
+        g_free (filename);
+
+        /* Compose with other image formats, if any available. */
+        pixbuf = xfwmPixmapCompose (pixbuf, dir, file);
+    }
     if (!pixbuf)
     {
         /*

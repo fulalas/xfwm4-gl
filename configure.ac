@@ -12,6 +12,7 @@ m4_define([xfconf_minimum_version], [4.13.0])
 m4_define([xfconf_legacy_version], [4.12.0])
 m4_define([xcomposite_minimum_version], [0.2])
 m4_define([wnck_minimum_version], [3.14])
+m4_define([librsvg_minimum_version], [2.52.0])
 m4_define([startup_notification_minimum_version], [0.5])
 m4_define([libepoxy_minimum_version], [1.0])
 m4_define([xpresent_minimum_version], [1.0])
@@ -128,6 +129,7 @@ XDT_CHECK_PACKAGE([LIBXFCONF], libxfconf-0, [xfconf_minimum_version],,
   XDT_CHECK_PACKAGE([LIBXFCONF], [libxfconf-0], [xfconf_legacy_version])
 ])
 XDT_CHECK_PACKAGE([LIBWNCK], [libwnck-3.0], [wnck_minimum_version])
+XDT_CHECK_PACKAGE([LIBRSVG], [librsvg-2.0], [librsvg_minimum_version])
 XDT_CHECK_PACKAGE([XINERAMA], [xinerama], [0])
 
 AS_IF([test "x$USE_MAINTAINER_MODE" = "xyes"],
@@ -324,8 +326,6 @@ src/Makefile
 themes/Makefile
 themes/daloa/Makefile
 themes/default/Makefile
-themes/default-hdpi/Makefile
-themes/default-xhdpi/Makefile
 themes/kokodi/Makefile
 themes/moheli/Makefile
 ])

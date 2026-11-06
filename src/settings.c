@@ -25,6 +25,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <glib.h>
 #include <pango/pango.h>
 #include <gdk/gdk.h>
@@ -255,24 +256,96 @@ getTitleShadow (Settings *rc, const gchar * name)
     return TITLE_SHADOW_NONE;
 }
 
-static const gchar *
-getThemeName (ScreenInfo *screen_info, Settings *rc)
+static gboolean
+isThemePiece (const gchar *filename)
 {
-    const gchar *theme = getStringValue ("theme", rc);
-    gint scale;
+    static const gchar *suffixes[] = { "-active", "-inactive", "-prelight", "-pressed", "-stretch", NULL };
+    const gchar *dot;
+    gchar *base;
+    gboolean found;
+    guint i;
+
+    dot = strrchr (filename, '.');
+    if (!dot)
+    {
+        return FALSE;
+    }
+    base = g_strndup (filename, dot - filename);
+    found = FALSE;
+    for (i = 0; suffixes[i] && !found; i++)
+    {
+        found = g_str_has_suffix (base, suffixes[i]);
+    }
+    g_free (base);
+
+    return found;
+}
+
+static gboolean
+isThemeScalable (const gchar *dir)
+{
+    GDir *gdir;
+    const gchar *name;
+    gboolean svg, raster;
+
+    gdir = g_dir_open (dir, 0, NULL);
+    if (!gdir)
+    {
+        return FALSE;
+    }
+    svg = raster = FALSE;
+    while ((name = g_dir_read_name (gdir)))
+    {
+        if (!isThemePiece (name))
+        {
+            continue;
+        }
+        if (g_str_has_suffix (name, ".svg"))
+        {
+            svg = TRUE;
+        }
+        else if (xfwmPixmapIsRaster (name))
+        {
+            raster = TRUE;
+        }
+    }
+    g_dir_close (gdir);
+
+    return svg && !raster;
+}
+
+static gdouble
+getThemeScale (ScreenInfo *screen_info)
+{
+    gdouble dpi;
+    gdouble scale;
+
+    if (!screen_info->theme_scalable)
+    {
+        return 1.0;
+    }
 
     scale = gdk_window_get_scale_factor (myScreenGetGdkWindow (screen_info));
-    if (scale == 1)
+    dpi = gdk_screen_get_resolution (screen_info->gscr);
+    if (dpi > 0)
     {
-        return theme;
+        scale *= dpi / 96.0;
     }
 
-    if (strcmp (theme, DEFAULT_THEME))
-    {
-        return theme;
-    }
+    return scale;
+}
 
-    return DEFAULT_HDPI_THEME;
+static gint
+getScaledIntValue (ScreenInfo *screen_info, const gchar *option, Settings *rc)
+{
+    gint value;
+
+    value = getIntValue (option, rc);
+    if (ABS (value) <= 1)
+    {
+        return value;
+    }
+    return (gint) lround (value * screen_info->theme_scale);
 }
 
 static void
@@ -394,8 +467,10 @@ loadTheme (ScreenInfo *screen_info, Settings *rc)
     }
 
     /* Then load xfwm4 theme values */
-    theme = getThemeDir (getThemeName (screen_info, rc), THEMERC);
+    theme = getThemeDir (getStringValue ("theme", rc), THEMERC);
     parseRc (THEMERC, theme, rc);
+    screen_info->theme_scalable = isThemeScalable (theme);
+    screen_info->theme_scale = getThemeScale (screen_info);
 
     /* And finally redo a pass for transitive definitions of colors */
     for (i = 0; i < XPM_COLOR_SYMBOL_SIZE; i++)
@@ -420,13 +495,13 @@ loadTheme (ScreenInfo *screen_info, Settings *rc)
     }
 
     screen_info->params->shadow_delta_x =
-        - getIntValue ("shadow_delta_x", rc);
+        - getScaledIntValue (screen_info, "shadow_delta_x", rc);
     screen_info->params->shadow_delta_y =
-        - getIntValue ("shadow_delta_y", rc);
+        - getScaledIntValue (screen_info, "shadow_delta_y", rc);
     screen_info->params->shadow_delta_width =
-        - getIntValue ("shadow_delta_width", rc);
+        - getScaledIntValue (screen_info, "shadow_delta_width", rc);
     screen_info->params->shadow_delta_height =
-        - getIntValue ("shadow_delta_height", rc);
+        - getScaledIntValue (screen_info, "shadow_delta_height", rc);
 
     for (i = 0; i < XPM_COLOR_SYMBOL_SIZE; i++)
     {
@@ -550,16 +625,16 @@ loadTheme (ScreenInfo *screen_info, Settings *rc)
     screen_info->params->title_shadow[INACTIVE] = getTitleShadow (rc, "title_shadow_inactive");
 
     strncpy (screen_info->params->button_layout, getStringValue ("button_layout", rc), BUTTON_STRING_COUNT);
-    screen_info->params->button_spacing = getIntValue ("button_spacing", rc);
-    screen_info->params->button_offset = getIntValue ("button_offset", rc);
-    screen_info->params->frame_border_top = getIntValue ("frame_border_top", rc);
-    screen_info->params->maximized_offset = getIntValue ("maximized_offset", rc);
+    screen_info->params->button_spacing = getScaledIntValue (screen_info, "button_spacing", rc);
+    screen_info->params->button_offset = getScaledIntValue (screen_info, "button_offset", rc);
+    screen_info->params->frame_border_top = getScaledIntValue (screen_info, "frame_border_top", rc);
+    screen_info->params->maximized_offset = getScaledIntValue (screen_info, "maximized_offset", rc);
     screen_info->params->title_vertical_offset_active =
-        getIntValue ("title_vertical_offset_active", rc);
+        getScaledIntValue (screen_info, "title_vertical_offset_active", rc);
     screen_info->params->title_vertical_offset_inactive =
-        getIntValue ("title_vertical_offset_inactive", rc);
+        getScaledIntValue (screen_info, "title_vertical_offset_inactive", rc);
     screen_info->params->title_horizontal_offset =
-        getIntValue ("title_horizontal_offset", rc);
+        getScaledIntValue (screen_info, "title_horizontal_offset", rc);
 
     g_free (theme);
 }

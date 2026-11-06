@@ -111,6 +111,8 @@ struct _ScreenInfo
     xfwmPixmap top[TITLE_COUNT][2];
     xfwmPixmap corners_stretch[CORNER_COUNT][2];
     xfwmPixmap sides_stretch[SIDE_COUNT][2];
+    gboolean theme_scalable;
+    gdouble theme_scale;
 
     /* Per screen graphic contexts */
     GC box_gc;

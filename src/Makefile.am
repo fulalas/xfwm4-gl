@@ -37,6 +37,8 @@ xfwm4_SOURCES =								\
 	moveresize.h							\
 	mypixmap.c							\
 	mypixmap.h							\
+	mysvg.c								\
+	mysvg.h								\
 	mywindow.c							\
 	mywindow.h							\
 	netwm.c								\
@@ -86,6 +88,7 @@ xfwm4_CFLAGS =								\
 	$(LIBXFCE4UI_CFLAGS)						\
 	$(LIBXFCE4UTIL_CFLAGS)						\
 	$(LIBXFCONF_CFLAGS)						\
+	$(LIBRSVG_CFLAGS)						\
 	$(PRESENT_EXTENSION_CFLAGS)					\
 	$(RANDR_CFLAGS)							\
 	$(RENDER_CFLAGS)						\
@@ -109,6 +112,7 @@ xfwm4_LDADD =								\
 	$(LIBXFCE4UI_LIBS)						\
 	$(LIBXFCE4UTIL_LIBS)						\
 	$(LIBXFCONF_LIBS)						\
+	$(LIBRSVG_LIBS)						\
 	$(PRESENT_EXTENSION_LIBS)					\
 	$(RANDR_LIBS) 							\
 	$(RENDER_LIBS)							\

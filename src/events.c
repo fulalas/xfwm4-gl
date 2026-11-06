@@ -2713,6 +2713,36 @@ update_screen_font (ScreenInfo *screen_info)
     clientUpdateAllFrames (screen_info, UPDATE_FRAME);
 }
 
+static void
+scale_factor_cb (ScreenInfo *screen_info)
+{
+    if (screen_info->theme_scalable)
+    {
+        set_reload (screen_info->display_info);
+    }
+    else
+    {
+        update_screen_font (screen_info);
+    }
+}
+
+static gboolean
+dpi_cb (GObject * obj, GdkEvent * ev, gpointer data)
+{
+    DisplayInfo * display_info;
+    GSList *list;
+
+    display_info = (DisplayInfo *) data;
+    g_return_val_if_fail (display_info, TRUE);
+
+    for (list = display_info->screens; list; list = g_slist_next (list))
+    {
+        scale_factor_cb (list->data);
+    }
+
+    return TRUE;
+}
+
 static gboolean
 refresh_font_cb (GObject * obj, GdkEvent * ev, gpointer data)
 {
@@ -2849,7 +2879,7 @@ initPerScreenCallbacks (ScreenInfo *screen_info)
 
     g_signal_connect_swapped (G_OBJECT (myScreenGetGtkWidget (screen_info)),
                               "notify::scale-factor",
-                              G_CALLBACK (update_screen_font),
+                              G_CALLBACK (scale_factor_cb),
                               screen_info);
 }
 
@@ -2877,7 +2907,7 @@ initPerDisplayCallbacks (DisplayInfo *display_info)
                       "signal::notify::gtk-xft-antialias",
                       G_CALLBACK (refresh_font_cb), (gpointer) (display_info),
                       "signal::notify::gtk-xft-dpi",
-                      G_CALLBACK (refresh_font_cb), (gpointer) (display_info),
+                      G_CALLBACK (dpi_cb), (gpointer) (display_info),
                       "signal::notify::gtk-xft-hinting",
                       G_CALLBACK (refresh_font_cb), (gpointer) (display_info),
                       "signal::notify::gtk-xft-hintstyle",

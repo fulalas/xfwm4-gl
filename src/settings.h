@@ -39,10 +39,6 @@
 #define DEFAULT_THEME "Default"
 #endif
 
-#ifndef DEFAULT_HDPI_THEME
-#define DEFAULT_HDPI_THEME "Default-xhdpi"
-#endif
-
 enum
 {
     TITLE_SHADOW_NONE  = 0,
