@@ -39,6 +39,12 @@ xfwm4_SOURCES =								\
 	mypixmap.h							\
 	mysvg.c								\
 	mysvg.h								\
+	mysvgaxis.c							\
+	mysvgaxis.h							\
+	mysvgparse.c							\
+	mysvgparse.h							\
+	mysvgsnap.c							\
+	mysvgsnap.h							\
 	mywindow.c							\
 	mywindow.h							\
 	netwm.c								\
