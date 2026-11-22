@@ -32,7 +32,7 @@ AM_INIT_AUTOMAKE([1.8 dist-bzip2 tar-ustar no-dist-gzip foreign])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 
-AM_MAINTAINER_MODE()
+AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl set helper path prefix
@@ -122,6 +122,14 @@ XDT_CHECK_PACKAGE([GLIB], [glib-2.0], [glib_minimum_version])
 XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [gtk_minimum_version])
 XDT_CHECK_PACKAGE([LIBXFCE4UTIL], [libxfce4util-1.0], [xfce_minimum_version])
 XDT_CHECK_PACKAGE([LIBXFCE4UI], libxfce4ui-2, [libxfce4ui_minimum_version])
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBXFCE4UI_CFLAGS"
+AC_MSG_CHECKING([whether libxfce4ui has X11 support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <libxfce4ui/libxfce4ui.h>]], [[XfceSMClient *c = NULL; (void) c;]])],
+  [AC_MSG_RESULT([yes])],
+  [AC_MSG_RESULT([no])
+   AC_MSG_ERROR([libxfce4ui was built without X11 support; rebuild it with X11 enabled (details in config.log)])])
+CPPFLAGS="$save_CPPFLAGS"
 XDT_CHECK_PACKAGE([LIBXFCE4KBD_PRIVATE], libxfce4kbd-private-3, [libxfce4kbd_private_minimum_version])
 XDT_CHECK_PACKAGE([LIBXFCONF], libxfconf-0, [xfconf_minimum_version],,
 [

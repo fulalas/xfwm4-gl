@@ -70,6 +70,13 @@ To check which renderer is in use, open Window Manager Tweaks, Compositor tab:
   original `xfwm4`; it only gained a tooltip. It covers quite old games and
   players that bypass the window manager without saying anything.
 
+## Build
+
+Needs `xfce4-dev-tools`, and `libxfce4ui` built with X11 support:
+
+    ./autogen.sh --prefix=/usr
+    make
+
 ## Usage
 
 All files keep the same names and paths as the original, so once installed the
