@@ -51,6 +51,8 @@
 #include "mypixmap.h"
 #include "xpm-color-table.h"
 
+#define SVG_KEEP_ALPHA 0xE0
+
 enum buf_op
 {
     op_header,
@@ -977,6 +979,30 @@ xfwmPixmapRenderGdkPixbuf (xfwmPixmap * pm, GdkPixbuf *pixbuf)
     return TRUE;
 }
 
+static void
+svg_cut_out (GdkPixbuf *pixbuf)
+{
+    guchar *pixels, *p, *end;
+    gint width, height, rowstride;
+    gint y;
+
+    pixels = gdk_pixbuf_get_pixels (pixbuf);
+    width = gdk_pixbuf_get_width (pixbuf);
+    height = gdk_pixbuf_get_height (pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+    for (y = 0; y < height; y++)
+    {
+        end = pixels + y * rowstride + width * 4;
+        for (p = pixels + y * rowstride + 3; p < end; p += 4)
+        {
+            if (*p >= SVG_KEEP_ALPHA)
+            {
+                *p = 0xff;
+            }
+        }
+    }
+}
+
 gboolean
 xfwmPixmapLoad (ScreenInfo * screen_info, xfwmPixmap * pm, const gchar * dir, const gchar * file, xfwmColorSymbol * cs)
 {
@@ -998,7 +1024,11 @@ xfwmPixmapLoad (ScreenInfo * screen_info, xfwmPixmap * pm, const gchar * dir, co
     pixbuf = xfwmSvgLoad (filename, cs, screen_info->theme_scale);
     g_free (filename);
 
-    if (!pixbuf)
+    if (pixbuf)
+    {
+        svg_cut_out (pixbuf);
+    }
+    else
     {
         /*
          * Always try to load the XPM first, using our own routine
