@@ -528,8 +528,8 @@ msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
 msgstr ""
-"_Ignorer les fenêtres absentes de la barre des tâches\n"
-" ou des propriétés « skip pager » et « skip taskbar »"
+"_Ignorer les fenêtres ayant la propriété « skip pager »\n"
+"ou « skip taskbar »"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
@@ -732,7 +732,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Affichage direct des _fenêtres plein écran"
+msgstr "Affichage direct des _fenêtres plein écran en superposition"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

@@ -760,15 +760,15 @@ msgstr "<i>გაუმჭვირვალე</i>"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
 msgid "Opacity of _inactive windows:"
-msgstr "არააქტიური ფანჯრების ბუნდოვნება:"
+msgstr "არააქტიური ფანჯრების გაუმჭვირვალობა:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
 msgid "Opacity of windows during _move:"
-msgstr "ფანჯრების ბუნდოვნება გადაადგილების დროს:"
+msgstr "ფანჯრების გაუმჭვირვალობა გადაადგილების დროს:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
 msgid "Opacity of windows during resi_ze:"
-msgstr "ფანჯრების ბუნდოვნება ზომის შეცვლის დროს:"
+msgstr "ფანჯრების გაუმჭვირვალობა ზომის შეცვლის დროს:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1466
 msgid "Opacity of popup wi_ndows:"

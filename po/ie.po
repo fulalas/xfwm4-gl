@@ -98,7 +98,7 @@ msgstr ""
 
 #: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
-msgstr "Socket del gerente de parametres"
+msgstr "Socket del gerente de sessiones"
 
 #: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445

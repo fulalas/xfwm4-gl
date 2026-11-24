@@ -419,7 +419,7 @@ msgstr "_Kantmotstand:"
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
 msgstr ""
-"<b>Bruk vindustilpasning for arbeidsområder når skjermens kanter nås</b>"
+"<b>Bytt arbeidsområde når skjermkanten nås</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -623,7 +623,8 @@ msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
 msgstr ""
-"_Lagre og gjenopprett forrige arbeidsområde ved bytting med hurtigtast."
+"_Lagre og gjenopprett forrige arbeidsområde\n"
+"ved bytting med hurtigtast"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"
@@ -632,8 +633,8 @@ msgstr "Bryt arbeidsområdet avhengig av skrivebordets _utforming"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
 msgstr ""
-"Bruk vindustilpasning for arbeidsområder når _det første eller siste "
-"arbeidsområde nås"
+"Gå rundt arbeidsområdene når _det første eller siste arbeidsområdet "
+"er nådd"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:683
 msgid "_Workspaces"

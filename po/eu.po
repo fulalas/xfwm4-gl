@@ -35,7 +35,7 @@ msgstr "Abisua"
 
 #: settings-dialogs/tweaks-settings.c:55
 msgid "None"
-msgstr "Batez"
+msgstr "Bat ere ez"
 
 #: settings-dialogs/tweaks-settings.c:229
 msgid "OpenGL EGL"
@@ -155,7 +155,7 @@ msgstr "Leiho kudeatzailea"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
-msgstr "Leiho portaera eta lastre-teklak konfiguratu"
+msgstr "Leiho portaera eta laster-teklak konfiguratu"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
@@ -494,7 +494,7 @@ msgstr "Huts xfconf abiaraztean. Arrazoia: %s"
 
 #: settings-dialogs/xfwm4-settings.c:917
 msgid "Could not create the settings dialog."
-msgstr "Ezin da ezapen elkarrizketa sortu."
+msgstr "Ezin da ezarpen elkarrizketa sortu."
 
 #: settings-dialogs/xfwm4-settings.c:1922
 msgid ""
@@ -506,7 +506,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-settings.c:1924
 msgid "Reset to Defaults"
-msgstr "Be_rrezarri lehenespenetara"
+msgstr "Berrezarri lehenespenetara"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:131
 msgid ""
@@ -587,7 +587,7 @@ msgstr "Leihoaren izenburua ezkutatu maximizatuta dagoenean"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:507
 msgid "Automatically _tile windows when moving toward the screen edge"
-msgstr "Automatikoki _goratu leihoak pantaila ertzetik mugitzean"
+msgstr "Automatikoki _lauzatu leihoak pantaila ertzera mugitzean"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
@@ -708,7 +708,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Zuzenean leihoak _pantaila osoan bistarazi"
+msgstr "Bistaratu zuzenean _pantaila osoko gainjarritako leihoak"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

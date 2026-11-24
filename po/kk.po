@@ -173,7 +173,7 @@ msgstr "Терезелер басқарушысының қу баптаулар�
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
-msgstr "Терезе әрекеттерін мен жарлықтарды туралау"
+msgstr "Терезе әрекеттері мен эффекттерін туралау"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
@@ -351,7 +351,7 @@ msgstr "Ф_окус алған терезені көтеру алдындағы 
 
 #: settings-dialogs/xfwm4-dialog.glade:1027
 msgid "<b>Raise on focus</b>"
-msgstr "<b>Тышқан тілшесі өткен кезде терезені көрсету</b>"
+msgstr "<b>Фокус алғанда терезені көтеру</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1053
 msgid "Raise window when clicking _inside application window"
@@ -512,8 +512,8 @@ msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
 msgstr ""
-"\"Ауыстырғышта көрсетпеу\" және \"есептер жолағында көрсетпеу\"\n"
-" қасиеттері орнатылған терезелерді аттап өту"
+"\"Ауыстырғышта көрсетпеу\" немесе \"есептер жолағында көрсетпеу\"\n"
+"қасиеттері орнатылған терезелерді _аттап өту"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
@@ -549,7 +549,7 @@ msgstr "Енгізу кезіндегі фокусты ұрлауға тыйым
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
-msgstr "Қалыпты ICCCM _фокус тәсілін елемеу"
+msgstr "Қалыпты ICCCM _фокус тәсілін ескеру"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:305
 msgid "When a window raises itself:"
@@ -609,7 +609,7 @@ msgstr "Қ_олжетерлілік"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "Жұмыс оры_ндарын ауыстыру үшін тышқан дөңгелегін қолдану"
+msgstr "Жұмыс үстелінде тышқан дөңгелегімен жұмыс оры_ндарын ауыстыру"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:627
 msgid ""
@@ -801,7 +801,7 @@ msgstr "Жал_пы"
 msgid ""
 "Margins are areas on the edges of the screen where no window will be placed"
 msgstr ""
-"Өрістер - бұл экран бұрыштарындағы аймақтар, оларға терезелер қойылмайды"
+"Өрістер - бұл экран шеттеріндегі аймақтар, оларға терезелер қойылмайды"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"

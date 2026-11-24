@@ -557,7 +557,7 @@ msgstr "Apabila tetingkap naik sendiri:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:328
 msgid "_Bring window on current workspace"
-msgstr "_Bawa tetingkap dari ruangkerja semasa"
+msgstr "_Bawa tetingkap ke ruang kerja semasa"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"

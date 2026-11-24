@@ -112,7 +112,7 @@ msgstr ""
 
 #: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
-msgstr "Διαχείριση υποδοχής συνδέσεων"
+msgstr "Υποδοχή διαχειριστή συνεδρίας"
 
 #: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445
@@ -199,7 +199,7 @@ msgid ""
 msgstr ""
 "παράθυρα;συμπεριφορά;ρυθμίσεις;προτιμήσεις;κυκλική εναλλαγή;κυκλική "
 "εναλλαγή;εναλλαγή;εστίαση;ανύψωση;προσβασιμότητα;πλήκτρο;σύρσιμο;μετακίνηση;μετακίνηση;απόκρυψη;πλαίσιο;μπάρα "
-"τίτλου;μεγιστοποίηση;τίτλος;οθόνη;άκρη;hot corner;συγκόλληση;τροχός του "
+"τίτλου;μεγιστοποίηση;παράθεση;οθόνη;άκρη;hot corner;συγκόλληση;τροχός του "
 "ποντικιού;αναδίπλωση;επιφάνειες "
 "εργασίας;τοποθέτηση;σύνθεση;σύνθεση;ενεργοποίηση;απενεργοποίηση;σκιές;περιγράμματα;διαφάνεια;αλλαγή "
 "μεγέθους;ανενεργό;επισκόπηση;compiz;μεταβάσεις;"
@@ -569,7 +569,7 @@ msgstr "Ενεργοποίηση πρ_οστασίας απώλειας της �
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
-msgstr "Να τηρείται η πρότυπη υπό_δειξη εστίασης ICCM"
+msgstr "Να τηρείται η πρότυπη υπό_δειξη εστίασης ICCCM"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:305
 msgid "When a window raises itself:"
@@ -874,7 +874,7 @@ msgstr "[ΟΡΙΣΜΑΤΑ...]"
 #: src/main.c:675
 #, c-format
 msgid "Type \"%s --help\" for usage."
-msgstr "Για πληροφορίες χρήσης πληκτρολογήστε \"%s - help\"."
+msgstr "Για πληροφορίες χρήσης πληκτρολογήστε \"%s --help\"."
 
 #: src/menu.c:51
 msgid "Ma_ximize"

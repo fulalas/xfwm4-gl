@@ -175,7 +175,7 @@ msgid ""
 "content;move;resize;moving;resizing;double click;"
 msgstr ""
 "janelas;gestão;definições;preferências;temas;estilos;decorações;barra de "
-"título;fonte;botões; menu;minimizar;maximizar;tonalidade;roll "
+"título;fonte;botões;menu;minimizar;maximizar;enrolar;roll "
 "up;layout;atalhos de teclado;foco;snapping;ecrã;espaços de "
 "trabalho;bordas;canto;ocultar "
 "conteúdo;mover;redimensionar;mover;redimensionar;clique duplo;"
@@ -195,7 +195,7 @@ msgid ""
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
-"janelas;comportamento;configurações;preferências;ciclístico;ciclo;comutação;foco;aumentos;acessibilidade;tecla;arrastar;mover;movendo;esconder;moldura;barra "
+"janelas;comportamento;configurações;preferências;circulação;ciclo;comutação;foco;levantar;acessibilidade;tecla;arrastar;mover;movendo;esconder;moldura;barra "
 "de título;maximizado;ladrilho;tela;hot corner;snapping;mouse;enrolar;espaços "
 "de "
 "trabalho;colocação;compositor;composição;ativar;desativar;sombras;decorações;opacidade;redimensionar;inativo;pré-"
@@ -424,9 +424,7 @@ msgstr "R_esistência das bordas:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr ""
-"<b>Mudar de espaço de trabalho quando o _ponteiro alcançar a borda da tela</"
-"b>"
+msgstr "<b>Mudar de espaço de trabalho ao alcançar a borda da tela</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -726,7 +724,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Exibir tela cheia diretamente so_breposta às janelas"
+msgstr "Exibir diretamente as janelas sobrepostas em _tela cheia"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

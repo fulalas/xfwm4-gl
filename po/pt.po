@@ -187,7 +187,7 @@ msgid ""
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
 "janelas;comportamento;definições;preferências;percorrendo;percorrer;troca;foco;raises;acessibilidade;tecla;arrastando;mover;movendo;ocultar;moldura;barra "
-"de título;maximizada;título;ecrã;limite;canto ativo;snapping;roda do "
+"de título;maximizada;mosaico;ecrã;limite;canto ativo;snapping;roda do "
 "rato;enrolar;espaços de "
 "trabalho;posicionamento;compositor;composição;ativar;desativar;sombras;decorations;opacidade;redimensionar;inativa;pré-"
 "visualização;compiz;transições;"
@@ -550,7 +550,7 @@ msgstr "P_ercorrer"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:264
 msgid "Activate foc_us stealing prevention"
-msgstr "Ati_var foco retirando a prevenção"
+msgstr "Ati_var prevenção de roubo de foco"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"

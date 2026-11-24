@@ -99,7 +99,7 @@ msgstr ""
 
 #: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
-msgstr "Sokkel for innstillingshandterar"
+msgstr "Sokkel for økthandsamar"
 
 #: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445

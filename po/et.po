@@ -521,7 +521,7 @@ msgstr ""
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
 msgstr ""
-"Lappa läbi _loendis olevate vähendatud akende viimati kasutamise järjekorras"
+"Lappa läbi _vähendatud akende viimati kasutamise järjekorras"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
@@ -862,7 +862,7 @@ msgstr "Mi_nimeeri"
 
 #: src/menu.c:54
 msgid "Minimize _Other Windows"
-msgstr "Haagi aknaid teiste akende külge"
+msgstr "Minimeeri t_eised aknad"
 
 #: src/menu.c:55
 msgid "S_how"

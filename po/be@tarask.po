@@ -182,8 +182,8 @@ msgid ""
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
-"вокны;паводзіны;налады;перавагі;вандраваньне на "
-"ровары;паўтор;пераключэньне;фокус;павышэньне;даступнасьць;клявіша;перацягваньне;перасоўваньне;перамяшчэньне;схаваць;кадр;загаловак;разгорнутае;кафля;экран;мяжа;гарачы "
+"вокны;паводзіны;налады;перавагі;гартаньне;"
+"паўтор;пераключэньне;фокус;павышэньне;даступнасьць;клявіша;перацягваньне;перасоўваньне;перамяшчэньне;схаваць;кадр;загаловак;разгорнутае;кафля;экран;мяжа;гарачы "
 "кут;кола "
 "мышу;згортваньне;прасторы;разьмяшчэньне;кампазітар;кампазіцыі;уключэньне;адключэньне;цені;упрыгожваньні;непразрыстасьць;зьмяненьне "
 "памеру;нядзейны;перадпрагляд;compiz;пераходы;"
@@ -453,7 +453,7 @@ msgstr "Напоўніць вакно"
 
 #: settings-dialogs/xfwm4-settings.c:223
 msgid "Always on top"
-msgstr "Заўсёды _наверсе"
+msgstr "Заўсёды наверсе"
 
 #: settings-dialogs/xfwm4-settings.c:224
 msgid "Nothing"
@@ -617,11 +617,11 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Згарнуць прасторы пры дзейным_ напластаваньні стала"
+msgstr "Гартаць прасторы паводле дзейнага _напластаваньня стала"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "Згарнуць прасторы, калі_ першая ці апошняя прастора дасягнута"
+msgstr "Гартаць прасторы, калі _першая ці апошняя прастора дасягнутая"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:683
 msgid "_Workspaces"
@@ -701,7 +701,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Адлюстроўваць _вокны непасрэдна на ўвесь экран"
+msgstr "Паказваць _поўнаэкранныя накладныя вокны наўпрост"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

@@ -173,7 +173,7 @@ msgid ""
 "windows;behavior;settings;preferences;cycling;cycle;switching;focus;raises;accessibility;key;dragging;move;moving;hide;frame;title "
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
-msgstr "หน้าต่าง;พฤติกรรม;ตั้งค่า;ปรับแต่ง;วนหน้าต่าง;สลับ;โฟกัส;ยกหน้าต่าง;สิ่งอำนวยความสะดวก;ปุ่ม;ลาก;ย้าย;ซ่อน;เส้นขอบ;หัวหน้าต่าง;ขยายแผ่;เรียงต่อชน;หน้าจอ;ขอบ;มุมยอดนิยม;การดูดติด;ลูกกลิ้งเมาส์;ม้วนขึ้น;พื้นที่ทำงาน;การวางตำแหน่ง;compositor;composite;เปิดใช้;ปิดใช้;เงา;กรอบหน้าต่าง;ความทึบ;ปรับขนาด;ไม่แอคทีฟ;ภาพตัวอย่าง;compiz;การเปลี่ยน;"
+msgstr "หน้าต่าง;พฤติกรรม;ตั้งค่า;ปรับแต่ง;วนหน้าต่าง;สลับ;โฟกัส;ยกหน้าต่าง;สิ่งอำนวยความสะดวก;ปุ่ม;ลาก;ย้าย;ซ่อน;เส้นขอบ;หัวหน้าต่าง;ขยายแผ่;เรียงต่อชน;หน้าจอ;ขอบ;มุมร้อน;การดูดติด;ลูกกลิ้งเมาส์;ม้วนขึ้น;พื้นที่ทำงาน;การวางตำแหน่ง;compositor;composite;เปิดใช้;ปิดใช้;เงา;กรอบหน้าต่าง;ความทึบ;ปรับขนาด;ไม่แอคทีฟ;ภาพตัวอย่าง;compiz;การเปลี่ยน;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44

@@ -854,7 +854,7 @@ msgstr "Maksimiraj"
 
 #: src/menu.c:52
 msgid "Unma_ximize"
-msgstr "Pomanjšaj"
+msgstr "Povrni velikost"
 
 #: src/menu.c:53
 msgid "Mi_nimize"

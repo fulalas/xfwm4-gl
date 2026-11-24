@@ -419,7 +419,7 @@ msgstr "_Ketahanan tepi:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Berpindah area kerja ketika _penunjuk mencapai tepi layar</b>"
+msgstr "<b>Berpindah area kerja ketika penunjuk mencapai tepi layar</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -431,7 +431,7 @@ msgstr "Saat mengubah uku_ran"
 
 #: settings-dialogs/xfwm4-dialog.glade:1504
 msgid "<b>Hide content of windows</b>"
-msgstr "<b>Sembunyikan isi jendela saat memindahkan</b>"
+msgstr "<b>Sembunyikan isi jendela</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1532
 msgid "The action to perform when the title-bar is double-clicked"
@@ -841,7 +841,7 @@ msgstr "Ganti manajer jendela yang ada"
 
 #: src/main.c:625
 msgid "Print version information and exit"
-msgstr "Menampilkan informasi versi"
+msgstr "Tampilkan informasi versi lalu keluar"
 
 #: src/main.c:628
 msgid "Enable debug logging"

@@ -144,7 +144,7 @@ msgstr "ワークスペース名"
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
-msgstr "マネージャーソケットの設定"
+msgstr "設定マネージャーソケット"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
@@ -186,7 +186,7 @@ msgstr ""
 "ズ;アクセシビリティ;キー;ドラッグ;移動;移動;非表示;フレーム;タイトルバー;最大"
 "化;タイル;画面;エッジ;ホットコーナー;スナップ;マウスホイール ;ロールアップ;"
 "ワークスペース;配置;コンポジター;合成;有効化;無効化;シャドウ;装飾;不透明度;サ"
-"イズ変更;非アクティブ;プレビュー;圧縮;トランジション;"
+"イズ変更;非アクティブ;プレビュー;compiz;トランジション;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
@@ -591,7 +591,7 @@ msgstr "ウィンドウを止める代わりにエッジ抵抗を使用する(_E
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
-msgstr "ウィンドウの巻き上げにマウスホイールを使用する(_L)"
+msgstr "タイトルバー上のマウスホイールでウィンドウを巻き上げる(_L)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:555
 msgid "Notify of _urgency by making window's decoration blink"
@@ -717,7 +717,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1063
 msgid "Show windows preview in place of icons when cycling"
-msgstr "ウィンドウの循環中アイコンとともにウィンドウのプレビューを表示する"
+msgstr "ウィンドウの循環中アイコンの代わりにウィンドウのプレビューを表示する"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1079
 msgid "Show shadows under pop_up windows"

@@ -529,7 +529,7 @@ msgstr "Cycle _through windows on all workspaces"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:196
 msgid "_Draw frame around selected window while cycling"
-msgstr "_Draw frame around selected windows while cycling"
+msgstr "_Draw frame around selected window while cycling"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:212
 msgid "_Raise windows while cycling"

@@ -37,7 +37,7 @@ msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
 msgstr ""
-"قد تكون هذه النافذة معطوبة ولا تستجيب.\n"
+"قد تكون هذه النافذة مشغولة ولا تستجيب.\n"
 "هل تريد إنهاء هذا التطبيق؟"
 
 #: helper-dialog/helper-dialog.c:91
@@ -196,7 +196,7 @@ msgstr ""
 "الدخول;مفتاح;سحب;حركة;تحريك;إخفاء;إطار;شريط "
 "العنوان;مكبر;عنوان;شاشة;حافَة;زوايا ساخنة;أخذ لقطة;عجلة الفأرة;تدحرج "
 "لفوق;مساحات عمل;تموضع;مُركّب;تركيب;تفعيل;إلغاء تفعيل;ظلال;.زينة;العَتَمَة;غير "
-"الحجم;غير فعال;معاينة;compiz;مترجمون;"
+"الحجم;غير فعال;معاينة;compiz;انتقالات;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
@@ -419,7 +419,7 @@ msgstr "_مقاومة الحافة:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b> لف مساحة العمل عند بلوغ خافة الشاشة </b>"
+msgstr "<b> لف مساحة العمل عند بلوغ حافة الشاشة </b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -431,7 +431,7 @@ msgstr "عن_د التحجيم"
 
 #: settings-dialogs/xfwm4-dialog.glade:1504
 msgid "<b>Hide content of windows</b>"
-msgstr "<b> إخفاء مكونات التوافذ </b>"
+msgstr "<b> إخفاء مكونات النوافذ </b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1532
 msgid "The action to perform when the title-bar is double-clicked"
@@ -568,7 +568,7 @@ msgstr "_جلب النافذة إلى مساحة العمل الحالية"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
-msgstr "أنتقل لنافذة مساحة العمل"
+msgstr "الانتقال إلى مساحة عمل ال_نافذة"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
@@ -592,7 +592,7 @@ msgstr "أخف العنوان عند تكبير النافذة"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:507
 msgid "Automatically _tile windows when moving toward the screen edge"
-msgstr "إرفع النوافذ تلقائيا عندما التركيز"
+msgstr "_ترتيب النوافذ تلقائيًا عند تحريكها نحو حافة الشاشة"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
@@ -710,7 +710,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "عرض نوافذ تملئ الشاشة مباشرة"
+msgstr "عرض النوافذ المتراكبة بملء الشاشة مباشرةً (_F)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -879,7 +879,7 @@ msgstr "_حجّم"
 #. ----------------------------------------------
 #: src/menu.c:59
 msgid "Always on _Top"
-msgstr "_ألق في الأعلى"
+msgstr "دائمًا في الأ_على"
 
 #: src/menu.c:60
 msgid "_Same as Other Windows"

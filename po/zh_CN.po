@@ -248,7 +248,7 @@ msgstr "标题"
 
 #: settings-dialogs/xfwm4-dialog.glade:314
 msgid "The window title cannot be removed"
-msgstr "未能移除窗口标题"
+msgstr "窗口标题不能被移除"
 
 #: settings-dialogs/xfwm4-dialog.glade:330
 msgid "Active"
@@ -517,8 +517,8 @@ msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
 msgstr ""
-"跳过有 “跳过页面” 或 “跳过工具栏”\n"
-"属性设置的窗口(_K)"
+"跳过设置了“跳过分页器”或“跳过任务栏”\n"
+"属性的窗口(_K)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
@@ -598,7 +598,7 @@ msgstr "使用边缘阻距而不是窗口吸附(_E)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
-msgstr "使用鼠标滑轮以滚动窗口(_L)"
+msgstr "在标题栏上使用鼠标滚轮卷起窗口(_L)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:555
 msgid "Notify of _urgency by making window's decoration blink"
@@ -707,7 +707,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "直接覆盖窗口显示全屏(_F)"
+msgstr "直接显示全屏覆盖窗口(_F)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -961,4 +961,4 @@ msgstr "从子进程读取数据时出错：%s\n"
 #: src/terminate.c:141
 #, c-format
 msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "未能启动帮助对话框：%s\n"
+msgstr "未能启动 helper-dialog：%s\n"

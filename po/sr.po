@@ -745,7 +745,7 @@ msgstr "Приближи показивач заједно са радном п�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
 msgid "Opaci_ty of window decorations:"
-msgstr "Прозирност_ст украса прозора:"
+msgstr "Прозирност _украса прозора:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1187
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1263

@@ -162,7 +162,7 @@ msgstr "Керівник вікон"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
-msgstr "Налаштувати заголовок вікна і ярлик запуску"
+msgstr "Налаштувати поведінку вікон і комбінації клавіш"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
@@ -183,7 +183,7 @@ msgstr "Налаштування керівника вікон"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
-msgstr "Тонке налаштування заголовку вікна і ефектів"
+msgstr "Тонке налаштування поведінки вікон і ефектів"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
@@ -194,8 +194,8 @@ msgstr ""
 "вікна;оформлення;налаштування;конфігурування;перехід;по-"
 "колу;перемикання;фокус;піднімання;доступність;кнопка;перетягування;перемістити;переміщення;приховати;рамка;заголовок;розгорнути;заголовок;екран;межа;гарячі "
 "кути;захват;колесо миші;згорнути догори;робочий "
-"простір;розміщення;розміщувач;композиція;івімкнено;вимкнено;тінь;оформлення;непрозорість;зміна "
-"розміру;не активний;перегляд;публікація;переклади;"
+"простір;розміщення;розміщувач;композиція;увімкнено;вимкнено;тінь;оформлення;непрозорість;зміна "
+"розміру;не активний;перегляд;compiz;переходи;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
@@ -212,7 +212,7 @@ msgid ""
 "desktops;number;windows;screen;margins;"
 msgstr ""
 "робочий простір;налаштування;конфігурування;віртуальні "
-"столи;номер;вікна;екран;злиття;"
+"столи;номер;вікна;екран;поля;"
 
 #: settings-dialogs/xfwm4-dialog.glade:77
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:78
@@ -265,7 +265,7 @@ msgstr "Приліпити"
 
 #: settings-dialogs/xfwm4-dialog.glade:405
 msgid "Shade"
-msgstr "Тінь"
+msgstr "Згорнути в заголовок"
 
 #: settings-dialogs/xfwm4-dialog.glade:426
 msgid "Minimize"
@@ -285,7 +285,7 @@ msgstr "Приховування"
 
 #: settings-dialogs/xfwm4-dialog.glade:510
 msgid "<b>Button layout</b>"
-msgstr "<b>Кнопка розкладки</b>"
+msgstr "<b>Розкладка кнопок</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:534
 msgid "_Style"
@@ -498,7 +498,7 @@ msgstr "Комбінація клавіш"
 #: settings-dialogs/xfwm4-settings.c:906
 #, c-format
 msgid "Failed to initialize xfconf. Reason: %s"
-msgstr "Невдача ініціалізації xfconf. Відповідь: %s"
+msgstr "Невдача ініціалізації xfconf. Причина: %s"
 
 #: settings-dialogs/xfwm4-settings.c:917
 msgid "Could not create the settings dialog."
@@ -532,7 +532,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
-msgstr "Вклю_чаючи приховані (згорнуті в значки) вінка"
+msgstr "Вклю_чаючи приховані (згорнуті в значки) вікна"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:180
 msgid "Cycle _through windows on all workspaces"
@@ -572,7 +572,7 @@ msgstr "Поміст_ити вікно на поточну робочу обла
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
-msgstr "Перемкнути _вікна робочої області"
+msgstr "Перемкнутися на робочу область _вікна"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
@@ -649,7 +649,7 @@ msgstr "_Робочі області"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:703
 msgid "_Minimum size of windows to trigger smart placement:"
 msgstr ""
-"_Наймешний розмір вікон, при якому буде ввімкнено розумне розташування:"
+"_Найменший розмір вікон, при якому буде ввімкнено розумне розташування:"
 
 #. Smart placement size
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:757
@@ -829,7 +829,7 @@ msgstr "%s (на %s)"
 #: src/keyboard.c:147 src/settings.c:158
 #, c-format
 msgid "Unsupported keyboard modifier '%s'"
-msgstr "Непідтртимуваний модифікатор клавіатури '%s'"
+msgstr "Непідтримуваний модифікатор клавіатури '%s'"
 
 #: src/main.c:611
 msgid "Set the compositor mode"
@@ -866,7 +866,7 @@ msgstr "_Розгорнути"
 
 #: src/menu.c:52
 msgid "Unma_ximize"
-msgstr "З_горнути"
+msgstr "_Відновити"
 
 #: src/menu.c:53
 msgid "Mi_nimize"
@@ -904,11 +904,11 @@ msgstr "Завжди _нижче від інших вікон"
 #. ----------------------------------------------
 #: src/menu.c:63
 msgid "Roll Window Up"
-msgstr "Перемістити вікно вверх"
+msgstr "Згорнути вікно в заголовок"
 
 #: src/menu.c:64
 msgid "Roll Window Down"
-msgstr "Перемістити вікно вниз"
+msgstr "Розгорнути вікно із заголовка"
 
 #: src/menu.c:65
 msgid "_Fullscreen"

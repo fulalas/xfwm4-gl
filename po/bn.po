@@ -126,7 +126,7 @@ msgid ""
 "Try %s --help to see a full list of available command line options.\n"
 msgstr ""
 "%s: %s\n"
-"চেষ্টা করুন %s --সহায়তা বিদ্যমান কমান্ড লাইন অপশনের পূর্ণ তালিকা দেখতে।\n"
+"চেষ্টা করুন %s --help বিদ্যমান কমান্ড লাইন অপশনের পূর্ণ তালিকা দেখতে।\n"
 
 #: settings-dialogs/workspace-settings.c:107
 #: settings-dialogs/workspace-settings.c:121
@@ -392,7 +392,7 @@ msgstr "<i>প্রশস্ত</i>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1263
 msgid "<b>Windows snapping</b>"
-msgstr "<b>উইন্ডোর ছবি নিচ্ছে</b>"
+msgstr "<b>উইন্ডো স্ন্যাপিং</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1300
 msgid "With the mouse _pointer"
@@ -835,7 +835,7 @@ msgstr "[ARGUMENTS...]"
 #: src/main.c:675
 #, c-format
 msgid "Type \"%s --help\" for usage."
-msgstr "ব্যবহারের জন্য \"%s --সহায়তা\" টাইপ করুন।"
+msgstr "ব্যবহারের জন্য \"%s --help\" টাইপ করুন।"
 
 #: src/menu.c:51
 msgid "Ma_ximize"
@@ -954,4 +954,4 @@ msgstr "চাইল্ড প্রসেস থেকে উপাত্ত �
 #: src/terminate.c:141
 #, c-format
 msgid "Cannot spawn helper-dialog: %s\n"
-msgstr "বিপুল সংখ্যক সহায়তাকারী-ডায়ালগ সৃষ্টি করা যাচ্ছে না: %s\n"
+msgstr "সহায়তাকারী-ডায়ালগ সৃষ্টি করা যাচ্ছে না: %s\n"

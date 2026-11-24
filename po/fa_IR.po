@@ -428,7 +428,7 @@ msgstr "هنگام _حرکت"
 
 #: settings-dialogs/xfwm4-dialog.glade:1482
 msgid "When _resizing"
-msgstr "هنگام بالا آمد_ن"
+msgstr "هنگام _تغییر اندازه"
 
 #: settings-dialogs/xfwm4-dialog.glade:1504
 msgid "<b>Hide content of windows</b>"

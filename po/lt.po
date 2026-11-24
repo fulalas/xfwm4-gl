@@ -535,7 +535,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
-msgstr "Į_traukti paslėptus (t.y. neatpažintus) langus"
+msgstr "Į_traukti paslėptus (t.y. suskleistus) langus"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:180
 msgid "Cycle _through windows on all workspaces"
@@ -563,7 +563,7 @@ msgstr "Aktyvuoti _fokusavimo nukreipimo draudimą"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
-msgstr "Garbingas _standartinis ICCCM fokusavimo patarimas"
+msgstr "Paisyti _standartinio ICCCM fokusavimo nurodymo"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:305
 msgid "When a window raises itself:"
@@ -599,11 +599,11 @@ msgstr "Išskleidus, slėpti lango pavadinimą"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:507
 msgid "Automatically _tile windows when moving toward the screen edge"
-msgstr "Automatiškai iškloti _langus, kai jie perkeliami link lango krašto"
+msgstr "Automatiškai iškloti _langus, kai jie perkeliami link ekrano krašto"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
-msgstr "Vietoj lango pritraukimo naudoti _lango atsparumą"
+msgstr "Vietoj lango pritraukimo naudoti _kraštų atsparumą"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
@@ -743,7 +743,7 @@ msgstr "Aplink iškylančiuosius langus _rodyti šešėlius"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1095
 msgid "Show shadows under _dock windows"
-msgstr "Aplink paslėptus langus _rodyti šešėlius"
+msgstr "Aplink doko langus _rodyti šešėlius"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1111
 msgid "Show shadows under _regular windows"
@@ -775,7 +775,7 @@ msgstr "<i>Permatomumas</i>"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1443
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1519
 msgid "<i>Opaque</i>"
-msgstr "<i>Matomumas</i>"
+msgstr "<i>Nepermatomumas</i>"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1238
 msgid "Opacity of _inactive windows:"
@@ -795,7 +795,7 @@ msgstr "_Iškylančiųjų langų permatomumas:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1559
 msgid "C_ompositor"
-msgstr "_Kūrimas"
+msgstr "_Komponavimas"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:90
 msgid "_Number of workspaces:"

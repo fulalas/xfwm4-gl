@@ -173,7 +173,7 @@ msgstr "視窗管理員調校"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
-msgstr "微調視窗視窗行為與特效"
+msgstr "微調視窗行為與特效"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
@@ -618,7 +618,7 @@ msgstr "以實際的桌面配置決定工作區迴繞(_L)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
-msgstr "抵達第一個或最後一個工作區時時迴繞工作區(_T)"
+msgstr "抵達第一個或最後一個工作區時迴繞工作區(_T)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:683
 msgid "_Workspaces"
@@ -695,7 +695,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "以直接覆蓋視窗的方式顯示全螢幕(_F)"
+msgstr "直接顯示全螢幕覆蓋視窗(_F)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

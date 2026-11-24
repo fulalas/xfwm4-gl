@@ -132,11 +132,11 @@ msgstr ""
 #: settings-dialogs/workspace-settings.c:203
 #, c-format
 msgid "Workspace %d"
-msgstr "Workspace %d"
+msgstr "Qada xebatê %d"
 
 #: settings-dialogs/workspace-settings.c:329
 msgid "Workspace Name"
-msgstr "Navê Workspace"
+msgstr "Navê qada xebatê"
 
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
@@ -190,11 +190,11 @@ msgstr ""
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
 msgid "Workspaces"
-msgstr "WorksPaces"
+msgstr "Qadên xebatê"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
-msgstr "Navmalîn, nav û marjînal"
+msgstr "Rêzkirin, nav û marjînên qadên xebatê saz bike"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
@@ -222,11 +222,11 @@ msgstr "<b>The_me</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:208
 msgid "<b>Title fon_t</b>"
-msgstr "<b>Sernav fon_t</b>"
+msgstr "<b>_Curenivîsa sernavê</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:246
 msgid "<b>Title _alignment</b>"
-msgstr "<b>Sernav _alignment</b>"
+msgstr "<b>_Rêzkirina sernavê</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:283
 msgid "Click and drag the buttons to change the layout"
@@ -282,7 +282,7 @@ msgstr "_Awayî"
 
 #: settings-dialogs/xfwm4-dialog.glade:553
 msgid "Define shortcuts to perform _window manager actions:"
-msgstr "Kurtefîlmên Daxuyaniyê bikin da ku kiryarên Gerînendeyê bikin:"
+msgstr "Kurteriyan ji bo kiryarên rêvebirê _pencereyan diyar bike:"
 
 #: settings-dialogs/xfwm4-dialog.glade:613
 msgid "_Edit"
@@ -356,7 +356,7 @@ msgstr "Dema di _nava pencereya sepanê de tê klîkkirin, pencereyê bilind bik
 
 #: settings-dialogs/xfwm4-dialog.glade:1068
 msgid "<b>Raise on click</b>"
-msgstr "<b>Li ser bikirtînin</b>"
+msgstr "<b>Bi klîkê bilind bike</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1088
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:404
@@ -409,7 +409,7 @@ msgstr "_Berxwedana xwe:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Dema ku gihîştina perdeya ekranê</b>"
+msgstr "<b>Dema digihîje kenarê ekranê, qadên xebatê ji serî ve bidomîne</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -542,7 +542,7 @@ msgstr "_Gerandin"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:264
 msgid "Activate foc_us stealing prevention"
-msgstr "Pêşkêşkirina diziya foc_us çalak bike"
+msgstr "Pêşîlêgirtina dizîna _fokusê çalak bike"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:280
 msgid "Honor _standard ICCCM focus hint"
@@ -558,19 +558,19 @@ msgstr "Pencereyê bîne qada xebatê ya _heyî"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
-msgstr "Vegere Win_Dow Workspace"
+msgstr "Biçe qada xebatê ya _pencereyê"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
-msgstr "Do _nothing"
+msgstr "_Tiştekî neke"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:430
 msgid "Key used to _grab and move windows:"
-msgstr "Mifteya ku bi _grab û veguhastina Windows ve hatî kişandin:"
+msgstr "Mifteya ji bo _girtin û veguhestina pencereyan:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:460
 msgid "_Raise windows when any mouse button is pressed"
-msgstr "_Pencereya dema ku bişkoja mişk tê zext kirin"
+msgstr "Dema bişkojeke mişkê tê pêlkirin, pencereyan _bilind bike"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:476
 msgid "Hide frame of windows when ma_ximized"
@@ -586,11 +586,11 @@ msgstr "Dema ber bi kenarê ekranê ve tên birin, pencereyan bixweber _rêz bik
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:523
 msgid "Use _edge resistance instead of window snapping"
-msgstr "Li şûna pencereya pencereyê li şûna pencereya pencereyê bikar bînin"
+msgstr "Li şûna pêvekirina pencereyan _berxwedana kenaran bi kar bîne"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:539
 msgid "Use mouse wheel on title bar to ro_ll up the window"
-msgstr "Li ser sernavê mişkokê li ser pencereyê hilkişînin"
+msgstr "Ji bo pêçana pencereyê, tekera mişkê li ser darika sernavê bi _kar bîne"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:555
 msgid "Notify of _urgency by making window's decoration blink"
@@ -607,7 +607,7 @@ msgstr "_Gihîştinbarî"
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
 msgstr ""
-"Li ser sermaseyê karta _mouse bikar bînin ku ji bo veguheztina karên xebatê"
+"Ji bo guherandina qadên xebatê tekera _mişkê li ser sermaseyê bi kar bîne"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:627
 msgid ""
@@ -619,7 +619,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"
-msgstr "Worksiyonên Worksiyonê li gorî sermaseya rastîn a ku girêdayî ye"
+msgstr "Qadên xebatê li gorî _rêzkirina rastîn a sermaseyê ji serî ve bidomîne"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:660
 msgid "Wrap workspaces when _the first or the last workspace is reached"
@@ -631,7 +631,7 @@ msgstr "_Qadên xebatê"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:703
 msgid "_Minimum size of windows to trigger smart placement:"
-msgstr "_Minumh Mezinahiya Windows-ê ji bo pêkanîna cîhaza hişmend:"
+msgstr "_Mezinahiya herî kêm a pencereyan ji bo bicihkirina hişmend:"
 
 #. Smart placement size
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:757
@@ -840,7 +840,7 @@ msgstr "[ARGUMAN...]"
 #: src/main.c:675
 #, c-format
 msgid "Type \"%s --help\" for usage."
-msgstr "Type \"%s --help\" ji bo karanînê."
+msgstr "Ji bo bikaranînê \"%s --help\" binivîse."
 
 #: src/menu.c:51
 msgid "Ma_ximize"
@@ -911,11 +911,11 @@ msgstr "Her tim li qada xebatê ya _xuyayî"
 
 #: src/menu.c:70
 msgid "Move to Another _Workspace"
-msgstr "Vegere yekî din _Workspace"
+msgstr "Bibe qadeke xebatê ya _din"
 
 #: src/menu.c:71
 msgid "Move to Another Monitor"
-msgstr "Vegere çavdêriyek din"
+msgstr "Bibe ekraneke din"
 
 #. --------------------------------------------------------
 #: src/menu.c:76

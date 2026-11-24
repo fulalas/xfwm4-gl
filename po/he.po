@@ -157,7 +157,7 @@ msgstr "מנהל חלונות"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
-msgstr "הגדר התנהגות, נגיעות וקיצורי דרך חלון"
+msgstr "הגדר התנהגות וקיצורי דרך של חלונות"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
@@ -931,19 +931,19 @@ msgstr "_הפעל מחדש"
 
 #: src/menu.c:207
 msgid "Monitor _Left"
-msgstr "הצג _השמאלי"
+msgstr "הצג ה_שמאלי"
 
 #: src/menu.c:211
 msgid "Monitor _Right"
-msgstr "הצג _הימני"
+msgstr "הצג ה_ימני"
 
 #: src/menu.c:215
 msgid "Monitor _Up"
-msgstr "הצג _העליון"
+msgstr "הצג ה_עליון"
 
 #: src/menu.c:219
 msgid "Monitor _Down"
-msgstr "הצג _התחתון"
+msgstr "הצג ה_תחתון"
 
 #: src/menu.c:459
 #, c-format

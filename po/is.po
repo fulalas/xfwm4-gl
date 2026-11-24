@@ -128,7 +128,7 @@ msgid ""
 "Try %s --help to see a full list of available command line options.\n"
 msgstr ""
 "%s: %s\n"
-"Prufaðu %s --hjálp til að sjá lista með öllum tiltækum skipanavalkostum.\n"
+"Prufaðu %s --help til að sjá lista með öllum tiltækum skipanavalkostum.\n"
 
 #: settings-dialogs/workspace-settings.c:107
 #: settings-dialogs/workspace-settings.c:121
@@ -605,7 +605,7 @@ msgstr "_Aðgengi"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
-msgstr "Nota _músarhjólið til að skipta um vinnusvæði"
+msgstr "Nota _músarhjólið á skjáborðinu til að skipta um vinnusvæði"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:627
 msgid ""

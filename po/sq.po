@@ -182,7 +182,7 @@ msgid ""
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
-"dritaresjellje;rregullime;parapëlqime;ciklim;cikël;shndërrim;fokus;ngritje;përdorshmëri "
+"dritare;sjellje;rregullime;parapëlqime;ciklim;cikël;shndërrim;fokus;ngritje;përdorshmëri "
 "nga persona me aftësi të "
 "kufizuara;tast;tërheqje;lëvize;lëvizje;fshihe;kuadër;shtyllë titujsh;e "
 "maksimizuar;kuadrat;skenë;skaj;cep i ndjeshëm;snapping;rrotëz miu;roll "
@@ -286,7 +286,7 @@ msgstr "_Stil"
 
 #: settings-dialogs/xfwm4-dialog.glade:553
 msgid "Define shortcuts to perform _window manager actions:"
-msgstr "Përcaktoni shkurtore për të kryer veprime _window manager:"
+msgstr "Përcaktoni shkurtore për të kryer veprime të _përgjegjësit të dritareve:"
 
 #: settings-dialogs/xfwm4-dialog.glade:613
 msgid "_Edit"
@@ -414,7 +414,7 @@ msgstr "Rezistencë _skajesh:"
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
 msgstr ""
-"<b>Mbështilli hapësirat e punëve. kur mbërrihet në skajin e ekranit</b>"
+"<b>Mbështilli hapësirat e punëve kur mbërrihet në skajin e ekranit</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"

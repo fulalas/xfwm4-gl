@@ -517,7 +517,7 @@ msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
 msgstr ""
-"Hoppa _över fönster som har egenskaperna \"hoppa över sökning\"\n"
+"Hoppa _över fönster som har egenskaperna \"hoppa över arbetsyteväxlare\"\n"
 "eller \"hoppa över aktivitetsfält\" inställda"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148

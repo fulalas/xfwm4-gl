@@ -617,7 +617,9 @@ msgstr "_Hiiren rulla työpöydän yllä vaihtaa työtilaa"
 msgid ""
 "_Remember and recall previous workspace\n"
 "when switching via keyboard shortcuts"
-msgstr "M_uista edellinen työtila pikanäppäimillä vaihdettaessa"
+msgstr ""
+"M_uista edellinen työtila\n"
+"pikanäppäimillä vaihdettaessa"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:644
 msgid "Wrap workspaces depending on the actual desktop _layout"

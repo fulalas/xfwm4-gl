@@ -150,7 +150,7 @@ msgstr "Názov pracovnej plochy"
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
-msgstr "Nastavenia správcu soketu"
+msgstr "Soket správcu nastavení"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
@@ -316,7 +316,7 @@ msgstr "Zamerať _umiestnenením kurzoru myši nad okno"
 
 #: settings-dialogs/xfwm4-dialog.glade:765
 msgid "_Delay before window receives focus:"
-msgstr "_Oneskorenie pred presunutím okna do popredia:"
+msgstr "_Oneskorenie pred zameraním okna:"
 
 #. Focus delay
 #. Raise focus delay
@@ -707,7 +707,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Použiť priame zobrazovanie pre okná v režime _celej obrazovky"
+msgstr "Zobraziť prekryvné okná na _celú obrazovku priamo"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

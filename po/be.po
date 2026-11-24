@@ -26,7 +26,9 @@ msgstr ""
 msgid ""
 "This window might be busy and is not responding.\n"
 "Do you want to terminate the application?"
-msgstr "Гэтае акно занятае і не адказвае. Хочаце спыніць гэтую праграму?"
+msgstr ""
+"Магчыма, гэтае акно занятае і не адказвае.\n"
+"Хочаце спыніць гэтую праграму?"
 
 #: helper-dialog/helper-dialog.c:91
 msgid "Warning"
@@ -153,7 +155,7 @@ msgstr "Кіраўнік акон"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:4
 msgid "Configure window behavior and shortcuts"
-msgstr "Наладка паводзін акна і значкоў"
+msgstr "Наладка паводзін акна і спалучэнняў клавіш"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:5
 msgid ""
@@ -709,7 +711,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Адлюстроўваць _вокны на ўвесь экран"
+msgstr "Паказваць _поўнаэкранныя накладныя вокны непасрэдна"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

@@ -166,8 +166,8 @@ msgid ""
 "content;move;resize;moving;resizing;double click;"
 msgstr ""
 "finestres;gestió;ajusts;preferències;temes;estils;decoració;barra de "
-"títol;lletra;botons;menú;minimitzar;maximitzar;ombrejar;desenrotllar;disposició;dreceres "
-"de teclat;fòcus;encaixar;pantalla;espais de treball;cantonades;bores;ocultar "
+"títol;lletra;botons;menú;minimitzar;maximitzar;ombrejar;enrotllar;disposició;dreceres "
+"de teclat;fòcus;encaixar;pantalla;espais de treball;cantonades;vores;ocultar "
 "el contingut;moure;redimensionar;doble clic;"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
@@ -185,8 +185,8 @@ msgid ""
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
-"finestres;comportament;ajusts;preferències;recórrer;canviar;fòcus;elevar;accessibilitat;tecla;arrossegar;moure;ocultar;marc;barrà "
-"de títol;maximitzat;títol;pantalla;cantonada;cantonada calenta;encaixar;roda "
+"finestres;comportament;ajusts;preferències;recórrer;canviar;fòcus;elevar;accessibilitat;tecla;arrossegar;moure;ocultar;marc;barra "
+"de títol;maximitzat;mosaic;pantalla;cantonada;cantonada calenta;encaixar;roda "
 "del ratolí;enrotllar;espais de "
 "treball;ubicar;compositor;composició;habilitar;inhabilitar;ombres;decoracions;opacitat;redimensionar;inactiu;vista "
 "prèvia;compiz;transicions;"
@@ -722,7 +722,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Mostra directament a pantalla completa les _finestres"
+msgstr "Mostra directament les _finestres superposades a pantalla completa"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""

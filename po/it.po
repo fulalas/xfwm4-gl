@@ -185,7 +185,7 @@ msgstr "Regolazioni del gestore delle finestre"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:4
 msgid "Fine-tune window behaviour and effects"
-msgstr "Regolazione del comportamento della finestra e delle scorciatoie"
+msgstr "Regolazione del comportamento e degli effetti delle finestre"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:5
 msgid ""
@@ -824,7 +824,7 @@ msgstr "_Generale"
 msgid ""
 "Margins are areas on the edges of the screen where no window will be placed"
 msgstr ""
-"I bordi sono aree agli angoli dello schermo dove non verrà posta alcuna "
+"I margini sono aree ai bordi dello schermo dove non verrà posta alcuna "
 "finestra"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
@@ -927,7 +927,7 @@ msgstr "A schermo _intero"
 
 #: src/menu.c:66
 msgid "Leave _Fullscreen"
-msgstr "Lascia _a schermo intero"
+msgstr "Esci da schermo _intero"
 
 #: src/menu.c:67
 msgid "Context _Help"

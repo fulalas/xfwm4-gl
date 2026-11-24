@@ -134,7 +134,7 @@ msgid ""
 "Try %s --help to see a full list of available command line options.\n"
 msgstr ""
 "%s: %s\n"
-"»%s -- help« eingeben, um eine vollständige Liste verfügbarer "
+"»%s --help« eingeben, um eine vollständige Liste verfügbarer "
 "Befehlszeilenoptionen zu sehen.\n"
 
 #: settings-dialogs/workspace-settings.c:107
@@ -151,7 +151,7 @@ msgstr "Name der Arbeitsfläche"
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
-msgstr "Socket für die Sitzungsverwaltung"
+msgstr "Socket für die Einstellungsverwaltung"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
@@ -188,7 +188,7 @@ msgid ""
 "bar;maximized;tile;screen;edge;hot corner;snapping;mouse wheel;roll "
 "up;workspaces;placement;compositor;compositing;enable;disable;shadows;decorations;opacity;resize;inactive;preview;compiz;transitions;"
 msgstr ""
-"Fenster;Verhalten;Einstellungen;Präferenzen;Radfahren;Zyklus;Umschalten;Fokussieren;Anheben;Zugänglichkeit;Taste;Ziehen;Bewegen;Verschieben;Ausblenden;Rahmen;Titelleiste;Maximiert;Kachel;Bildschirm;Rand;heiße "
+"Fenster;Verhalten;Einstellungen;Präferenzen;Durchwechseln;Zyklus;Umschalten;Fokussieren;Anheben;Zugänglichkeit;Taste;Ziehen;Bewegen;Verschieben;Ausblenden;Rahmen;Titelleiste;Maximiert;Kachel;Bildschirm;Rand;heiße "
 "Ecke;Einrasten;Mausrad;Aufrollen;Arbeitsflächen;Platzierung;Compositor;Compositing;Aktivieren;Deaktivieren;Schatten;Dekorationen;Deckkraft;Größe "
 "ändern;inaktiv;Vorschau;compiz;Übergänge;"
 
@@ -417,7 +417,7 @@ msgstr "_Widerstand an den Kanten:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Arbeitsfläche wechseln, wenn die Bildschirmecke erreicht wird</b>"
+msgstr "<b>Arbeitsfläche wechseln, wenn der Bildschirmrand erreicht wird</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"

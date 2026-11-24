@@ -211,7 +211,7 @@ msgstr ""
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:78
 #: settings-dialogs/xfwm4-workspace-dialog.glade:416
 msgid "_Help"
-msgstr "Trợ giúp "
+msgstr "Trợ _giúp"
 
 #. ----------------------------------------------
 #: settings-dialogs/xfwm4-dialog.glade:94
@@ -425,7 +425,7 @@ msgstr "Khi _thay đổi kích cỡ"
 
 #: settings-dialogs/xfwm4-dialog.glade:1504
 msgid "<b>Hide content of windows</b>"
-msgstr "<b>Hiện nội dung cửa sổ</b>"
+msgstr "<b>Ẩn nội dung cửa sổ</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1532
 msgid "The action to perform when the title-bar is double-clicked"
@@ -518,7 +518,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
-msgstr "Chuyển qua các cửa sổ theo thứ tự dùng gần đây"
+msgstr "Chuyển qua các cửa sổ đã thu nhỏ theo thứ tự dùng gần đây"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
@@ -562,7 +562,7 @@ msgstr "Mang cửa sổ đến không gian làm việc hiện tại"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
-msgstr "Chuyển quan không gian làm việc của cửa sổ"
+msgstr "Chuyển qua không gian làm việc của cửa sổ"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
@@ -606,7 +606,7 @@ msgstr "Luôn chớp các cửa sổ đang thông báo"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:594
 msgid "_Accessibility"
-msgstr "Truy cập"
+msgstr "Trợ _năng"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:611
 msgid "Use the _mouse wheel on the desktop to switch workspaces"
@@ -705,7 +705,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Hiển thị các cửa tổ toàn màn hình trực tiếp"
+msgstr "Hiển thị trực tiếp các cửa sổ phủ toàn màn hình"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -765,7 +765,7 @@ msgstr "Độ mờ của các cửa sổ không được tập trung"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1314
 msgid "Opacity of windows during _move:"
-msgstr "Độ mờ của cửa sổ khi di duyển"
+msgstr "Độ mờ của cửa sổ khi di chuyển"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1390
 msgid "Opacity of windows during resi_ze:"
@@ -798,7 +798,7 @@ msgstr "_Tổng quát"
 #: settings-dialogs/xfwm4-workspace-dialog.glade:232
 msgid ""
 "Margins are areas on the edges of the screen where no window will be placed"
-msgstr "Biên là khu vực bên ngoài màn hình không thể đặt cửa sổ ứng dụng"
+msgstr "Lề là khu vực ở các cạnh màn hình nơi không đặt cửa sổ ứng dụng"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:393
 msgid "_Margins"

@@ -199,7 +199,7 @@ msgstr "Работни места"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
-msgstr "Настройване на поведението, имената и допустимите граници"
+msgstr "Настройване на подредбата, имената и полетата"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
@@ -417,7 +417,7 @@ msgstr "Съпротивление в краищата:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Опаковане на работните места при достигане края на екрана</b>"
+msgstr "<b>Превъртане на работните места при достигане края на екрана</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -568,7 +568,7 @@ msgstr "Преместване на прозореца на текущото р�
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:345
 msgid "Switch to win_dow's workspace"
-msgstr "Превключване на прозорците на работното място"
+msgstr "Превключване към работното място на _прозореца"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:363
 msgid "Do _nothing"
@@ -725,7 +725,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Показване на всички прозорци наведнъж на цял екран"
+msgstr "Директно показване на наслагващите се прозорци на _цял екран"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -840,7 +840,7 @@ msgstr "Не се поддържа клавиатурен модификатор
 
 #: src/main.c:611
 msgid "Set the compositor mode"
-msgstr "Преминаване в режим на композиране"
+msgstr "Задаване на режима на композиране"
 
 #: src/main.c:613
 msgid "Set the vblank mode"
@@ -911,11 +911,11 @@ msgstr "Винаги под другите прозорци"
 #. ----------------------------------------------
 #: src/menu.c:63
 msgid "Roll Window Up"
-msgstr "Завърти прозореца нагоре"
+msgstr "Навиване на прозореца"
 
 #: src/menu.c:64
 msgid "Roll Window Down"
-msgstr "Завърти прозореца надолу"
+msgstr "Развиване на прозореца"
 
 #: src/menu.c:65
 msgid "_Fullscreen"
@@ -974,7 +974,7 @@ msgstr "Монитор _отдолу"
 #: src/menu.c:459
 #, c-format
 msgid "%s: GtkMenu failed to grab the pointer\n"
-msgstr "%s: GtkMenu не не успя да прихване показалеца\n"
+msgstr "%s: GtkMenu не успя да прихване показалеца\n"
 
 #: src/terminate.c:83
 #, c-format

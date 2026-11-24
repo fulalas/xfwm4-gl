@@ -515,8 +515,8 @@ msgid ""
 "S_kip windows that have \"skip pager\"\n"
 "or \"skip taskbar\" properties set"
 msgstr ""
-"_Ignorar las fenèstras absentas de la barra dels prètzfaches\n"
-" o de las proprietats « skip pager » e « skip taskbar »"
+"_Ignorar las fenèstras qu'an las proprietats\n"
+"« skip pager » o « skip taskbar »"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"

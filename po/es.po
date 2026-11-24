@@ -413,7 +413,7 @@ msgstr "Con el _puntero del ratón"
 
 #: settings-dialogs/xfwm4-dialog.glade:1316
 msgid "With a _dragged window"
-msgstr "Con una ventana  _arrastrastrada"
+msgstr "Con una ventana _arrastrada"
 
 #: settings-dialogs/xfwm4-dialog.glade:1348
 msgid "_Edge resistance:"
@@ -527,7 +527,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:148
 msgid "Cycle _through minimized windows in most recently used order"
-msgstr "Recorrer de las ventanas minimizadas por orden de uso más reciente"
+msgstr "_Recorrer las ventanas minimizadas por orden de uso más reciente"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:164
 msgid "_Include hidden (i.e. iconified) windows"
@@ -613,7 +613,7 @@ msgstr "_Notificar una urgencia con el parpadeo de la decoración de la ventana"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:571
 msgid "Keep urgent windows _blinking repeatedly"
-msgstr "Parpadeo repetido de las _ventanas hasta que reciban el foco"
+msgstr "Mantener el _parpadeo de las ventanas urgentes"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:594
 msgid "_Accessibility"
@@ -720,7 +720,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "Mostrar _directamente las ventanas a pantalla completa"
+msgstr "Mostrar _directamente las ventanas superpuestas a pantalla completa"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -835,11 +835,11 @@ msgstr "La tecla modificadora «%s» no es compatible"
 
 #: src/main.c:611
 msgid "Set the compositor mode"
-msgstr "Activar la composición"
+msgstr "Establecer el modo de composición"
 
 #: src/main.c:613
 msgid "Set the vblank mode"
-msgstr "Activar el modo de intervalo vertical"
+msgstr "Establecer el modo de intervalo vertical"
 
 #: src/main.c:623
 msgid "Replace the existing window manager"

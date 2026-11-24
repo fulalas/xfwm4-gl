@@ -144,7 +144,7 @@ msgstr "የቅንብሮች አስተዳዳሪ ሶኬት"
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
 msgid "Window Manager"
-msgstr "ማስኮት አስተዳዳሪ"
+msgstr "የመስኮት አስተዳዳሪ"
 
 #
 #: settings-dialogs/xfce-wm-settings.desktop.in:4
@@ -876,7 +876,7 @@ msgstr "ዳርቻዎች (_M)"
 #: src/client.c:215
 #, c-format
 msgid "%s (on %s)"
-msgstr "%s ( %s)"
+msgstr "%s (በ%s ላይ)"
 
 #: src/keyboard.c:147 src/settings.c:158
 #, c-format
@@ -929,7 +929,7 @@ msgstr "አሳንስ (_N)"
 
 #: src/menu.c:54
 msgid "Minimize _Other Windows"
-msgstr "መስኮቶችን ከለሎች መስኮቶች አሰልፍ"
+msgstr "ሌሎች መስኮቶችን አሳንስ (_O)"
 
 #: src/menu.c:55
 msgid "S_how"

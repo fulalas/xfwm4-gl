@@ -101,7 +101,7 @@ msgstr ""
 
 #: settings-dialogs/tweaks-settings.c:695
 msgid "Session manager socket"
-msgstr "Sokkel til indstillingshåndtering"
+msgstr "Sokkel til sessionshåndtering"
 
 #: settings-dialogs/tweaks-settings.c:695
 #: settings-dialogs/workspace-settings.c:445
@@ -165,7 +165,7 @@ msgid ""
 "shortcuts;focus;snapping;screen;workspaces;edges;corner;hide "
 "content;move;resize;moving;resizing;double click;"
 msgstr ""
-"vindueshåndtering;indstillinger;præferencer;temaer;stile;dekorationer;titellinje;skrifttype;knapper;menu;miniminer;maksimer;skygge;rul "
+"vindueshåndtering;indstillinger;præferencer;temaer;stile;dekorationer;titellinje;skrifttype;knapper;menu;minimer;maksimer;skygge;rul "
 "op;layout;tastaturgenveje;fokus;fastgørelse;skærm;arbejdsområder;kanter;hjørne;skjul "
 "indhold;flyt;tilpas størrelse;flytning;tilpasning af størrelse;dobbeltklik;"
 

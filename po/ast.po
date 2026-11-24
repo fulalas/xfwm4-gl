@@ -167,7 +167,7 @@ msgid ""
 msgstr ""
 "ventanes;xestión;axustes;preferencies;temes;estilos;adornos;barra de "
 "títulu;fonte;botones;menú;minimizar;masimizar;dilíu;endolcar;capa;atayos de "
-"tecláu;focu;alinear;pantalla,estayes de trabayu;exes;esquina;anubrir "
+"tecláu;focu;alinear;pantalla;estayes de trabayu;exes;esquina;anubrir "
 "conteníu;amover;cambear tamañu;amoviendo;cambeando tamañu;doble clic;"
 
 #: settings-dialogs/xfce-wmtweaks-settings.desktop.in:3
@@ -190,7 +190,7 @@ msgstr ""
 "de títulu;masimizáu;baldosa;pantalla;exe;atayu d'esquina;rastrando;rueda del "
 "mur;endolcar;estayes de "
 "trabayu;allugamientu;compositor;componiendo;autivar;desautivar;solombres;adornos;opacidá;cambear "
-"tamañu;non autivu;previsualización;compiz;transiciones"
+"tamañu;non autivu;previsualización;compiz;transiciones;"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:3
 #: settings-dialogs/xfwm4-workspace-dialog.glade:44
@@ -199,7 +199,7 @@ msgstr "Estayes de trabayu"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:4
 msgid "Configure layout, names and margins"
-msgstr "Configurar distribución del tecláu, nome y márxenes"
+msgstr "Configurar distribución, nomes y márxenes"
 
 #: settings-dialogs/xfce-workspaces-settings.desktop.in:5
 msgid ""
@@ -574,7 +574,7 @@ msgstr "_Nun facer nada"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:430
 msgid "Key used to _grab and move windows:"
-msgstr "Tecla usada pa _grabar y esplazar ventanes:"
+msgstr "Tecla usada pa _garrar y esplazar ventanes:"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:460
 msgid "_Raise windows when any mouse button is pressed"
@@ -729,7 +729,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1079
 msgid "Show shadows under pop_up windows"
-msgstr "Amosar somlobres baxo ventanos _emerxentes"
+msgstr "Amosar solombres baxo ventanes _emerxentes"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1095
 msgid "Show shadows under _dock windows"
@@ -737,7 +737,7 @@ msgstr "Amosar solombres baxo ventanes _empotrables"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1111
 msgid "Show shadows under _regular windows"
-msgstr "Amosar somlobres baxo ventanes _normales"
+msgstr "Amosar solombres baxo ventanes _normales"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1127
 msgid "Zoom desktop with mouse wheel"

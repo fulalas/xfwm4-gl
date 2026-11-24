@@ -415,7 +415,7 @@ msgstr "R_esistencia do bordo:"
 
 #: settings-dialogs/xfwm4-dialog.glade:1435
 msgid "<b>Wrap workspaces when reaching the screen edge</b>"
-msgstr "<b>Axustar os espazos de traballo ao chegar á beira da pantalla</b>"
+msgstr "<b>Cambiar de espazo de traballo ao chegar á beira da pantalla</b>"
 
 #: settings-dialogs/xfwm4-dialog.glade:1466
 msgid "When _moving"
@@ -746,7 +746,7 @@ msgstr "Aumentar e diminuír o escritorio coa roda do rato"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1143
 msgid "Zoom pointer along with the desktop"
-msgstr "Punteiro de zoom xunto co escritorio"
+msgstr "Ampliar tamén o punteiro xunto co escritorio"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
 msgid "Opaci_ty of window decorations:"
@@ -945,19 +945,19 @@ msgstr "Reiniciar"
 
 #: src/menu.c:207
 msgid "Monitor _Left"
-msgstr "Monitor _da esquerda"
+msgstr "Monitor da _esquerda"
 
 #: src/menu.c:211
 msgid "Monitor _Right"
-msgstr "Monitor _da dereita"
+msgstr "Monitor da de_reita"
 
 #: src/menu.c:215
 msgid "Monitor _Up"
-msgstr "Monitor _de arriba"
+msgstr "Monitor de _arriba"
 
 #: src/menu.c:219
 msgid "Monitor _Down"
-msgstr "Monitor _de abaixo"
+msgstr "Monitor de a_baixo"
 
 #: src/menu.c:459
 #, c-format

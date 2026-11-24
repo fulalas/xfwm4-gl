@@ -142,7 +142,7 @@ msgstr "작업 공간 이름"
 #: settings-dialogs/workspace-settings.c:445
 #: settings-dialogs/xfwm4-settings.c:241
 msgid "Settings manager socket"
-msgstr "관리자 소켓을 설정합니다"
+msgstr "설정 관리자 소켓"
 
 #: settings-dialogs/xfce-wm-settings.desktop.in:3
 #: settings-dialogs/xfwm4-dialog.glade:61
@@ -707,7 +707,7 @@ msgstr ""
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1046
 msgid "Display _fullscreen overlay windows directly"
-msgstr "직접 창을 도배하여 전체 화면 표시(_F)"
+msgstr "전체 화면 오버레이 창을 직접 표시(_F)"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1047
 msgid ""
@@ -737,7 +737,7 @@ msgstr "마우스 휠로 데스크톱 확대"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1143
 msgid "Zoom pointer along with the desktop"
-msgstr "포인터를 따라 데스크톱 확대"
+msgstr "데스크톱과 함께 포인터도 확대"
 
 #: settings-dialogs/xfwm4-tweaks-dialog.glade:1162
 msgid "Opaci_ty of window decorations:"
@@ -829,7 +829,7 @@ msgstr "기존 창 관리자 바꾸기"
 
 #: src/main.c:625
 msgid "Print version information and exit"
-msgstr "버전 정보"
+msgstr "버전 정보를 출력하고 끝내기"
 
 #: src/main.c:628
 msgid "Enable debug logging"

@@ -790,7 +790,7 @@ msgstr "Nosaukumi"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:194
 msgid "_General"
-msgstr "_Vsipārēji"
+msgstr "_Vispārēji"
 
 #: settings-dialogs/xfwm4-workspace-dialog.glade:232
 msgid ""
