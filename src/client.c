@@ -1299,6 +1299,8 @@ clientGetWMProtocols (Client *c)
     display_info = screen_info->display_info;
 
     wm_protocols_flags = getWMProtocols (display_info, c->window);
+    FLAG_UNSET (c->wm_flags, WM_FLAG_DELETE | WM_FLAG_TAKEFOCUS | WM_FLAG_CONTEXT_HELP |
+                             WM_FLAG_PING | WM_FLAG_ACTIVATE_ON_CLICK);
     FLAG_SET (c->wm_flags,
         (wm_protocols_flags & WM_PROTOCOLS_DELETE_WINDOW) ?
         WM_FLAG_DELETE : 0);
@@ -3434,6 +3436,7 @@ clientToggleMaximizedAtPoint (Client *c, gint cx, gint cy, int mode, gboolean re
     XWindowChanges wc;
     GdkRectangle rect;
     unsigned long old_flags;
+    tilePositionType old_tile_mode;
 
     g_return_val_if_fail (c != NULL, FALSE);
     TRACE ("client \"%s\" (0x%lx)", c->name, c->window);
@@ -3443,6 +3446,7 @@ clientToggleMaximizedAtPoint (Client *c, gint cx, gint cy, int mode, gboolean re
         return FALSE;
     }
 
+    old_tile_mode = c->tile_mode;
     if (c->tile_mode != TILE_NONE)
     {
         clientUntile (c);
@@ -3472,6 +3476,7 @@ clientToggleMaximizedAtPoint (Client *c, gint cx, gint cy, int mode, gboolean re
     if (!clientNewMaxSize (c, &wc, rect))
     {
         c->flags = old_flags;
+        c->tile_mode = old_tile_mode;
         return FALSE;
     }
 
@@ -3609,6 +3614,7 @@ clientMoveToMonitor (Client *c, GdkMonitor *current_monitor, GdkMonitor *target_
     GdkRectangle current_rect, target_rect;
     int monitor_offset_x, monitor_offset_y;
     float monitor_ratio_x, monitor_ratio_y;
+    gboolean scale_all;
 
     /* Get monitor geometry for current/target, removing margins */
     gdk_monitor_get_geometry(current_monitor, &current_rect);
@@ -3625,6 +3631,15 @@ clientMoveToMonitor (Client *c, GdkMonitor *current_monitor, GdkMonitor *target_
     /* Update the client x/y/width/height to be relative to the new monitor (+0.5 for rounding) */
     c->x = target_rect.x + (monitor_ratio_x * target_rect.width) + 0.5;
     c->y = target_rect.y + (monitor_ratio_y * target_rect.height) + 0.5;
+    scale_all = FLAG_TEST (c->flags, CLIENT_FLAG_FULLSCREEN) || (c->tile_mode != TILE_NONE);
+    if (scale_all || FLAG_TEST (c->flags, CLIENT_FLAG_MAXIMIZED_HORIZ))
+    {
+        c->width = (c->width * target_rect.width) / (float) current_rect.width + 0.5;
+    }
+    if (scale_all || FLAG_TEST (c->flags, CLIENT_FLAG_MAXIMIZED_VERT))
+    {
+        c->height = (c->height * target_rect.height) / (float) current_rect.height + 0.5;
+    }
 
     /* Same for saved geometry, if applicable */
     if (FLAG_TEST (c->flags, CLIENT_FLAG_RESTORE_SIZE_POS))
@@ -4014,7 +4029,9 @@ clientDecOpacity (Client *c)
 
     if ((c->opacity > OPACITY_SET_MIN) && !(FLAG_TEST (c->xfwm_flags, XFWM_FLAG_OPACITY_LOCKED)))
     {
-         clientSetOpacity (c, c->opacity - OPACITY_SET_STEP, 0, 0);
+         guint opacity = c->opacity - OPACITY_SET_STEP;
+
+         clientSetOpacity (c, MAX (opacity, OPACITY_SET_MIN), 0, 0);
     }
 }
 

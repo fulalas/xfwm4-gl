@@ -23,9 +23,12 @@ distclean-local:
 .PHONY: ChangeLog
 
 ChangeLog: Makefile
-	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp \
-	&& mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) \
-	|| (touch ChangeLog; echo 'Git directory not found: installing possibly empty changelog.' >&2)
+	if GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp; then \
+		mv .changelog.tmp ChangeLog; \
+	else \
+		rm -f .changelog.tmp; touch ChangeLog; \
+		echo 'Git directory not found: installing possibly empty changelog.' >&2; \
+	fi
 
 dist-hook: ChangeLog
 
@@ -47,6 +50,8 @@ compile_flags.txt: Makefile
 	$(LIBXFCE4UI_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \
 	$(LIBXFCONF_CFLAGS) \
+	$(LIBRSVG_CFLAGS) \
+	$(LIBWNCK_CFLAGS) \
 	$(PRESENT_EXTENSION_CFLAGS) \
 	$(RANDR_CFLAGS) \
 	$(RENDER_CFLAGS) \

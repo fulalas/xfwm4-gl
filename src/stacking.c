@@ -241,8 +241,8 @@ clientAtPosition (ScreenInfo *screen_info, int x, int y, GList * exclude_list)
     for (list = g_list_last (screen_info->windows_stack); list; list = g_list_previous (list))
     {
         c2 = (Client *) list->data;
-        if ((frameX (c2) <= x) && (frameX (c2) + frameWidth (c2) >= x)
-            && (frameY (c2) <= y) && (frameY (c2) + frameHeight (c2) >= y))
+        if ((frameX (c2) <= x) && (frameX (c2) + frameWidth (c2) > x)
+            && (frameY (c2) <= y) && (frameY (c2) + frameHeight (c2) > y))
         {
             if (clientSelectMask (c2, NULL, SEARCH_INCLUDE_SKIP_PAGER | SEARCH_INCLUDE_SKIP_TASKBAR, WINDOW_REGULAR_FOCUSABLE)
                 && !g_list_find (exclude_list, (gconstpointer) c2))

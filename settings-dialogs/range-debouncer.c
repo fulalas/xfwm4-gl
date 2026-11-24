@@ -37,6 +37,7 @@ struct _RangeDebouncer
   gulong               signal1;
   gulong               signal2;
   gulong               signal3;
+  gulong               signal4;
 };
 
 enum
@@ -94,6 +95,7 @@ range_debouncer_init (RangeDebouncer *range_debouncer)
   range_debouncer->signal1 = 0;
   range_debouncer->signal2 = 0;
   range_debouncer->signal3 = 0;
+  range_debouncer->signal4 = 0;
 }
 
 
@@ -120,6 +122,9 @@ range_debouncer_bind (GtkRange *range)
   range_debouncer->signal3 =
     g_signal_connect_swapped (range, "button-release-event",
                               G_CALLBACK (range_debouncer_button_released), range_debouncer);
+  range_debouncer->signal4 =
+    g_signal_connect_swapped (range, "grab-broken-event",
+                              G_CALLBACK (range_debouncer_button_released), range_debouncer);
 
   return range_debouncer;
 }
@@ -136,6 +141,7 @@ range_debouncer_finalize (GObject *object)
       g_signal_handler_disconnect(range_debouncer->range, range_debouncer->signal1);
       g_signal_handler_disconnect(range_debouncer->range, range_debouncer->signal2);
       g_signal_handler_disconnect(range_debouncer->range, range_debouncer->signal3);
+      g_signal_handler_disconnect(range_debouncer->range, range_debouncer->signal4);
       g_object_weak_unref (G_OBJECT (range_debouncer->range),
                            (GWeakNotify)range_debouncer_weak_notify, range_debouncer);
     }

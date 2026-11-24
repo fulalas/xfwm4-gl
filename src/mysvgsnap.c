@@ -58,6 +58,7 @@ typedef struct
 }
 PathState;
 
+static gboolean can_snap (const gchar *);
 static void layout_collect (Layout *, const gchar *, const SvgCanvas *);
 static void collect_spans (const gchar *, GArray **);
 static void add_box_spans (GArray **, const Box *);
@@ -84,11 +85,42 @@ svgSnap (const gchar *data, const SvgCanvas *canvas)
     Layout layout;
     gchar *snapped;
 
+    if (!can_snap (data))
+    {
+        return g_strdup (data);
+    }
     layout_collect (&layout, data, canvas);
     snapped = layout_apply (&layout, data);
     layout_free (&layout);
 
     return snapped;
+}
+
+static gboolean
+can_snap (const gchar *data)
+{
+    const gchar *p, *tag, *end;
+    GArray *attrs;
+    gboolean ok;
+
+    if (svgNextTag (data, "<use", &end) || svgNextTag (data, "<symbol", &end))
+    {
+        return FALSE;
+    }
+    if (svgNextTag (data, "<svg", &end) && svgNextTag (end, "<svg", &end))
+    {
+        return FALSE;
+    }
+    ok = TRUE;
+    p = data;
+    while (ok && (tag = svgNextTag (p, "<g", &end)))
+    {
+        attrs = svgTagAttrs (tag, end);
+        ok = !svgAttrGet (attrs, "transform");
+        svgAttrsFree (attrs);
+        p = end + 1;
+    }
+    return ok;
 }
 
 static void
@@ -321,7 +353,7 @@ static const gchar *
 map_command (PathState *state, const gchar *p)
 {
     static const gchar commands[] = "MLHVCSQTAZ";
-    static const gchar *const patterns[] = { "xy", "xy", "x", "y", "xyxyxy", "xyxy", "xyxy", "xy", "nnnnnxy", "" };
+    static const gchar *const patterns[] = { "xy", "xy", "x", "y", "xyxyxy", "xyxy", "xyxy", "xy", "nnnffxy", "" };
     const gchar *c;
 
     c = strchr (commands, (*p == 'z') ? 'Z' : *p);
@@ -345,10 +377,26 @@ map_number (PathState *state, const gchar *p)
     {
         return NULL;
     }
-    v = g_ascii_strtod (p, &end);
-    if (end == p)
+    if (!*state->arg)
     {
-        return NULL;
+        state->arg = state->pattern;
+    }
+    if (*state->arg == 'f')
+    {
+        if (*p != '0' && *p != '1')
+        {
+            return NULL;
+        }
+        v = *p - '0';
+        end = (gchar *) p + 1;
+    }
+    else
+    {
+        v = g_ascii_strtod (p, &end);
+        if (end == p)
+        {
+            return NULL;
+        }
     }
     if (!g_ascii_isalpha (state->out->str[state->out->len - 1]))
     {
@@ -364,12 +412,8 @@ map_next_arg (PathState *state, gdouble v)
 {
     gchar arg;
 
-    if (!*state->arg)
-    {
-        state->arg = state->pattern;
-    }
     arg = *state->arg++;
-    if (arg == 'n')
+    if (arg == 'n' || arg == 'f')
     {
         return v;
     }

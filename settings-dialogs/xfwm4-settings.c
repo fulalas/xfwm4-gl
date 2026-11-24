@@ -235,7 +235,7 @@ static const MenuTemplate title_align_values[] = {
 
 
 static gboolean           opt_version = FALSE;
-static Window             opt_socket_id = 0;
+static gint               opt_socket_id = 0;
 static GOptionEntry       opt_entries[] = {
   { "socket-id", 's', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_INT, &opt_socket_id,
     N_("Settings manager socket"), N_("SOCKET ID") },
@@ -389,11 +389,11 @@ xfwm_settings_constructed (GObject *object)
   /* Style tab: button layout */
   {
     target_entry[0].target = "_xfwm4_button_layout";
-    target_entry[0].flags = 0;
+    target_entry[0].flags = GTK_TARGET_SAME_APP;
     target_entry[0].info = 2;
 
     target_entry[1].target = "_xfwm4_active_layout";
-    target_entry[1].flags = 0;
+    target_entry[1].flags = GTK_TARGET_SAME_APP;
     target_entry[1].info = 3;
 
     gtk_drag_dest_set (active_frame, GTK_DEST_DEFAULT_ALL, target_entry, 2, GDK_ACTION_MOVE);
@@ -933,7 +933,7 @@ main (int    argc,
     }
   else
     {
-      plug = xfwm_settings_create_plug (settings, opt_socket_id);
+      plug = xfwm_settings_create_plug (settings, (Window) opt_socket_id);
       g_signal_connect (plug, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
 
       /* Stop startup notification */
@@ -1380,7 +1380,7 @@ xfwm_settings_button_layout_property_changed (XfconfChannel *channel,
                             gtk_container_get_children (GTK_CONTAINER (hidden_box)));
 
   /* Move buttons to the active list */
-  for (str_value = g_value_get_string (value); str_value != NULL && *str_value != '\0'; ++str_value)
+  for (str_value = G_VALUE_HOLDS_STRING (value) ? g_value_get_string (value) : NULL; str_value != NULL && *str_value != '\0'; ++str_value)
     for (iter = children; iter != NULL; iter = g_list_next (iter))
       {
         button = GTK_WIDGET (iter->data);
@@ -1994,8 +1994,9 @@ xfwm_settings_validate_shortcut (XfceShortcutDialog  *dialog,
     {
       if (G_UNLIKELY (xfce_shortcuts_provider_has_shortcut (iter->data, shortcut)))
         {
-          other_provider = g_object_ref (iter->data);
           other_shortcut = xfce_shortcuts_provider_get_shortcut (iter->data, shortcut);
+          if (other_shortcut != NULL)
+            other_provider = g_object_ref (iter->data);
         }
     }
 

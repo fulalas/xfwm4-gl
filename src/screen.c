@@ -780,7 +780,7 @@ void
 myScreenFindMonitorAtPoint (ScreenInfo *screen_info, gint x, gint y, GdkRectangle *rect)
 {
     gint dx, dy, center_x, center_y, num_monitors, i;
-    guint32 distsquare, min_distsquare;
+    guint64 distsquare, min_distsquare;
     GdkRectangle monitor, nearest_monitor = { G_MAXINT, G_MAXINT, 0, 0 };
 
     g_return_if_fail (screen_info != NULL);
@@ -796,7 +796,7 @@ myScreenFindMonitorAtPoint (ScreenInfo *screen_info, gint x, gint y, GdkRectangl
         return;
     }
 
-    min_distsquare = G_MAXUINT32;
+    min_distsquare = G_MAXUINT64;
     num_monitors = myScreenGetNumMonitors (screen_info);
 
     for (i = 0; i < num_monitors; i++)
@@ -820,7 +820,7 @@ myScreenFindMonitorAtPoint (ScreenInfo *screen_info, gint x, gint y, GdkRectangl
         dx = x - center_x;
         dy = y - center_y;
 
-        distsquare = (dx * dx) + (dy * dy);
+        distsquare = (guint64) ((gint64) dx * dx) + (guint64) ((gint64) dy * dy);
 
         if (distsquare < min_distsquare)
         {

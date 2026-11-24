@@ -38,7 +38,7 @@ typedef struct _XfwmSettings        XfwmSettings;
 
 GType         xfwm_settings_get_type (void) G_GNUC_CONST;
 
-XfwmSettings *xfwm_settings_new      (void) G_GNUC_MALLOC;
+XfwmSettings *xfwm_settings_new      (void);
 
 
 

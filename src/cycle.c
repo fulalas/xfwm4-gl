@@ -252,6 +252,7 @@ clientCycleEventFilter (XfwmEvent *event, gpointer data)
     KeyCode cancel, left, right, up, down;
     int key, modifiers;
     gboolean cycling;
+    gboolean matched;
     GList *li;
 
     TRACE ("entering");
@@ -350,12 +351,14 @@ clientCycleEventFilter (XfwmEvent *event, gpointer data)
             {
                 status = EVENT_FILTER_CONTINUE;
                 cycling = FALSE;
+                matched = FALSE;
 
                 /* only accept events for the tab windows */
                 for (li = passdata->tabwin->tabwin_list; li != NULL; li = li->next)
                 {
                     if (GDK_WINDOW_XID (gtk_widget_get_window (li->data)) == event->meta.window)
                     {
+                        matched = TRUE;
                         if  (event->button.button == Button1)
                         {
                             tabwinSelectHovered (passdata->tabwin);
@@ -377,14 +380,14 @@ clientCycleEventFilter (XfwmEvent *event, gpointer data)
                         status = EVENT_FILTER_STOP;
                         cycling = TRUE;
                     }
-                    if (c2)
-                    {
-                        clientCycleUpdateWireframe (c2, passdata);
-                    }
-                    if (!cycling)
-                    {
-                        tabwinSelectHead (passdata->tabwin);
-                    }
+                }
+                if (c2)
+                {
+                    clientCycleUpdateWireframe (c2, passdata);
+                }
+                if (!matched)
+                {
+                    tabwinSelectHead (passdata->tabwin);
                 }
             }
             break;

@@ -382,6 +382,7 @@ try_pixmap_and_mask (ScreenInfo *screen_info, Pixmap src_pixmap, Pixmap src_mask
     GdkPixbuf *unscaled;
     GdkPixbuf *icon;
     guint w, h, depth;
+    guint mask_w, mask_h, mask_depth;
     cairo_surface_t *surface, *mask_surface, *image;
     cairo_t *cr;
 
@@ -397,9 +398,9 @@ try_pixmap_and_mask (ScreenInfo *screen_info, Pixmap src_pixmap, Pixmap src_mask
     surface = get_surface_from_pixmap (screen_info, src_pixmap, w, h, depth);
 
     if (surface && src_mask != None &&
-        get_pixmap_geometry (screen_info, src_mask, &w, &h, &depth))
+        get_pixmap_geometry (screen_info, src_mask, &mask_w, &mask_h, &mask_depth))
     {
-        mask_surface = get_surface_from_pixmap (screen_info, src_mask, w, h, depth);
+        mask_surface = get_surface_from_pixmap (screen_info, src_mask, mask_w, mask_h, mask_depth);
     }
     else
     {

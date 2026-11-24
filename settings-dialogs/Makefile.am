@@ -106,10 +106,10 @@ xfwm4-dialog_ui.h: xfwm4-dialog.glade
 xfwm4-tweaks-dialog_ui.h: xfwm4-tweaks-dialog.glade
 	$(AM_V_GEN) $(XDT_CSOURCE) --static --strip-comments --strip-content --name=tweaks_dialog_ui $< >$@
 
-workspace-resource.h:
+workspace-resource.h: workspace.gresource.xml monitor-icon.svg
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --sourcedir=$(srcdir) $(srcdir)/workspace.gresource.xml --target=$@ --generate-header
 
-workspace-resource.c:
+workspace-resource.c: workspace.gresource.xml monitor-icon.svg
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --sourcedir=$(srcdir) $(srcdir)/workspace.gresource.xml --target=$@ --generate-source
 
 endif

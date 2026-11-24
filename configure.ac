@@ -91,16 +91,16 @@ AC_CHECK_LIB([Xext], [XShapeCombineShape],
 AC_ARG_ENABLE([xi2],
   AS_HELP_STRING([--enable-xi2], [enable support for the X Input 2 extension])
   AS_HELP_STRING([--disable-xi2], [don't enable the X Input 2 extension (default)]),
-  [enable_xi2=yes], [])
+  [], [enable_xi2=no])
 have_xi2="no"
 if test x"$enable_xi2" = x"yes"; then
 dnl Check for Xi2 library
   AC_CHECK_LIB([Xi], [XISelectEvents],
   [
+    have_xi2="yes"
+    AC_DEFINE([HAVE_XI2], [1], [Define to enable XI2])
     if ! echo $LIBX11_LIBS | grep -q -- '-lXi'; then
-      have_xi2="yes"
       LIBX11_LIBS="$LIBX11_LIBS -lXi"
-      AC_DEFINE([HAVE_XI2], [1], [Define to enable XI2])
     fi
   ],
   [
@@ -112,9 +112,9 @@ fi
 dnl Check for XRes library
 AC_CHECK_LIB([XRes], [XResQueryClientIds],
   [
+    AC_DEFINE([HAVE_XRES], [1], [Define to enable XRes])
     if ! echo $LIBX11_LIBS | grep -q -- '-lXRes'; then
       LIBX11_LIBS="$LIBX11_LIBS -lXRes"
-      AC_DEFINE([HAVE_XRES], [1], [Define to enable XRes])
     fi
   ], [], [$LIBX11_CFLAGS $LIBX11_LDFLAGS $LIBX11_LIBS])
 

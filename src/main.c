@@ -285,7 +285,7 @@ ensure_basedir_spec (void)
             r = fopen (path, "r");
 
             g_snprintf (path, PATH_MAX, "%s/%s", new, name);
-            w = fopen (path, "w");
+            w = r ? fopen (path, "w") : NULL;
 
             if (w && r)
             {
@@ -417,7 +417,7 @@ vblank_callback (const gchar  *name,
     vblank_mode = compositorParseVblankMode (value);
     if (vblank_mode == VBLANK_ERROR)
     {
-        g_set_error (error, XFWM4_ERROR, 0, "Unrecognized compositor option \"%s\"", value);
+        g_set_error (error, XFWM4_ERROR, 0, "Unrecognized vblank option \"%s\"", value);
         return FALSE;
     }
     vblank_given = TRUE;

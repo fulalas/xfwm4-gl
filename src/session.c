@@ -264,6 +264,17 @@ getsubstring (gchar * s, gint * length)
     return ns;
 }
 
+static void
+read_value (const gchar * s, gchar * buf, char ** field)
+{
+    if (sscanf (s, "%*s %[^\n]", buf) != 1)
+    {
+        buf[0] = '\0';
+    }
+    free (*field);
+    *field = strdup (buf);
+}
+
 static gboolean
 sessionSaveScreen (ScreenInfo *screen_info, FILE *f)
 {
@@ -419,10 +430,14 @@ sessionLoadWindowStates (const gchar * filename)
             }
             if (!strcmp (s1, "[CLIENT]"))
             {
-                sscanf (s, "%*s 0x%lx", &w);
+                if (sscanf (s, "%*s 0x%lx", &w) != 1)
+                {
+                    w = None;
+                }
                 num_match++;
                 matches = g_realloc (matches, sizeof (Match) * num_match);
                 matches[num_match - 1].win = w;
+                matches[num_match - 1].client_leader = None;
                 matches[num_match - 1].client_id = NULL;
                 matches[num_match - 1].res_name = NULL;
                 matches[num_match - 1].res_class = NULL;
@@ -479,31 +494,33 @@ sessionLoadWindowStates (const gchar * filename)
             }
             else if (!strcmp (s1, "[CLIENT_ID]"))
             {
-                sscanf (s, "%*s %[^\n]", s1);
-                matches[num_match - 1].client_id = strdup (s1);
+                read_value (s, s1, &matches[num_match - 1].client_id);
             }
             else if (!strcmp (s1, "[WINDOW_ROLE]"))
             {
-                sscanf (s, "%*s %[^\n]", s1);
-                matches[num_match - 1].window_role = strdup (s1);
+                read_value (s, s1, &matches[num_match - 1].window_role);
             }
             else if (!strcmp (s1, "[RES_NAME]"))
             {
-                sscanf (s, "%*s %[^\n]", s1);
-                matches[num_match - 1].res_name = strdup (s1);
+                read_value (s, s1, &matches[num_match - 1].res_name);
             }
             else if (!strcmp (s1, "[RES_CLASS]"))
             {
-                sscanf (s, "%*s %[^\n]", s1);
-                matches[num_match - 1].res_class = strdup (s1);
+                read_value (s, s1, &matches[num_match - 1].res_class);
             }
             else if (!strcmp (s1, "[WM_NAME]"))
             {
-                sscanf (s, "%*s %[^\n]", s1);
-                matches[num_match - 1].wm_name = strdup (s1);
+                read_value (s, s1, &matches[num_match - 1].wm_name);
             }
             else if (!strcmp (s1, "[WM_COMMAND]"))
             {
+                if (matches[num_match - 1].wm_command)
+                {
+                    my_free_string_list (matches[num_match - 1].wm_command,
+                        matches[num_match - 1].wm_command_count);
+                    g_free (matches[num_match - 1].wm_command);
+                    matches[num_match - 1].wm_command = NULL;
+                }
                 if ((sscanf (s, "%*s (%i)%n", &matches[num_match - 1].wm_command_count, &pos) != 1) ||
                     (matches[num_match - 1].wm_command_count < 1) ||
                     (matches[num_match - 1].wm_command_count > (gint) sizeof (s)))
@@ -566,7 +583,7 @@ sessionFreeWindowStates (void)
             free (matches[i].wm_name);
             matches[i].wm_name = NULL;
         }
-        if ((matches[i].wm_command_count) && (matches[i].wm_command))
+        if (matches[i].wm_command)
         {
             my_free_string_list (matches[i].wm_command,
                 matches[i].wm_command_count);

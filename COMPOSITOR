@@ -23,8 +23,8 @@ Sync to vblank is selected with the "--vblank" command line option or the
 
   auto      sync every frame to the screen (default)
   adaptive  stop syncing when the frame rate falls below the refresh rate;
-            needs GLX (XFWM4_GL_BACKEND=glx) or XRender and
-            GLX_EXT_swap_control_tear, otherwise same as auto
+            needs libepoxy at build time, GLX (XFWM4_GL_BACKEND=glx) or
+            XRender, and GLX_EXT_swap_control_tear, otherwise same as auto
   off       no sync
 
   glx       XRender only: sync through GLX (libepoxy at build time)

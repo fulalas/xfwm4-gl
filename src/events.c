@@ -167,7 +167,7 @@ typeOfClick_event_filter (XfwmEvent *event, gpointer data)
     if (timestamp)
     {
         passdata->tcurrent = timestamp;
-        if (((gint) passdata->tcurrent - (gint) passdata->t0) > passdata->double_click_time)
+        if ((gint) (passdata->tcurrent - passdata->t0) > passdata->double_click_time)
         {
             keep_going = FALSE;
         }
@@ -2241,7 +2241,7 @@ handleEvent (DisplayInfo *display_info, XfwmEvent *event)
                     status = handleSelectionClear (display_info, (XSelectionClearEvent *) event->meta.xevent);
                     break;
                 case ColormapNotify:
-                    handleColormapNotify (display_info, (XColormapEvent *) event->meta.xevent);
+                    status = handleColormapNotify (display_info, (XColormapEvent *) event->meta.xevent);
                     break;
                 case ReparentNotify:
                     status = handleReparentNotify (display_info, (XReparentEvent *) event->meta.xevent);

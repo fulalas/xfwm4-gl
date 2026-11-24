@@ -48,7 +48,7 @@
 #include "xfwm4-tweaks-dialog_ui.h"
 #include "range-debouncer.h"
 
-static Window opt_socket_id = 0;
+static gint opt_socket_id = 0;
 static gboolean opt_version = FALSE;
 
 static const gchar *const modifier_list[] = {
@@ -77,7 +77,7 @@ cb_easy_click_combo_box_changed (GtkComboBox *combo, XfconfChannel *channel)
     {
         if (gtk_combo_box_get_active (combo) == n)
         {
-            xfconf_channel_set_string (channel, "/general/easy_click", _(modifier_list[n]));
+            xfconf_channel_set_string (channel, "/general/easy_click", modifier_list[n]);
         }
         n++;
     }
@@ -404,7 +404,7 @@ wm_tweaks_dialog_configure_widgets (GtkBuilder *builder)
     for (n = 0; modifier_list[n]; n++)
     {
         gtk_list_store_append (list_store, &iter);
-        gtk_list_store_set (list_store, &iter, 0, N_(modifier_list[n]), -1);
+        gtk_list_store_set (list_store, &iter, 0, _(modifier_list[n]), -1);
         if (!modifier_set && !strcmp (easy_click, modifier_list[n]))
         {
             gtk_combo_box_set_active (GTK_COMBO_BOX (easy_click_combo_box), n);
@@ -703,7 +703,7 @@ wm_tweaks_dialog_response (GtkWidget *dialog,
 
 static GOptionEntry entries[] =
 {
-    { "socket-id", 's', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_INT, &opt_socket_id, N_ ("Session manager socket"), N_ ("SOCKET ID") },
+    { "socket-id", 's', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_INT, &opt_socket_id, N_ ("Settings manager socket"), N_ ("SOCKET ID") },
     { "version", 'v', G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_NONE, &opt_version, N_ ("Version information"), NULL },
     { NULL }
 };
@@ -725,8 +725,8 @@ main (int argc, gchar **argv)
         {
             g_print (_ ("%s: %s\nTry %s --help to see a full list of available command line options.\n"), PACKAGE, cli_error->message, PACKAGE_NAME);
             g_error_free (cli_error);
-            return 1;
         }
+        return 1;
     }
 
     if (G_UNLIKELY (!xfwm_window_manager_is_supported ()))
@@ -745,7 +745,14 @@ main (int argc, gchar **argv)
     if (xfce_titled_dialog_get_type () == 0)
       return 1;
 
-    gtk_builder_add_from_string (builder, tweaks_dialog_ui, tweaks_dialog_ui_length, NULL);
+    if (gtk_builder_add_from_string (builder, tweaks_dialog_ui, tweaks_dialog_ui_length, &cli_error) == 0)
+    {
+        g_critical ("Failed to load UI: %s", cli_error->message);
+        g_error_free (cli_error);
+        g_object_unref (builder);
+        xfconf_shutdown ();
+        return 1;
+    }
 
     if (builder)
     {
@@ -766,7 +773,7 @@ main (int argc, gchar **argv)
         else
         {
             /* Create plug widget */
-            plug = gtk_plug_new (opt_socket_id);
+            plug = gtk_plug_new ((Window) opt_socket_id);
             g_signal_connect (plug, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
             gtk_widget_show (plug);
 

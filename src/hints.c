@@ -249,9 +249,9 @@ getHint (DisplayInfo *display_info, Window w, int atom_id, long *value)
         (items_read > 0))
     {
         *value = *((long *) (gpointer) data) & ((1LL << real_format) - 1);
-        XFree (data);
         success = TRUE;
     }
+    XFree (data);
 
     return success;
 }
@@ -909,16 +909,14 @@ getWindowProp (DisplayInfo *display_info, Window window, int atom_id, Window *w)
 
     if ((status == Success) && (result == Success))
     {
-        if (prop)
+        if (!prop || !check_type_and_format (32, XA_WINDOW, (int) nitems, format, type))
         {
-            *w = *((Window *) (gpointer) prop);
             XFree (prop);
-        }
-        if (!prop || !check_type_and_format (32, XA_WINDOW, -1, format, type))
-        {
             *w = None;
             return FALSE;
         }
+        *w = *((Window *) (gpointer) prop);
+        XFree (prop);
     }
 
     return (result == Success);
@@ -1004,40 +1002,16 @@ getClientLeader (DisplayInfo *display_info, Window window)
 gboolean
 getNetWMUserTime (DisplayInfo *display_info, Window window, guint32 *timestamp)
 {
-    Atom actual_type;
-    int actual_format;
-    unsigned long nitems;
-    unsigned long bytes_after;
-    unsigned char *data = NULL;
-    int result, status;
+    long value;
+    gboolean success;
 
     g_return_val_if_fail (window != None, FALSE);
     TRACE ("window 0x%lx", window);
 
-    myDisplayErrorTrapPush (display_info);
-    status = XGetWindowProperty (display_info->dpy, window,
-                                 display_info->atoms[NET_WM_USER_TIME],
-                                 0L, 1L, FALSE, XA_CARDINAL, &actual_type,
-                                 &actual_format, &nitems, &bytes_after,
-                                 (unsigned char **) &data);
-    result = myDisplayErrorTrapPop (display_info);
+    success = getHint (display_info, window, NET_WM_USER_TIME, &value);
+    *timestamp = (guint32) value;
 
-    if ((status == Success) &&
-        (result == Success) &&
-        (data != NULL) &&
-        (actual_type == XA_CARDINAL) &&
-        (nitems == 1) &&
-        (bytes_after == 0))
-    {
-        *timestamp = *((guint32 *) (gpointer) data);
-        XFree (data);
-        return TRUE;
-    }
-
-    XFree (data);
-    *timestamp = (guint32) CurrentTime;
-
-    return FALSE;
+    return success;
 }
 
 Window

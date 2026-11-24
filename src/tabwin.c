@@ -1016,6 +1016,14 @@ tabwinRemoveClient (Tabwin *tabwin, Client *c)
             icon = GTK_WIDGET (widgets->data);
             if (((Client *) g_object_get_data (G_OBJECT(icon), "client-ptr-val")) == c)
             {
+                if (tabwin_widget->hovered == icon)
+                {
+                    tabwin_widget->hovered = NULL;
+                }
+                if (tabwin_widget->selected == icon)
+                {
+                    tabwin_widget->selected = NULL;
+                }
                 gtk_container_remove (GTK_CONTAINER (tabwin_widget->container), icon);
                 tabwin_widget->widgets = g_list_delete_link (tabwin_widget->widgets, widgets);
                 break;

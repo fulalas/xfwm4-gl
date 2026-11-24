@@ -58,6 +58,7 @@ clientCreateXSyncAlarm (Client *c)
     display_info = screen_info->display_info;
 
     clientDestroyXSyncAlarm (c);
+    myDisplayErrorTrapPush (display_info);
     XSyncIntToValue (&c->xsync_value, 0);
     XSyncSetCounter (display_info->dpy, c->xsync_counter, c->xsync_value);
 
@@ -78,6 +79,10 @@ clientCreateXSyncAlarm (Client *c)
                                        XSyncCAValue |
                                        XSyncCAValueType,
                                        &attrs);
+    if (myDisplayErrorTrapPop (display_info))
+    {
+        c->xsync_alarm = None;
+    }
     if (c->xsync_alarm != None)
     {
         FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
@@ -122,10 +127,11 @@ clientGetXSyncCounter (Client * c)
     display_info = screen_info->display_info;
 
     data = NULL;
+    clientDestroyXSyncAlarm (c);
+    FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
+    c->xsync_counter = None;
     if (getCardinalList (display_info, c->window, NET_WM_SYNC_REQUEST_COUNTER, &data, &nitems))
     {
-        clientDestroyXSyncAlarm (c);
-        FLAG_UNSET (c->flags, CLIENT_FLAG_XSYNC_ENABLED);
         c->xsync_counter = (nitems > 0) ? (XSyncCounter) data[0] : None;
         if (c->xsync_counter != None)
         {
@@ -234,7 +240,9 @@ clientXSyncRequest (Client * c)
     xev.data.l[2] = (long) XSyncValueLow32 (next_value);
     xev.data.l[3] = (long) XSyncValueHigh32 (next_value);
     xev.data.l[4] = 0;
+    myDisplayErrorTrapPush (display_info);
     XSendEvent (display_info->dpy, c->window, FALSE, NoEventMask, (XEvent *) &xev);
+    myDisplayErrorTrapPopIgnored (display_info);
 
     clientXSyncResetTimeout (c);
     FLAG_SET (c->flags, CLIENT_FLAG_XSYNC_WAITING);

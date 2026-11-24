@@ -19,6 +19,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include <glib.h>
 
@@ -48,7 +49,7 @@ svgParseLength (const gchar *s, gdouble *v)
     gchar *end;
 
     *v = g_ascii_strtod (s, &end);
-    if (end == s)
+    if (end == s || !isfinite (*v))
     {
         return FALSE;
     }
@@ -77,7 +78,7 @@ svgParseViewbox (const gchar *viewbox, gdouble *box)
     {
         viewbox = skip_list_separators (viewbox);
         box[i] = g_ascii_strtod (viewbox, &next);
-        if (next == viewbox)
+        if (next == viewbox || !isfinite (box[i]))
         {
             return FALSE;
         }

@@ -51,9 +51,8 @@ int
 main (int argc, char **argv)
 {
     GtkWidget *dialog;
-    gint i;
     gulong xid;
-    gchar *title, *newstr;
+    gchar *title;
 
     xfce_textdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
 
@@ -72,13 +71,7 @@ main (int argc, char **argv)
         return 1;
     }
 
-    title = g_strdup ("");
-    for (i = 2; i < argc; i++)
-    {
-        newstr = g_strdup_printf ("%s %s", title, argv[i]);
-        g_free (title);
-        title = newstr;
-    }
+    title = g_strjoinv (" ", argv + 2);
 
     dialog = gtk_message_dialog_new (NULL, 0,
                                      GTK_MESSAGE_WARNING,

@@ -443,7 +443,7 @@ loadTheme (ScreenInfo *screen_info, Settings *rc)
         NULL
     };
 
-    gchar imagename[30];
+    gchar imagename[64];
     GValue tmp_val = { 0, };
     GValue tmp_val2 = { 0, };
     DisplayInfo *display_info;
@@ -889,11 +889,11 @@ loadSettings (ScreenInfo *screen_info)
     screen_info->params->prevent_focus_stealing =
         getBoolValue ("prevent_focus_stealing", rc);
     screen_info->params->raise_delay =
-        getIntValue ("raise_delay", rc);
+        CLAMP (getIntValue ("raise_delay", rc), 0, 2000);
     screen_info->params->raise_on_focus =
         getBoolValue ("raise_on_focus", rc);
     screen_info->params->focus_delay =
-        getIntValue ("focus_delay", rc);
+        CLAMP (getIntValue ("focus_delay", rc), 0, 2000);
     screen_info->params->raise_on_click =
         getBoolValue ("raise_on_click", rc);
     screen_info->params->raise_with_any_button =
@@ -931,7 +931,7 @@ loadSettings (ScreenInfo *screen_info)
     screen_info->params->snap_resist =
         getBoolValue ("snap_resist", rc);
     screen_info->params->snap_width =
-        getIntValue ("snap_width", rc);
+        CLAMP (getIntValue ("snap_width", rc), 0, 100);
     screen_info->params->suspend_compositing_fullscreen =
         getBoolValue ("suspend_compositing_fullscreen", rc);
     screen_info->params->tile_on_move =
@@ -960,7 +960,7 @@ loadSettings (ScreenInfo *screen_info)
     screen_info->params->scroll_workspaces =
         getBoolValue ("scroll_workspaces", rc);
     screen_info->params->wrap_resistance =
-        getIntValue ("wrap_resistance", rc);
+        CLAMP (getIntValue ("wrap_resistance", rc), 0, 100);
 
     set_settings_margin (screen_info, STRUTS_LEFT,   getIntValue ("margin_left", rc));
     set_settings_margin (screen_info, STRUTS_RIGHT,  getIntValue ("margin_right", rc));

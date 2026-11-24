@@ -100,7 +100,7 @@ only:
 | value | description |
 | --- | --- |
 | `auto` | (default) sync every frame to the screen |
-| `adaptive` | (new) turns vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (needs GLX, `XFWM4_GL_BACKEND=glx`, or XRender, plus `GLX_EXT_swap_control_tear`; otherwise, and always with the EGL default, same as `auto`) |
+| `adaptive` | (new) turns vsync off when the frame rate falls below the refresh rate, avoiding stutter and input lag (needs `libepoxy` at build time, GLX, `XFWM4_GL_BACKEND=glx`, or XRender, plus `GLX_EXT_swap_control_tear`; otherwise, and always with the EGL default, same as `auto`) |
 | `off` | no sync, fastest, tears |
 
 Two more values exist, `glx` and `xpresent`, but with the OpenGL renderer both

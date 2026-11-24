@@ -444,7 +444,7 @@ clientSetLast(Client *c)
     TRACE ("client \"%s\" (0x%lx)", c->name, c->window);
 
     screen_info = c->screen_info;
-    if (screen_info->client_count > 2)
+    if (screen_info->client_count > 1)
     {
         if (screen_info->clients == c)
         {

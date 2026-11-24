@@ -120,14 +120,16 @@ workspace_names_update_xfconf(gint workspace,
             for(i = prop_len; i < n_workspaces; ++i)
                 names[i] = g_strdup_printf(_("Workspace %d"), i + 1);
             names[n_workspaces] = NULL;
-            g_free(names[workspace]);
-            names[workspace] = g_strdup(new_name);
+            if(workspace < n_workspaces) {
+                g_free(names[workspace]);
+                names[workspace] = g_strdup(new_name);
+            }
         } else {
             /* here we may have a |names| array longer than the actual
              * number of workspaces, but that's fine.  the user might
              * want to re-add a workspace or whatever, and may appreciate
              * that we remember the old name. */
-            if(strcmp(names[workspace], new_name)) {
+            if(workspace < prop_len && strcmp(names[workspace], new_name)) {
                 g_free(names[workspace]);
                 names[workspace] = g_strdup(new_name);
             } else {
@@ -160,7 +162,11 @@ treeview_ws_names_cell_edited (GtkCellRendererText *cell,
     treeview = (GtkTreeView *) user_data;
     model = gtk_tree_view_get_model(treeview);
     path = gtk_tree_path_new_from_string (path_string);
-    gtk_tree_model_get_iter (model, &iter, path);
+    if (!gtk_tree_model_get_iter (model, &iter, path))
+    {
+        gtk_tree_path_free (path);
+        return;
+    }
 
     gtk_tree_model_get(model, &iter, COL_NUMBER, &ws_num, COL_NAME, &old_name, -1);
     if(strcmp(old_name, new_name)) {
@@ -292,7 +298,7 @@ xfconf_workspace_count_changed(XfconfChannel *channel,
 {
     WnckScreen *screen = get_default_wnck_screen();
 
-    if (screen != NULL)
+    if (screen != NULL && G_VALUE_HOLDS_INT(value))
         wnck_screen_change_workspace_count(screen, g_value_get_int(value));
     else
         workspace_dialog_count_changed(treeview);
@@ -466,8 +472,8 @@ main(int argc, gchar **argv)
         {
             g_print (_("%s: %s\nTry %s --help to see a full list of available command line options.\n"), PACKAGE, cli_error->message, PACKAGE_NAME);
             g_error_free (cli_error);
-            return 1;
         }
+        return 1;
     }
 
     if(opt_version)

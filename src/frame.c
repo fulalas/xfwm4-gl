@@ -91,6 +91,14 @@ frameCornerWidth (Client * c, int corner, int state)
 }
 
 static int
+frameButtonY (Client * c, int button, int state)
+{
+    ScreenInfo *screen_info = c->screen_info;
+
+    return ((frameDecorationTop (screen_info) - screen_info->buttons[button][state].height + 1) / 2) - frameBorderTop (c);
+}
+
+static int
 frameCornerHeight (Client * c, int corner, int state)
 {
     g_return_val_if_fail (c != NULL, 0);
@@ -689,8 +697,8 @@ frameSetShape (Client * c, int state, FramePixmap * frame_pix, int button_x[BUTT
         if (xfwmWindowVisible (&c->sides[SIDE_TOP]))
         {
             XShapeCombineShape (display_info->dpy, screen_info->shape_win, ShapeBounding,
-                                frameCornerWidth (c, CORNER_BOTTOM_LEFT, state),
-                                frameTop (c) - frameBottom (c),
+                                frameCornerWidth (c, CORNER_TOP_LEFT, state),
+                                0,
                                 MYWINDOW_XWINDOW (c->sides[SIDE_TOP]), ShapeBounding, ShapeUnion);
         }
 
@@ -721,7 +729,7 @@ frameSetShape (Client * c, int state, FramePixmap * frame_pix, int button_x[BUTT
             if (xfwmWindowVisible (&c->buttons[i]))
             {
                 XShapeCombineShape (display_info->dpy, screen_info->shape_win, ShapeBounding, button_x[i],
-                                    (frameTop (c) - screen_info->buttons[i][state].height + 1) / 2,
+                                    frameButtonY (c, i, state),
                                     MYWINDOW_XWINDOW (c->buttons[i]), ShapeBounding, ShapeUnion);
             }
         }
@@ -862,6 +870,8 @@ frameDrawWin (Client * c)
 
     if (CLIENT_HAS_FRAME (c))
     {
+        char menu = getLetterFromButton (MENU_BUTTON, c);
+
         /* First, hide the buttons that we don't have... */
         for (i = 0; i < BUTTON_COUNT; i++)
         {
@@ -873,7 +883,7 @@ frameDrawWin (Client * c)
         }
 
         /* Update icon if present and using a stretched frame */
-        if (strchr (screen_info->params->button_layout, getLetterFromButton(MENU_BUTTON, c)) &&
+        if (menu && strchr (screen_info->params->button_layout, menu) &&
             !xfwmPixmapNone (&screen_info->sides_stretch[SIDE_TOP][state]))
         {
             clientUpdateIcon (c, TRUE);
@@ -903,7 +913,7 @@ frameDrawWin (Client * c)
                         xfwmWindowSetBG (&c->buttons[button], my_pixmap);
                     }
                     xfwmWindowShow (&c->buttons[button], x,
-                        ((frameDecorationTop(screen_info) - screen_info->buttons[button][state].height + 1) / 2) - frameBorderTop (c),
+                        frameButtonY (c, button, state),
                         screen_info->buttons[button][state].width,
                         screen_info->buttons[button][state].height, TRUE);
                     button_x[button] = x;
@@ -941,7 +951,7 @@ frameDrawWin (Client * c)
                     x = x - screen_info->buttons[button][state].width -
                         screen_info->params->button_spacing;
                     xfwmWindowShow (&c->buttons[button], x,
-                        ((frameDecorationTop(screen_info) - screen_info->buttons[button][state].height + 1) / 2) - frameBorderTop (c),
+                        frameButtonY (c, button, state),
                         screen_info->buttons[button][state].width,
                         screen_info->buttons[button][state].height, TRUE);
                     button_x[button] = x;

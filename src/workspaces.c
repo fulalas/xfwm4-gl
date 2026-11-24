@@ -475,7 +475,7 @@ workspaceInsert (ScreenInfo * screen_info, guint position)
     count = screen_info->workspace_count;
     workspaceSetCount(screen_info, (gint) count + 1);
 
-    if (position > count)
+    if ((screen_info->workspace_count == count) || (position > count))
     {
         return;
     }

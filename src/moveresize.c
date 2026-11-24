@@ -390,7 +390,7 @@ clientFindClosestEdgeX (Client *c, int edge_pos)
                   && FLAG_TEST (c2->flags, CLIENT_FLAG_HAS_STRUT)
                   && FLAG_TEST (c2->xfwm_flags, XFWM_FLAG_VISIBLE))))
         {
-            if (clientCheckOverlap (c->y - frameExtentTop (c) - 1, c->y + c->height + frameExtentBottom (c) + 1, c2->y - frameExtentTop (c) - 1, c2->y + c2->height + frameExtentBottom (c) + 1))
+            if (clientCheckOverlap (c->y - frameExtentTop (c) - 1, c->y + c->height + frameExtentBottom (c) + 1, c2->y - frameExtentTop (c2) - 1, c2->y + c2->height + frameExtentBottom (c2) + 1))
             {
                 if (abs (c2->x - frameExtentLeft (c2) - edge_pos) < abs (closest - edge_pos))
                 {
@@ -436,7 +436,7 @@ clientFindClosestEdgeY (Client *c, int edge_pos)
                   && FLAG_TEST (c2->flags, CLIENT_FLAG_HAS_STRUT)
                   && FLAG_TEST (c2->xfwm_flags, XFWM_FLAG_VISIBLE))))
         {
-            if (clientCheckOverlap (c->x - frameExtentLeft (c) - 1, c->x + c->width + frameExtentRight (c) + 1, c2->x - frameExtentLeft (c) - 1, c2->x + c2->width + frameExtentRight (c) + 1))
+            if (clientCheckOverlap (c->x - frameExtentLeft (c) - 1, c->x + c->width + frameExtentRight (c) + 1, c2->x - frameExtentLeft (c2) - 1, c2->x + c2->width + frameExtentRight (c2) + 1))
             {
                 if (abs (c2->y - frameExtentTop(c2) - edge_pos) < abs (closest - edge_pos))
                 {
@@ -801,7 +801,7 @@ clientMoveTile (Client *c, XfwmEventMotion *event)
     disp_max_y = rect.y + rect.height;
 
     dist = MIN (TILE_DISTANCE, frameDecorationTop (screen_info) / 2);
-    dist_corner = (MIN (disp_max_x, disp_max_y)) / BORDER_TILE_LENGTH_RELATIVE;
+    dist_corner = (MIN (rect.width, rect.height)) / BORDER_TILE_LENGTH_RELATIVE;
 
     /* make sure the mouse position is inside the screen edges */
     if ((x >= disp_x - 1) && (x < disp_max_x + 1) &&

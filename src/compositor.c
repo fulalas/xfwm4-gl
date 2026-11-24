@@ -6205,11 +6205,11 @@ unmanage_screen (ScreenInfo *screen_info)
 
     if (screen_info->use_glx)
     {
-        free_glx_data (screen_info);
         for (buffer = 0; buffer < screen_info->use_n_buffers; buffer++)
         {
             destroy_glx_drawable (screen_info, buffer);
         }
+        free_glx_data (screen_info);
     }
 #endif /* HAVE_EPOXY */
 
@@ -6287,9 +6287,15 @@ unmanage_screen (ScreenInfo *screen_info)
     cairo_region_destroy (screen_info->direct_region);
     screen_info->direct_region = NULL;
 
+    if (screen_info->zoom_timeout_id != 0)
+    {
+        g_source_remove (screen_info->zoom_timeout_id);
+        screen_info->zoom_timeout_id = 0;
+    }
     if (screen_info->zoomed)
     {
         XFixesShowCursor (display_info->dpy, screen_info->xroot);
+        screen_info->zoomed = FALSE;
     }
 
     XCompositeUnredirectSubwindows (display_info->dpy, screen_info->xroot,
