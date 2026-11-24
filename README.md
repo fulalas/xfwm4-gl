@@ -135,8 +135,13 @@ New features:
 * any tool can read the current renderer and vsync mode by running
   `xprop -root _XFWM4_RENDER_BACKEND _XFWM4_VSYNC`
 * themes can be made of SVG files, and then grow with the screen DPI instead
-  of needing a separate big copy. The bundled themes are SVG now, and
-  `Default-hdpi` and `Default-xhdpi` are gone. See [SVG themes](#svg-themes)
+  of needing a separate big copy. The bundled themes are SVG now, with rounded
+  bottom corners, and `Default-hdpi` and `Default-xhdpi` are gone. See
+  [SVG themes](#svg-themes)
+* a GTK application can ask for its window to be focused when the mouse button
+  is released instead of pressed
+* the settings dialogs also run on Wayland, where Tweaks adds HDR on/off and
+  brightness
 
 Fixes:
 
@@ -170,6 +175,15 @@ Fixes:
   own frame
 * the decoration asks for fewer redraws, and a theme that ships only a
   stretched border image is used instead of being skipped
+* a window that asks not to be composited, or asks to always be, is now
+  listened to. The request was read from the wrong window, so it never worked
+  for windows with a title bar
+* a program can no longer crash xfwm4 through the counter it uses to sync
+  resizes
+* a fullscreen, maximized or tiled window sent to another monitor fits that
+  monitor instead of keeping the old size
+* a broken or hand-edited session file no longer restores the wrong window
+* many translations that said something else than the English were fixed
 
 ## SVG themes
 
